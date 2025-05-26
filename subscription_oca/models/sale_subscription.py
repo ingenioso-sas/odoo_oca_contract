@@ -7,6 +7,7 @@ from dateutil.relativedelta import relativedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError
+from markupsafe import Markup
 
 logger = logging.getLogger(__name__)
 
@@ -308,23 +309,34 @@ class SaleSubscription(models.Model):
         self.write({"sale_order_ids": [(4, order_id.id)]})
         return order_id
 
+    def send_Invoice(self, invoice):
+        mail_template = self.template_id.invoice_mail_template_id
+        invoice.with_context(force_send=True)._generate_pdf_and_send_invoice(
+            mail_template
+        )
+
     def generate_invoice(self):
         invoice_number = ""
         msg_static = _("Created invoice with reference")
+        invoice = False
         if self.template_id.invoicing_mode in ["draft", "invoice", "invoice_send"]:
             invoice = self.create_invoice()
             if self.template_id.invoicing_mode != "draft":
                 invoice.action_post()
-                mail_template = self.template_id.invoice_mail_template_id
-                invoice.with_context(force_send=True)._generate_pdf_and_send_invoice(
-                    mail_template
-                )
+                #self.sendInvoice()
                 invoice_number = invoice.name
-                message_body = (
-                    f"<b>{msg_static}</b> "
-                    f"<a href=# data-oe-model=account.move data-oe-id={invoice.id}>"
-                    f"{invoice_number}"
-                    "</a>"
+                # message_body = (
+                #     f"<b>{msg_static}</b> "
+                #     f"<a href=# data-oe-model=account.move data-oe-id={invoice.id}>"
+                #     f"{invoice_number}"
+                #     "</a>"
+                # )
+                message_body = Markup(
+                    "<b>{}</b> <a href='/web#id={}&model=account.move&view_type=form'>{}</a>"
+                ).format(
+                    _("Factura creada con referencia"),
+                    invoice.id,
+                    invoice_number
                 )
 
         if self.template_id.invoicing_mode == "sale_and_invoice":
@@ -339,6 +351,9 @@ class SaleSubscription(models.Model):
                 "<b>%s</b> <a href=# data-oe-model=account.move data-oe-id=%d>%s</a>"
                 % (msg_static, new_invoice.id, invoice_number)
             )
+        if invoice:
+            self.send_Invoice(invoice)
+
         if not invoice_number:
             invoice_number = _("To validate")
             message_body = f"<b>{msg_static}</b> {invoice_number}"
