@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="recurring_sale_subscription_template_views" model="ir.ui.view">
+        <field name="name">sale.subscription.template.inherit.whatsapp</field>
+        <field name="model">sale.subscription.template</field>
+        <field name="inherit_id" ref="subscription_oca.sale_subscription_template_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='invoice_mail_template_id']" position="before">
+                <field 
+                    name="send_notification_mode" 
+                    widget="radio" 
+                    invisible="invoicing_mode != 'invoice_send'"
+                    required="invoicing_mode == 'invoice_send'"/>
+            </xpath>
+            <!-- <xpath expr="//field[@name='invoice_mail_template_id']" position="attributes">
+            
+                <attribute name="invisible">send_notification_mode not in ('email', 'both', 'whatsapp')</attribute>
+                <attribute name="required">invoicing_mode == 'invoice_send'</attribute> 
+            </xpath> -->
+            <!-- <xpath expr="//field[@name='invoicing_mode']" position="replace">
+                <field name="invoicing_mode" widget="radio">
+                        <selection>
+                            <option value="draft">Draft</option>
+                            <option value="invoice">Invoice</option>
+                            <option value="sale_and_invoice">Sale order &amp; Invoice</option>
+                        </selection>
+                    </field>
+            </xpath> -->
+        </field>
+    </record>
+</odoo>
