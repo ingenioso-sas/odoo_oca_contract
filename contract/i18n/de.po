@@ -32,8 +32,8 @@ msgid ""
 "                <p style=\"border-left: 1px solid #8e0000; margin-left: 30px;"
 "\">\n"
 "                    &amp;nbsp;&amp;nbsp;<strong>REFERENCES</strong><br>\n"
-"                    &amp;nbsp;&amp;nbsp;Contract: <strong t-out=\"object."
-"name\"></strong><br>\n"
+"                    &amp;nbsp;&amp;nbsp;Contract: <strong t-"
+"out=\"object.name\"></strong><br>\n"
 "                    <t t-if=\"object.date_start\">\n"
 "                        &amp;nbsp;&amp;nbsp;Contract Date Start: <t t-"
 "out=\"object.date_start or ''\"></t><br>\n"
@@ -42,8 +42,8 @@ msgid ""
 "                    <t t-if=\"object.user_id\">\n"
 "                        <t t-if=\"object.user_id.email\">\n"
 "                            &amp;nbsp;&amp;nbsp;Your Contact: <a t-att-"
-"href=\"'mailto:%s?subject=Contract %s' % (object.user_id.email, object."
-"name)\" t-out=\"object.user_id.name\"></a>\n"
+"href=\"'mailto:%s?subject=Contract %s' % (object.user_id.email, object.name)"
+"\" t-out=\"object.user_id.name\"></a>\n"
 "                        </t>\n"
 "                        <t t-else=\"\">\n"
 "                            &amp;nbsp;&amp;nbsp;Your Contact: <t t-"
@@ -71,9 +71,10 @@ msgid ""
 "line-height: 16px; background-color: #F2F2F2;\">\n"
 "                    <span style=\"color: #222; margin-bottom: 5px; display: "
 "block; \">\n"
-"                        <address t-field=\"object.company_id.sudo()."
-"partner_id\" t-options='{\"widget\": \"contact\", \"fields\": [\"name\", "
-"\"address\"], \"no_marker\": True}'></address>\n"
+"                        <address t-"
+"field=\"object.company_id.sudo().partner_id\" t-options='{\"widget\": "
+"\"contact\", \"fields\": [\"name\", \"address\"], \"no_marker\": True}'></"
+"address>\n"
 "                    </span>\n"
 "                    <t t-if=\"object.company_id.phone\">\n"
 "                        <div style=\"margin-top: 0px; margin-right: 0px; "
@@ -108,8 +109,8 @@ msgstr ""
 "                <p style=\"border-left: 1px solid #8e0000; margin-left: 30px;"
 "\">\n"
 "                    &amp;nbsp;&amp;nbsp;<strong>REFERENCES</strong><br>\n"
-"                    &amp;nbsp;&amp;nbsp;Vertrag: <strong t-out=\"object."
-"name\"></strong><br>\n"
+"                    &amp;nbsp;&amp;nbsp;Vertrag: <strong t-"
+"out=\"object.name\"></strong><br>\n"
 "                    <t t-if=\"object.date_start\">\n"
 "                        &amp;nbsp;&amp;nbsp;Vertragsbeginn: <t t-"
 "out=\"object.date_start or ''\"></t><br>\n"
@@ -118,8 +119,8 @@ msgstr ""
 "                    <t t-if=\"object.user_id\">\n"
 "                        <t t-if=\"object.user_id.email\">\n"
 "                            &amp;nbsp;&amp;nbsp;Ihr Kontakt: <a t-att-"
-"href=\"'mailto:%s?subject=Contract %s' % (object.user_id.email, object."
-"name)\" t-out=\"object.user_id.name\"></a>\n"
+"href=\"'mailto:%s?subject=Contract %s' % (object.user_id.email, object.name)"
+"\" t-out=\"object.user_id.name\"></a>\n"
 "                        </t>\n"
 "                        <t t-else=\"\">\n"
 "                            &amp;nbsp;&amp;nbsp;Ihr Kontakt: <t t-"
@@ -131,8 +132,8 @@ msgstr ""
 "                <br>\n"
 "                <p>Wenn Sie Fragen haben, zögern Sie nicht, uns zu "
 "kontaktieren.</p>\n"
-"                <p>Vielen Dank, dass Sie sich für <t t-out=\"object."
-"company_id.name or 'us'\"> entschieden haben.</t>!</p>\n"
+"                <p>Vielen Dank, dass Sie sich für <t t-"
+"out=\"object.company_id.name or 'us'\"> entschieden haben.</t>!</p>\n"
 "                <br>\n"
 "                <br>\n"
 "                <div style=\"width: 375px; margin: 0px; padding: 0px; "
@@ -147,9 +148,10 @@ msgstr ""
 "line-height: 16px; background-color: #F2F2F2;\">\n"
 "                    <span style=\"color: #222; margin-bottom: 5px; display: "
 "block; \">\n"
-"                        <address t-field=\"object.company_id.sudo()."
-"partner_id\" t-options='{\"widget\": \"contact\", \"fields\": [\"name\", "
-"\"address\"], \"no_marker\": True}'></address>\n"
+"                        <address t-"
+"field=\"object.company_id.sudo().partner_id\" t-options='{\"widget\": "
+"\"contact\", \"fields\": [\"name\", \"address\"], \"no_marker\": True}'></"
+"address>\n"
 "                    </span>\n"
 "                    <t t-if=\"object.company_id.phone\">\n"
 "                        <div style=\"margin-top: 0px; margin-right: 0px; "
@@ -194,8 +196,8 @@ msgid ""
 "<span invisible=\"contract_to_invoice_count &gt; 1\">\n"
 "                                contract to invoice\n"
 "                            </span>\n"
-"                            <span invisible=\"contract_to_invoice_count &lt;"
-"= 1\">\n"
+"                            <span invisible=\"contract_to_invoice_count "
+"&lt;= 1\">\n"
 "                                contracts to invoice\n"
 "                            </span>"
 msgstr ""
@@ -508,6 +510,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:contract.field_contract_abstract_contract_line__is_auto_renew
 #: model:ir.model.fields,field_description:contract.field_contract_line__is_auto_renew
 #: model:ir.model.fields,field_description:contract.field_contract_template_line__is_auto_renew
+#: model_terms:ir.ui.view,arch_db:contract.contract_line_search_view
 msgid "Auto Renew"
 msgstr "Auto-Erneuern"
 
@@ -557,6 +560,7 @@ msgstr "Das Abbrechen für diese Zeile ist nicht erlaubt."
 #: model:ir.model.fields,field_description:contract.field_contract_line__is_canceled
 #: model:ir.model.fields,field_description:contract.field_contract_template_line__is_canceled
 #: model:ir.model.fields.selection,name:contract.selection__contract_line__state__canceled
+#: model_terms:ir.ui.view,arch_db:contract.contract_line_search_view
 msgid "Canceled"
 msgstr "Abgebrochen"
 
@@ -1088,6 +1092,7 @@ msgid "Date Start"
 msgstr "Startdatum"
 
 #. module: contract
+#: model_terms:ir.ui.view,arch_db:contract.contract_line_search_view
 #: model_terms:ir.ui.view,arch_db:contract.portal_my_contracts
 msgid "Date end"
 msgstr "Enddatum"
@@ -1108,6 +1113,11 @@ msgstr "Datum der nächsten Rechnung"
 #: model_terms:ir.ui.view,arch_db:contract.portal_contract_page
 msgid "Date of next invoice"
 msgstr "Datum der nächsten Rechnung"
+
+#. module: contract
+#: model_terms:ir.ui.view,arch_db:contract.contract_line_search_view
+msgid "Date start"
+msgstr ""
 
 #. module: contract
 #: model:ir.model.fields.selection,name:contract.selection__contract_abstract_contract__recurring_rule_type__daily
@@ -1670,6 +1680,14 @@ msgid "Name"
 msgstr "Bezeichnung"
 
 #. module: contract
+#: model_terms:ir.ui.view,arch_db:contract.res_config_settings_form_view
+msgid ""
+"New line will be generated at contract line "
+"renew                                    and linked to the original one as "
+"successor."
+msgstr ""
+
+#. module: contract
 #: model:ir.model.fields,field_description:contract.field_contract_contract__activity_date_deadline
 msgid "Next Activity Deadline"
 msgstr "Frist für die nächste Aktivität"
@@ -1707,6 +1725,11 @@ msgstr "Ende der nächsten Periode"
 #: model:ir.model.fields,field_description:contract.field_contract_recurrency_mixin__next_period_date_start
 msgid "Next Period Start"
 msgstr "Beginn der nächsten Periode"
+
+#. module: contract
+#: model_terms:ir.ui.view,arch_db:contract.contract_line_search_view
+msgid "Next invoice date"
+msgstr ""
 
 #. module: contract
 #: model:ir.model.fields.selection,name:contract.selection__contract_abstract_contract_line__display_type__line_note
@@ -1797,6 +1820,7 @@ msgstr "Weitere Informationen"
 #: model:ir.model.fields,field_description:contract.field_contract_line__partner_id
 #: model:ir.model.fields,field_description:contract.field_contract_template__partner_id
 #: model:ir.model.fields,field_description:contract.field_contract_template_line__partner_id
+#: model_terms:ir.ui.view,arch_db:contract.contract_line_search_view
 msgid "Partner"
 msgstr "Partner"
 
@@ -1889,6 +1913,7 @@ msgstr "Preisliste"
 #: model:ir.model.fields,field_description:contract.field_contract_abstract_contract_line__product_id
 #: model:ir.model.fields,field_description:contract.field_contract_line__product_id
 #: model:ir.model.fields,field_description:contract.field_contract_template_line__product_id
+#: model_terms:ir.ui.view,arch_db:contract.contract_line_search_view
 msgid "Product"
 msgstr "Produkt"
 
@@ -2527,6 +2552,15 @@ msgstr ""
 
 #. module: contract
 #. odoo-python
+#: code:addons/contract/models/contract.py:0
+#, python-format
+msgid ""
+"You cannot disable the 'Recurrence at line level' option if there are "
+"already invoices generated for this contract."
+msgstr ""
+
+#. module: contract
+#. odoo-python
 #: code:addons/contract/models/contract_line.py:0
 #, python-format
 msgid "You must supply a date of next invoice for contract line '%s'"
@@ -2576,8 +2610,8 @@ msgstr ""
 #~ msgstr "Fehler bei der SMS-Zustellung"
 
 #~ msgid ""
-#~ "<span attrs=\"{'invisible': [('contract_to_invoice_count', '&gt;', "
-#~ "1)]}\">\n"
+#~ "<span attrs=\"{'invisible': [('contract_to_invoice_count', '&gt;', 1)]}"
+#~ "\">\n"
 #~ "                                contract to invoice\n"
 #~ "                            </span>\n"
 #~ "                            <span attrs=\"{'invisible': "
@@ -2585,8 +2619,8 @@ msgstr ""
 #~ "                                contracts to invoice\n"
 #~ "                            </span>"
 #~ msgstr ""
-#~ "<span attrs=\"{'invisible': [('contract_to_invoice_count', '&gt;', "
-#~ "1)]}\">\n"
+#~ "<span attrs=\"{'invisible': [('contract_to_invoice_count', '&gt;', 1)]}"
+#~ "\">\n"
 #~ "                                abzurechnender Vertrag\n"
 #~ "                            </span>\n"
 #~ "                            <span attrs=\"{'invisible': "
@@ -2742,16 +2776,16 @@ msgstr ""
 #~ "5px 5px; background-repeat: repeat no-repeat;\">\n"
 #~ "        <h3 style=\"margin: 0px; padding: 2px 14px; font-size: 12px; "
 #~ "color: #DDD;\">\n"
-#~ "            <strong style=\"text-transform:uppercase;\">${object."
-#~ "company_id.name}</strong></h3>\n"
+#~ "            <strong style=\"text-transform:uppercase;\">$"
+#~ "{object.company_id.name}</strong></h3>\n"
 #~ "    </div>\n"
 #~ "    <div style=\"width: 347px; margin: 0px; padding: 5px 14px; line-"
 #~ "height: 16px; background-color: #F2F2F2;\">\n"
 #~ "        <span style=\"color: #222; margin-bottom: 5px; display: block; "
 #~ "\">\n"
-#~ "            ${object.company_id.partner_id.sudo()."
-#~ "with_context(show_address=True, html_format=True).name_get()[0][1] | "
-#~ "safe}\n"
+#~ "            $"
+#~ "{object.company_id.partner_id.sudo().with_context(show_address=True, "
+#~ "html_format=True).name_get()[0][1] | safe}\n"
 #~ "        </span>\n"
 #~ "        % if object.company_id.phone:\n"
 #~ "            <div style=\"margin-top: 0px; margin-right: 0px; margin-"
@@ -2762,8 +2796,8 @@ msgstr ""
 #~ "        % endif\n"
 #~ "        % if object.company_id.website:\n"
 #~ "            <div>\n"
-#~ "                Web: <a href=\"${object.company_id.website}\">${object."
-#~ "company_id.website}</a>\n"
+#~ "                Web: <a href=\"${object.company_id.website}\">$"
+#~ "{object.company_id.website}</a>\n"
 #~ "            </div>\n"
 #~ "        %endif\n"
 #~ "        <p></p>\n"
@@ -2806,16 +2840,16 @@ msgstr ""
 #~ "5px 5px; background-repeat: repeat no-repeat;\">\n"
 #~ "        <h3 style=\"margin: 0px; padding: 2px 14px; font-size: 12px; "
 #~ "color: #DDD;\">\n"
-#~ "            <strong style=\"text-transform:uppercase;\">${object."
-#~ "company_id.name}</strong></h3>\n"
+#~ "            <strong style=\"text-transform:uppercase;\">$"
+#~ "{object.company_id.name}</strong></h3>\n"
 #~ "    </div>\n"
 #~ "    <div style=\"width: 347px; margin: 0px; padding: 5px 14px; line-"
 #~ "height: 16px; background-color: #F2F2F2;\">\n"
 #~ "        <span style=\"color: #222; margin-bottom: 5px; display: block; "
 #~ "\">\n"
-#~ "            ${object.company_id.partner_id.sudo()."
-#~ "with_context(show_address=True, html_format=True).name_get()[0][1] | "
-#~ "safe}\n"
+#~ "            $"
+#~ "{object.company_id.partner_id.sudo().with_context(show_address=True, "
+#~ "html_format=True).name_get()[0][1] | safe}\n"
 #~ "        </span>\n"
 #~ "        % if object.company_id.phone:\n"
 #~ "            <div style=\"margin-top: 0px; margin-right: 0px; margin-"
@@ -2826,8 +2860,8 @@ msgstr ""
 #~ "        % endif\n"
 #~ "        % if object.company_id.website:\n"
 #~ "            <div>\n"
-#~ "                Web: <a href=\"${object.company_id.website}\">${object."
-#~ "company_id.website}</a>\n"
+#~ "                Web: <a href=\"${object.company_id.website}\">$"
+#~ "{object.company_id.website}</a>\n"
 #~ "            </div>\n"
 #~ "        %endif\n"
 #~ "        <p></p>\n"

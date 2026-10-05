@@ -6,6 +6,7 @@
 from datetime import timedelta
 
 from dateutil.relativedelta import relativedelta
+from markupsafe import Markup
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
@@ -32,6 +33,8 @@ class ContractLine(models.Model):
         auto_join=True,
         ondelete="cascade",
     )
+    # replace from abstract to add the store=True
+    partner_id = fields.Many2one(store=True)
     currency_id = fields.Many2one(related="contract_id.currency_id")
     date_start = fields.Date(required=True)
     date_end = fields.Date(compute="_compute_date_end", store=True, readonly=False)
@@ -716,7 +719,7 @@ class ContractLine(models.Model):
                             "old_end": old_date_end,
                             "new_end": rec.date_end,
                         }
-                        rec.contract_id.message_post(body=msg)
+                        rec.contract_id.message_post(body=Markup(msg))
                 else:
                     rec.write(
                         {
@@ -792,7 +795,7 @@ class ContractLine(models.Model):
                     "new_date_start": new_line.date_start,
                     "new_date_end": new_line.date_end,
                 }
-                rec.contract_id.message_post(body=msg)
+                rec.contract_id.message_post(body=Markup(msg))
         return contract_line
 
     def stop_plan_successor(self, date_start, date_end, is_auto_renew):
@@ -895,7 +898,7 @@ class ContractLine(models.Model):
                 "new_date_start": date_start,
                 "new_date_end": date_end,
             }
-            rec.contract_id.message_post(body=msg)
+            rec.contract_id.message_post(body=Markup(msg))
         return contract_line
 
     def cancel(self):
@@ -909,7 +912,7 @@ class ContractLine(models.Model):
                     [f"<strong>{name}</strong>" for name in lines.mapped("name")]
                 ),
             )
-            contract.message_post(body=msg)
+            contract.message_post(body=Markup(msg))
         self.mapped("predecessor_contract_line_id").write(
             {"successor_contract_line_id": False}
         )
@@ -926,7 +929,7 @@ class ContractLine(models.Model):
                     [f"<strong>{name}</strong>" for name in lines.mapped("name")]
                 ),
             )
-            contract.message_post(body=msg)
+            contract.message_post(body=Markup(msg))
         for rec in self:
             if rec.predecessor_contract_line_id:
                 predecessor_contract_line = rec.predecessor_contract_line_id
@@ -1058,7 +1061,7 @@ class ContractLine(models.Model):
                 "new_date_start": date_start,
                 "new_date_end": date_end,
             }
-            rec.contract_id.message_post(body=msg)
+            rec.contract_id.message_post(body=Markup(msg))
         return res
 
     @api.model
