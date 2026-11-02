@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <record id="email_template_contract_invoice_notify" model="mail.template">
+        <field name="name">Contract invoice: payment link + overdue info</field>
+        <field name="model_id" ref="account.model_account_move" />
+        <field name="subject">{{ object.company_id.name }} Invoice {{ object.name }}</field>
+        <field name="partner_to">{{ object.partner_id.id }}</field>
+        <field name="lang">{{ object.partner_id.lang }}</field>
+        <field name="auto_delete" eval="True" />
+        <field name="body_html" type="html">
+            <div>
+                <p>Hola <t t-out="object.partner_id.name" />,</p>
+                <p>Tu factura <strong t-out="object.name" /> por
+                <strong t-out="object.amount_total" /> ya está disponible.</p>
+                <p>
+                    <a t-att-href="object._get_payment_portal_url()"
+                       target="_blank"
+                       style="background-color:#875A7B;padding:8px 16px;text-decoration:none;color:#fff;border-radius:5px;">Ver y pagar factura</a>
+                </p>
+                <t t-set="overdue" t-value="object._get_contract_overdue_invoices()" />
+                <t t-if="overdue">
+                    <p>Tienes además <strong t-out="len(overdue)" /> factura(s)
+                    pendiente(s): <t t-out="', '.join(overdue.mapped('name'))" />
+                    por <strong t-out="sum(overdue.mapped('amount_residual'))" />.
+                    Puedes pagarlas todas desde tu portal.</p>
+                </t>
+                <p>Gracias por tu confianza.</p>
+            </div>
+        </field>
+    </record>
+    <record id="email_template_contract_overdue_digest" model="mail.template">
+        <field name="name">Contract overdue digest: pay-all link</field>
+        <field name="model_id" ref="contract.model_contract_contract" />
+        <field name="subject">Contrato {{ object.name }}: facturas vencidas pendientes</field>
+        <field name="partner_to">{{ object.partner_id.id }}</field>
+        <field name="lang">{{ object.partner_id.lang }}</field>
+        <field name="auto_delete" eval="True" />
+        <field name="body_html" type="html">
+            <div>
+                <p>Hola <t t-out="object.partner_id.name" />,</p>
+                <p>Contrato <strong t-out="object.name" />: tienes facturas vencidas
+                pendientes. No se fusionan montos, este es solo un resumen:</p>
+                <t t-set="invoices" t-value="object._get_overdue_reminder_candidates()" />
+                <ul>
+                    <t t-foreach="invoices" t-as="inv">
+                        <li><t t-out="inv.name" /> — vence <t t-out="inv.invoice_date_due" /> — saldo <t t-out="inv.amount_residual" /></li>
+                    </t>
+                </ul>
+                <p>
+                    <a t-att-href="object._get_overdue_pay_all_url(invoices)"
+                       target="_blank"
+                       style="background-color:#875A7B;padding:8px 16px;text-decoration:none;color:#fff;border-radius:5px;">Pagar todo</a>
+                </p>
+                <p>Si ya pagaste, ignora este mensaje.</p>
+            </div>
+        </field>
+    </record>
+</odoo>

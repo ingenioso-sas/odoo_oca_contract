@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="contract_contract_form_view_notify" model="ir.ui.view">
+        <field name="name">contract.contract form view (in contract_invoice_notify)</field>
+        <field name="model">contract.contract</field>
+        <field name="inherit_id" ref="contract.contract_contract_form_view" />
+        <field name="arch" type="xml">
+            <field name="invoice_mail_template_id" position="after">
+                <field name="send_notification_mode" invisible="invoicing_mode != 'validate_send'" />
+            </field>
+            <field name="renew_alert_days" position="after">
+                <group string="Overdue reminders (digest per contract)">
+                    <field name="overdue_reminder_enabled" />
+                    <field name="overdue_grace_days" invisible="not overdue_reminder_enabled" />
+                    <field name="overdue_resend_after_days" invisible="not overdue_reminder_enabled" />
+                    <field name="overdue_max_reminders" invisible="not overdue_reminder_enabled" />
+                </group>
+            </field>
+        </field>
+    </record>
+</odoo>

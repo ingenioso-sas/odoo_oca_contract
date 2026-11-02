@@ -15,6 +15,12 @@
                         <field name="company_id" invisible="1" />
                         <field name="journal_id" />
                         <field name="pricelist_id" />
+                        <field name="invoicing_mode" />
+                        <field
+                            name="invoice_mail_template_id"
+                            invisible="invoicing_mode != 'validate_send'"
+                        />
+                        <field name="renew_alert_days" />
                         <field
                             name="company_id"
                             options="{'no_create': True}"

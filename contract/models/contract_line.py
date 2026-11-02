@@ -71,6 +71,19 @@ class ContractLine(models.Model):
         "and temporary one for which a user is not able to plan a"
         "successor in advance",
     )
+    # Simple pause (from subscription_package): temporary freeze that, unlike
+    # stop/plan_successor, keeps history and just shifts . No successor line.
+    is_paused = fields.Boolean(
+        default=False,
+        copy=False,
+        help="Paused lines are excluded from automatic invoicing until resumed.",
+    )
+    pause_date = fields.Date(copy=False, readonly=True)
+    recurring_monthly_amount = fields.Monetary(
+        compute="_compute_recurring_monthly_amount",
+        string="Monthly Recurring",
+        help="Price subtotal normalized to a monthly amount (MRR contribution).",
+    )
     is_plan_successor_allowed = fields.Boolean(
         string="Plan successor allowed?", compute="_compute_allowed"
     )
@@ -540,13 +553,16 @@ class ContractLine(models.Model):
         "recurring_next_date",
         "date_start",
         "date_end",
+        "is_paused",
     )
     def _compute_create_invoice_visibility(self):
         # TODO: depending on the lines, and their order, some sections
         # have no meaning in certain invoices
         today = fields.Date.context_today(self)
         for rec in self:
-            if (
+            if rec.is_paused:
+                rec.create_invoice_visibility = False
+            elif (
                 (not rec.display_type or rec.is_recurring_note)
                 and rec.date_start
                 and today >= rec.date_start
@@ -554,6 +570,74 @@ class ContractLine(models.Model):
                 rec.create_invoice_visibility = bool(rec.recurring_next_date)
             else:
                 rec.create_invoice_visibility = False
+
+    @api.depends(
+        "price_subtotal", "recurring_rule_type", "recurring_interval", "is_canceled"
+    )
+    def _compute_recurring_monthly_amount(self):
+        """Normalize the line subtotal to a monthly amount.
+
+        Used as MRR contribution for services management (as
+        subscription_package.total_recurring_price does per plan).
+        """
+        factor = {
+            "daily": 30.0,
+            "weekly": 30.0 / 7.0,
+            "monthly": 1.0,
+            "monthlylastday": 1.0,
+            "quarterly": 1.0 / 3.0,
+            "semesterly": 1.0 / 6.0,
+            "yearly": 1.0 / 12.0,
+        }
+        for rec in self:
+            if rec.display_type or rec.is_canceled or not rec.recurring_interval:
+                rec.recurring_monthly_amount = 0.0
+                continue
+            rate = factor.get(rec.recurring_rule_type or "monthly", 1.0)
+            rec.recurring_monthly_amount = rec.price_subtotal * rate / max(
+                rec.recurring_interval, 1
+            )
+
+    def action_pause(self):
+        """Freeze invoicing without closing the line (1-click UX)."""
+        today = fields.Date.context_today(self)
+        for rec in self:
+            if rec.display_type or rec.is_canceled or rec.is_paused:
+                continue
+            rec.write({"is_paused": True, "pause_date": today})
+            msg = _(
+                "Contract line paused: <strong>%(line)s</strong>", line=rec.name
+            )
+            rec.contract_id.message_post(body=Markup(msg))
+        return True
+
+    def action_resume(self):
+        """Resume a paused line, shifting next dates by the paused gap.
+
+        This avoids catch-up billing the paused period, which is the
+        expected behaviour for services (holidays, temporary stop).
+        """
+        today = fields.Date.context_today(self)
+        for rec in self.filtered("is_paused"):
+            paused_days = 0
+            if rec.pause_date:
+                paused_days = max((today - rec.pause_date).days, 0)
+            vals = {"is_paused": False, "pause_date": False}
+            if paused_days and rec.recurring_next_date:
+                vals["recurring_next_date"] = (
+                    rec.recurring_next_date + timedelta(days=paused_days)
+                )
+                if rec.date_end:
+                    vals["date_end"] = rec.date_end + timedelta(days=paused_days)
+            rec.write(vals)
+            msg = _(
+                "Contract line resumed: <strong>%(line)s</strong> "
+                "(paused %(days)s day(s))",
+                line=rec.name,
+                days=paused_days,
+            )
+            rec.contract_id.message_post(body=Markup(msg))
+        return True
 
     def _prepare_invoice_line(self):
         self.ensure_one()
@@ -750,6 +834,8 @@ class ContractLine(models.Model):
         values["date_end"] = date_end
         values["recurring_next_date"] = recurring_next_date
         values["is_auto_renew"] = is_auto_renew
+        values["is_paused"] = False
+        values["pause_date"] = False
         values["predecessor_contract_line_id"] = self.id
         return values
 

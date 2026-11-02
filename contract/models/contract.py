@@ -141,6 +141,20 @@ class ContractContract(models.Model):
         inverse_name="contract_id",
         string="Modifications",
     )
+    is_to_renew = fields.Boolean(
+        compute="_compute_is_to_renew",
+        store=True,
+        string="To Renew",
+        help="Flags contracts with lines already renewable or ending within "
+        "the renewal alert window (from subscription_package.is_to_renew / "
+        "subscription_oca.to_renew).",
+    )
+    recurring_monthly_total = fields.Monetary(
+        compute="_compute_recurring_monthly_total",
+        store=True,
+        string="Monthly Recurring Total",
+        help="Sum of lines monthly recurring amounts (MRR).",
+    )
 
     @api.depends(
         "contract_line_ids",
@@ -356,6 +370,63 @@ class ContractContract(models.Model):
                 contract.date_end = max(date_end)
 
     @api.depends(
+        "contract_line_ids.date_end",
+        "contract_line_ids.is_auto_renew",
+        "contract_line_ids.manual_renew_needed",
+        "contract_line_ids.successor_contract_line_id",
+        "contract_line_ids.is_canceled",
+        "contract_line_ids.display_type",
+        "contract_line_ids.termination_notice_date",
+        "renew_alert_days",
+    )
+    def _compute_is_to_renew(self):
+        today = fields.Date.context_today(self)
+        for contract in self:
+            flag = False
+            alert_days = contract.renew_alert_days or 0
+            for line in contract.contract_line_ids:
+                if line.display_type or line.is_canceled:
+                    continue
+                # Already renewable (mirrors line states to-renew/upcoming-close)
+                if line.date_end and line.date_end < today and (
+                    line.is_auto_renew
+                    or (
+                        line.manual_renew_needed
+                        and not line.successor_contract_line_id
+                    )
+                ):
+                    flag = True
+                    break
+                if (
+                    line.termination_notice_date
+                    and line.termination_notice_date < today
+                    and not line.is_auto_renew
+                    and not line.manual_renew_needed
+                ):
+                    flag = True
+                    break
+                # Early warning window (from subscription_package renew alert)
+                if line.date_end and not line.is_auto_renew and alert_days:
+                    delta = (line.date_end - today).days
+                    if 0 <= delta <= alert_days:
+                        flag = True
+                        break
+            contract.is_to_renew = flag
+
+    @api.depends(
+        "contract_line_ids.recurring_monthly_amount",
+        "contract_line_ids.is_canceled",
+        "contract_line_ids.display_type",
+    )
+    def _compute_recurring_monthly_total(self):
+        for contract in self:
+            contract.recurring_monthly_total = sum(
+                contract.contract_line_ids.filtered(
+                    lambda line: not line.display_type and not line.is_canceled
+                ).mapped("recurring_monthly_amount")
+            )
+
+    @api.depends(
         "contract_line_ids.recurring_next_date",
         "contract_line_ids.is_canceled",
     )
@@ -366,6 +437,7 @@ class ContractContract(models.Model):
                 lambda line: (
                     line.recurring_next_date
                     and not line.is_canceled
+                    and not line.is_paused
                     and (not line.display_type or line.is_recurring_note)
                 )
             ).mapped("recurring_next_date")
@@ -557,6 +629,7 @@ class ContractContract(models.Model):
         def can_be_invoiced(contract_line):
             return (
                 not contract_line.is_canceled
+                and not contract_line.is_paused
                 and contract_line.recurring_next_date
                 and contract_line.recurring_next_date <= date_ref
                 and contract_line.next_period_date_start
@@ -668,7 +741,101 @@ class ContractContract(models.Model):
         self._add_contract_origin(moves)
         self._invoice_followers(moves)
         self._compute_recurring_next_date()
+        self._auto_validate_invoices(moves)
         return moves
+
+    def _auto_validate_invoices(self, moves):
+        """Post/send invoices per contract invoicing mode.
+
+        Unified entry point (replaces the old global
+        contract_invoice_auto_validate behaviour). Ported from
+        subscription_oca.invoicing_mode (draft/invoice/invoice_send) but
+        kept here so it can be set per contract/template instead of
+        globally per company.
+        """
+        for contract in self:
+            contract_moves = moves & contract._get_related_invoices()
+            if not contract_moves or contract.invoicing_mode == "draft":
+                continue
+            draft_moves = contract_moves.filtered(lambda m: m.state == "draft")
+            if not draft_moves:
+                continue
+            try:
+                draft_moves.action_post()
+            except Exception as exc:  # noqa: BLE001 - keep cron robust
+                _logger.warning(
+                    "Could not auto-validate invoices %s for contract %s: %s",
+                    draft_moves.ids,
+                    contract.display_name,
+                    exc,
+                )
+                contract.message_post(
+                    body=Markup(
+                        _("Automatic validation failed: %s") % exc,
+                    )
+                )
+                continue
+            if contract.invoicing_mode == "validate_send":
+                template = contract.invoice_mail_template_id
+                if not template:
+                    # Fallback to the standard EDI invoice template which
+                    # already includes portal access_url + Pay Now link when
+                    # a payment provider is configured.
+                    template = self.env.ref(
+                        "account.email_template_edi_invoice",
+                        raise_if_not_found=False,
+                    )
+                for move in draft_moves.filtered(lambda m: m.state == "posted"):
+                    if template:
+                        try:
+                            template.send_mail(
+                                move.id, force_send=False, raise_exception=False
+                            )
+                        except Exception as exc:  # noqa: BLE001
+                            _logger.warning(
+                                "Could not send invoice %s: %s", move.id, exc
+                            )
+                    move.message_post(
+                        body=Markup(
+                            _("Invoice auto-validated and sent from contract %s")
+                            % contract._get_html_link()
+                        )
+                    )
+
+    @api.model
+    def cron_check_to_renew(self):
+        """Create a reminder activity for contracts flagged to renew.
+
+        Lightweight version of subscription_package renewal alerts: instead
+        of sending emails blindly, assign a TODO to the responsible so it
+        appears in Discuss/Systray without spamming customers.
+        """
+        today = fields.Date.context_today(self)
+        contracts = self.search(
+            [("is_to_renew", "=", True), ("is_terminated", "=", False)]
+        )
+        todo_type = self.env.ref("mail.mail_activity_data_todo", raise_if_not_found=False)
+        for contract in contracts:
+            if not contract.user_id:
+                continue
+            existing = self.env["mail.activity"].search(
+                [
+                    ("res_model", "=", "contract.contract"),
+                    ("res_id", "=", contract.id),
+                    ("activity_type_id", "=", todo_type.id if todo_type else False),
+                    ("user_id", "=", contract.user_id.id),
+                    ("date_deadline", ">=", today),
+                ],
+                limit=1,
+            )
+            if existing:
+                continue
+            contract.activity_schedule(
+                "mail.mail_activity_data_todo",
+                user_id=contract.user_id.id,
+                note=_("Contract %s needs renewal review.") % contract.display_name,
+            )
+        return True
 
     @api.model
     def _get_recurring_create_func(self, create_type="invoice"):

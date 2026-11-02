@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- Inject pending invoices + pay-all into contract portal detail -->
+    <template
+        id="portal_contract_page_pending_invoices"
+        name="Contract pending invoices + pay all"
+        inherit_id="contract.portal_contract_page"
+    >
+        <xpath expr="//div[@id='item_details']" position="after">
+            <div id="pending_invoices" class="mt-4" t-if="contract._get_pending_invoices()">
+                <h4>Facturas pendientes</h4>
+                <p class="text-muted">
+                    Tus facturas anteriores no se fusionan con la actual.
+                    Puedes pagarlas todas en un solo paso.
+                </p>
+                <table class="table table-sm">
+                    <thead class="bg-100">
+                        <tr>
+                            <th>Factura</th>
+                            <th class="text-right">Vence</th>
+                            <th class="text-right">Saldo</th>
+                            <th class="text-right">Pagar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="contract._get_pending_invoices()" t-as="inv">
+                            <tr>
+                                <td><t t-esc="inv.name" /></td>
+                                <td class="text-right"><span t-field="inv.invoice_date_due" /></td>
+                                <td class="text-right">
+                                    <span t-field="inv.amount_residual"
+                                        t-options='{"widget": "monetary", "display_currency": inv.currency_id}' />
+                                </td>
+                                <td class="text-right">
+                                    <a t-att-href="inv.get_portal_url()"
+                                       class="btn btn-sm btn-outline-primary">Pagar</a>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="2">Total pendiente</th>
+                            <th class="text-right">
+                                <t t-esc="contract.pending_invoices_total" />
+                                <t t-esc="contract.currency_id.name" />
+                            </th>
+                            <th class="text-right">
+                                <a t-attf-href="/my/contracts/{{contract.id}}/pay-all?access_token={{contract.access_token}}"
+                                   class="btn btn-sm btn-primary">Pagar todo</a>
+                            </th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </xpath>
+    </template>
+</odoo>
