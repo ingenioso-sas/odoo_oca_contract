@@ -187,9 +187,13 @@ class ContractContract(models.Model):
         self.ensure_one()
         # No pay-all link: contract_portal_payment was discarded in the 19.0
         # migration (native portal already offers Pay Now per invoice).
-        # Fallback: portal of the oldest overdue invoice.
+        # Fallback: absolute portal URL of the oldest overdue invoice
+        # (absolute because it is sent as plain text over WhatsApp).
         try:
-            return invoices[:1].get_portal_url() if invoices else ""
+            if not invoices:
+                return ""
+            inv = invoices[:1]
+            return inv.get_base_url().rstrip("/") + inv.get_portal_url()
         except Exception:  # noqa: BLE001
             return ""
 

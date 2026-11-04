@@ -39,6 +39,15 @@ class TestContractInvoiceNotify(TestContractBase):
         self.assertNotIn(move.id, move._get_contract_overdue_invoices().ids)
         text = move._get_whatsapp_text()
         self.assertIn(move.name, text)
+        # Links must be absolute: WhatsApp messages are plain text, a
+        # relative /my/invoices/... URL cannot be opened from the chat.
+        self.assertTrue(
+            move._get_payment_portal_url().startswith("http"),
+            "payment portal URL must be absolute",
+        )
+        self.assertIn(
+            move._get_payment_portal_url(), move._get_whatsapp_text()
+        )
 
     def test_validate_send_whatsapp_no_phone_does_not_break(self):
         self.contract.write(

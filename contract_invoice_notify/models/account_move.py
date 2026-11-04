@@ -71,10 +71,15 @@ class AccountMove(models.Model):
         }
 
     def _get_payment_portal_url(self):
-        """Portal URL with access token; shows Pay Now when PSP configured."""
+        """Absolute portal URL with access token.
+
+        Must be absolute (not get_portal_url() alone, which is relative):
+        the link is sent as plain text over WhatsApp, where there is no
+        base domain to resolve against. Also used by the email template.
+        """
         self.ensure_one()
         try:
-            return self.get_portal_url()
+            return self.get_base_url().rstrip("/") + self.get_portal_url()
         except Exception:  # noqa: BLE001
             return ""
 
