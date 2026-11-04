@@ -348,6 +348,11 @@
                             </group>
                             <group name="recurring_type" string="Recurring Type">
                                 <field name="generation_type" />
+                                <field name="invoicing_mode" />
+                                <field
+                                    name="invoice_mail_template_id"
+                                    invisible="invoicing_mode != 'validate_send'"
+                                />
                             </group>
                         </page>
                         <page name="modications" string="Modifications">
@@ -363,6 +368,7 @@
                             <group>
                                 <field name="code" />
                                 <field name="group_id" />
+                                <field name="recurring_monthly_total" readonly="1" />
                                 <field
                                     name="currency_id"
                                     groups="base.group_multi_currency"
@@ -472,6 +478,7 @@
                 <field name="code" optional="show" />
                 <field name="journal_id" groups="account.group_account_user" />
                 <field name="partner_id" />
+                <field name="recurring_monthly_total" optional="hide" />
                 <field name="payment_term_id" optional="hide" />
                 <field
                     name="tag_ids"
