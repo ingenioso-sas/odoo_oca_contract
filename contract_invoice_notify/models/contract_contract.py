@@ -43,6 +43,15 @@ class ContractContract(models.Model):
         string="Max reminders",
         help="Max digest reminders per invoice. 0 = unlimited.",
     )
+    whatsapp_template_id = fields.Many2one(
+        comodel_name="mail.template",
+        string="WhatsApp Template",
+        domain="[('model', '=', 'account.move')]",
+        help="Template used to build the WhatsApp message sent with the "
+        "invoice. If empty, the default 'Contract invoice: WhatsApp "
+        "notification' template is used. Only used when the notification "
+        "channel includes WhatsApp.",
+    )
 
     def _get_invoice_email_template(self):
         self.ensure_one()
@@ -70,6 +79,40 @@ class ContractContract(models.Model):
             _logger.warning("Could not send invoice %s by email: %s", move.id, exc)
             return False
 
+    def _get_invoice_whatsapp_template(self):
+        self.ensure_one()
+        if self.whatsapp_template_id:
+            return self.whatsapp_template_id
+        return self.env.ref(
+            "contract_invoice_notify.whatsapp_template_contract_invoice",
+            raise_if_not_found=False,
+        )
+
+    def _get_invoice_whatsapp_message(self, move):
+        """Build the WhatsApp text for an invoice.
+
+        Renders the contract's WhatsApp template (or the default one) on
+        the invoice; falls back to the built-in text if no template is
+        found or rendering fails.
+        """
+        self.ensure_one()
+        template = self._get_invoice_whatsapp_template()
+        if template:
+            try:
+                body = template._render_field(
+                    "body_html", [move.id], compute_lang=True
+                )[move.id]
+                text = self.env["contract.whatsapp.driver"]._html_to_text(body)
+                if text:
+                    return text
+            except Exception as exc:  # noqa: BLE001
+                _logger.warning(
+                    "Could not render WhatsApp template for %s: %s",
+                    move.display_name,
+                    exc,
+                )
+        return move._get_whatsapp_text()
+
     def _send_invoice_whatsapp(self, move):
         # Odoo 19 base only provides partner phone (no mobile field).
         mobile = (move.partner_id.phone or "").strip()
@@ -81,7 +124,7 @@ class ContractContract(models.Model):
                 )
             )
             return False
-        message = move._get_whatsapp_text()
+        message = self._get_invoice_whatsapp_message(move)
         pdf_base64 = None
         filename = f"{move.name or 'invoice'}.pdf"
         try:

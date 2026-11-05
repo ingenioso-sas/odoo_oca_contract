@@ -58,6 +58,35 @@ class TestContractInvoiceNotify(TestContractBase):
         invoices = self.contract.with_context(no_whatsapp_delay=True).recurring_create_invoice()
         self.assertEqual(set(invoices.mapped("state")), {"posted"})
 
+    def test_validate_send_whatsapp_uses_contract_template(self):
+        self.contract.write(
+            {"invoicing_mode": "validate_send", "send_notification_mode": "whatsapp"}
+        )
+        template = self.env["mail.template"].create(
+            {
+                "name": "WA custom",
+                "model_id": self.env.ref("account.model_account_move").id,
+                "subject": "custom",
+                "lang": "{{ object.partner_id.lang }}",
+                "body_html": (
+                    "<p>AVISO PERSONALIZADO "
+                    "<t t-out=\"object.name\" /> "
+                    "<a t-att-href=\"object._get_payment_portal_url()\">link</a></p>"
+                ),
+            }
+        )
+        self.contract.write({"whatsapp_template_id": template.id})
+        self.contract.partner_id.write({"phone": "3001234567"})
+        self._prepare_line()
+        invoices = self.contract.with_context(no_whatsapp_delay=True).recurring_create_invoice()
+        self.assertEqual(set(invoices.mapped("state")), {"posted"})
+        message = self.contract._get_invoice_whatsapp_message(invoices[0])
+        self.assertIn("AVISO PERSONALIZADO", message)
+        self.assertIn(invoices[0].name, message)
+        # Absolute link inside the custom message
+        self.assertIn(invoices[0]._get_payment_portal_url(), message)
+        self.assertTrue(invoices[0]._get_payment_portal_url().startswith("http"))
+
     def test_overdue_digest_per_contract_respects_grace_resend_max(self):
         self.contract.write(
             {

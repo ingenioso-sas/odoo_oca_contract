@@ -58,6 +58,12 @@ Optionally enable the overdue digest per contract: a daily cron sends one
 digest per contract with the overdue invoices (grace days, resend interval
 and max reminders are configurable). Contacts can opt out individually.
 
+The WhatsApp message is built from a `mail.template` (on `account.move`):
+each contract (or its template) can select its own in *WhatsApp Template*
+(shown when the channel includes WhatsApp); otherwise the default
+*Contract invoice: WhatsApp notification* template is used. The rendered
+HTML is converted to plain text, keeping links as absolute URLs.
+
 Bug Tracker
 ===========
 

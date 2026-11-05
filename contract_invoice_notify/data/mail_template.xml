@@ -55,4 +55,31 @@
             </div>
         </field>
     </record>
+    <record id="whatsapp_template_contract_invoice" model="mail.template">
+        <field name="name">Contract invoice: WhatsApp notification</field>
+        <field name="model_id" ref="account.model_account_move" />
+        <field name="subject">Factura {{ object.name }} disponible para pago</field>
+        <field name="lang">{{ object.partner_id.lang }}</field>
+        <field name="auto_delete" eval="True" />
+        <field name="body_html" type="html">
+            <div>
+                <p>Hola <t t-out="object.partner_id.display_name" />,</p>
+                <p>Tu factura <strong t-out="object.name" /> por
+                <strong t-out="object.amount_total" />
+                <strong t-out="object.currency_id.name" /> ya está disponible.</p>
+                <p>Puedes verla y pagarla aquí:
+                    <a t-att-href="object._get_payment_portal_url()">Ver y pagar factura</a>
+                </p>
+                <t t-set="overdue" t-value="object._get_contract_overdue_invoices()" />
+                <t t-if="overdue">
+                    <p>Además tienes <strong t-out="len(overdue)" /> factura(s)
+                    pendiente(s) (<t t-out="', '.join(overdue.mapped('name'))" />)
+                    por <strong t-out="sum(overdue.mapped('amount_residual'))" />
+                    <t t-out="object.currency_id.name" />.
+                    Puedes pagarlas todas desde tu portal.</p>
+                </t>
+                <p>Gracias por tu confianza.</p>
+            </div>
+        </field>
+    </record>
 </odoo>

@@ -8,6 +8,10 @@ message is logged + posted in chatter so cron never breaks. A future
 payment_<psp>/whatsapp provider only needs to override _send_via_provider.
 """
 import logging
+import re
+
+from lxml import etree
+from lxml import html as lxml_html
 
 from odoo import api, models
 
@@ -55,3 +59,32 @@ class ContractWhatsappDriver(models.AbstractModel):
                 "WhatsApp (logged, no provider) -> %s: %.200s", mobile, message
             )
         return sent
+
+    @api.model
+    def _html_to_text(self, html_content):
+        """Convert a rendered (mail.template) HTML body to WhatsApp text.
+
+        Links are kept as raw URLs (WhatsApp auto-links them) and block
+        elements become line breaks.
+        """
+        if not html_content:
+            return ""
+        try:
+            root = lxml_html.fragment_fromstring(html_content, create_parent="div")
+        except Exception:  # noqa: BLE001 - best effort, strip tags
+            return re.sub(r"<[^>]+>", "", html_content).strip()
+        for anchor in root.xpath(".//a[@href]"):
+            href = (anchor.get("href") or "").strip()
+            label = (anchor.text_content() or "").strip()
+            if href and href not in label:
+                replacement = f"{label} {href}".strip() if label else href
+            else:
+                replacement = label or href
+            span = etree.Element("span")
+            span.text = replacement
+            span.tail = anchor.tail
+            anchor.getparent().replace(anchor, span)
+        for block in root.xpath(".//br | .//p | .//div | .//li | .//tr | .//h1 | .//h2 | .//h3 | .//h4"):
+            block.tail = (block.tail or "") + "\n"
+        lines = [line.strip() for line in root.text_content().splitlines()]
+        return "\n".join(line for line in lines if line)

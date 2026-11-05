@@ -36,3 +36,12 @@ class ContractTemplate(models.Model):
         string="Max reminders",
         help="Max digest reminders per invoice. 0 = unlimited.",
     )
+    whatsapp_template_id = fields.Many2one(
+        comodel_name="mail.template",
+        string="WhatsApp Template",
+        domain="[('model', '=', 'account.move')]",
+        help="Template used to build the WhatsApp message sent with the "
+        "invoice. If empty, the default 'Contract invoice: WhatsApp "
+        "notification' template is used. Only used when the notification "
+        "channel includes WhatsApp.",
+    )
