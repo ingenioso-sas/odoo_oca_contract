@@ -5,9 +5,15 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form" />
         <field name="arch" type="xml">
-            <field name="phone" position="after">
-                <field name="opt_out_overdue_reminder" />
-            </field>
+            <!-- Se inserta una fila propia con su etiqueta debajo del bloque
+                 de teléfono (el campo phone vive en un <div>, no en un
+                 <group>, por lo que un <field> suelto no muestra label). -->
+            <xpath expr="(//field[@name='phone'])[1]/.." position="after">
+                <div class="o_row">
+                    <label for="opt_out_overdue_reminder" />
+                    <field name="opt_out_overdue_reminder" />
+                </div>
+            </xpath>
         </field>
     </record>
 </odoo>
