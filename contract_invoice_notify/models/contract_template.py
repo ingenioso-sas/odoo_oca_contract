@@ -1,20 +1,16 @@
 # Copyright 2026
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class ContractTemplate(models.Model):
     _inherit = "contract.template"
 
-    send_notification_mode = fields.Selection(
-        selection=[
-            ("email", "Email"),
-            ("whatsapp", "WhatsApp"),
-            ("both", "Email + WhatsApp"),
-        ],
-        default="email",
-        required=True,
-        string="Invoice notification channel",
+    notification_channel_ids = fields.Many2many(
+        string="Notification Channels",
+        comodel_name="contract.notification.channel",
+        default=lambda self: self._default_notification_channel_ids(),
+        help="Channels copied to contracts created from this template.",
     )
     overdue_reminder_enabled = fields.Boolean(
         default=False,
@@ -36,12 +32,11 @@ class ContractTemplate(models.Model):
         string="Max reminders",
         help="Max digest reminders per invoice. 0 = unlimited.",
     )
-    whatsapp_template_id = fields.Many2one(
-        comodel_name="mail.template",
-        string="WhatsApp Template",
-        domain="[('model', '=', 'account.move')]",
-        help="Template used to build the WhatsApp message sent with the "
-        "invoice. If empty, the default 'Contract invoice: WhatsApp "
-        "notification' template is used. Only used when the notification "
-        "channel includes WhatsApp.",
-    )
+
+    @api.model
+    def _default_notification_channel_ids(self):
+        channel = self.env.ref(
+            "contract_invoice_notify.notification_channel_email",
+            raise_if_not_found=False,
+        )
+        return channel or self.env["contract.notification.channel"]

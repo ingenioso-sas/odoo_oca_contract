@@ -1,6 +1,5 @@
 # Copyright 2026
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-import base64
 import logging
 
 from markupsafe import Markup
@@ -13,16 +12,19 @@ _logger = logging.getLogger(__name__)
 class ContractContract(models.Model):
     _inherit = "contract.contract"
 
-    send_notification_mode = fields.Selection(
-        selection=[
-            ("email", "Email"),
-            ("whatsapp", "WhatsApp"),
-            ("both", "Email + WhatsApp"),
-        ],
-        default="email",
-        required=True,
-        string="Invoice notification channel",
-        help="Used when invoicing mode is 'Validate and send by email'.",
+    notification_channel_ids = fields.Many2many(
+        string="Notification Channels",
+        comodel_name="contract.notification.channel",
+        default=lambda self: self._default_notification_channel_ids(),
+        help="Channels used for invoice notifications and overdue digests. "
+        "Selecting email and WhatsApp sends both.",
+    )
+    notification_template_ids = fields.One2many(
+        string="Notification Template Overrides",
+        comodel_name="contract.notification.template",
+        inverse_name="contract_id",
+        copy=True,
+        help="Optional per-contract template overrides by channel and purpose.",
     )
     overdue_reminder_enabled = fields.Boolean(
         default=False,
@@ -43,21 +45,21 @@ class ContractContract(models.Model):
         string="Max reminders",
         help="Max digest reminders per invoice. 0 = unlimited.",
     )
-    whatsapp_template_id = fields.Many2one(
-        comodel_name="mail.template",
-        string="WhatsApp Template",
-        domain="[('model', '=', 'account.move')]",
-        help="Template used to build the WhatsApp message sent with the "
-        "invoice. If empty, the default 'Contract invoice: WhatsApp "
-        "notification' template is used. Only used when the notification "
-        "channel includes WhatsApp.",
-    )
+
+    @api.model
+    def _default_notification_channel_ids(self):
+        channel = self.env.ref(
+            "contract_invoice_notify.notification_channel_email",
+            raise_if_not_found=False,
+        )
+        return channel or self.env["contract.notification.channel"]
+
+    # === TEMPLATES === #
 
     def _get_invoice_email_template(self):
         self.ensure_one()
         if self.invoice_mail_template_id:
             return self.invoice_mail_template_id
-        # Our template adds payment link + overdue info block.
         template = self.env.ref(
             "contract_invoice_notify.email_template_contract_invoice_notify",
             raise_if_not_found=False,
@@ -66,91 +68,98 @@ class ContractContract(models.Model):
             template = self.env.ref(
                 "account.email_template_edi_invoice", raise_if_not_found=False
             )
-        return template
+        return template or self.env["mail.template"]
 
-    def _send_invoice_email(self, move):
-        template = self._get_invoice_email_template()
-        if not template:
-            return False
-        try:
-            template.send_mail(move.id, force_send=False, raise_exception=False)
-            return True
-        except Exception as exc:  # noqa: BLE001
-            _logger.warning("Could not send invoice %s by email: %s", move.id, exc)
-            return False
-
-    def _get_invoice_whatsapp_template(self):
+    def _get_overdue_email_template(self):
         self.ensure_one()
-        if self.whatsapp_template_id:
-            return self.whatsapp_template_id
-        return self.env.ref(
-            "contract_invoice_notify.whatsapp_template_contract_invoice",
-            raise_if_not_found=False,
+        return (
+            self.env.ref(
+                "contract_invoice_notify.email_template_contract_overdue_digest",
+                raise_if_not_found=False,
+            )
+            or self.env["mail.template"]
         )
 
-    def _get_invoice_whatsapp_message(self, move):
-        """Build the WhatsApp text for an invoice.
-
-        Renders the contract's WhatsApp template (or the default one) on
-        the invoice; falls back to the built-in text if no template is
-        found or rendering fails.
-        """
+    def _get_notification_template(self, record, purpose, channel_code):
         self.ensure_one()
-        template = self._get_invoice_whatsapp_template()
-        if template:
-            try:
-                body = template._render_field(
-                    "body_html", [move.id], compute_lang=True
-                )[move.id]
-                text = self.env["contract.whatsapp.driver"]._html_to_text(body)
-                if text:
-                    return text
-            except Exception as exc:  # noqa: BLE001
-                _logger.warning(
-                    "Could not render WhatsApp template for %s: %s",
-                    move.display_name,
-                    exc,
+        override = self.notification_template_ids.filtered(
+            lambda line: line.channel_id.code == channel_code
+            and line.purpose == purpose
+        )[:1]
+        if override:
+            return override.template_id
+        if channel_code == "email":
+            if purpose == "invoice_notification":
+                return self._get_invoice_email_template()
+            if purpose == "overdue_digest":
+                return self._get_overdue_email_template()
+        if channel_code == "whatsapp" and purpose == "invoice_notification":
+            return (
+                self.env.ref(
+                    "contract_invoice_notify."
+                    "whatsapp_template_contract_invoice",
+                    raise_if_not_found=False,
                 )
-        return move._get_whatsapp_text()
+                or self.env["mail.template"]
+            )
+        return self.env["mail.template"]
 
-    def _send_invoice_whatsapp(self, move):
-        # Odoo 19 base only provides partner phone (no mobile field).
-        mobile = (move.partner_id.phone or "").strip()
-        if not mobile:
-            move.message_post(
-                body=Markup(
-                    _("WhatsApp skipped: customer %s has no mobile/phone.")
-                    % move.partner_id.display_name
-                )
-            )
-            return False
-        message = self._get_invoice_whatsapp_message(move)
-        pdf_base64 = None
-        filename = f"{move.name or 'invoice'}.pdf"
-        try:
-            pdf_content, _ext = self.env["ir.actions.report"]._render_qweb_pdf(
-                "account.account_invoices", [move.id]
-            )
-            pdf_base64 = base64.b64encode(pdf_content).decode()
-        except Exception as exc:  # noqa: BLE001
-            _logger.warning("Could not render invoice PDF %s: %s", move.id, exc)
-        driver = self.env["contract.whatsapp.driver"]
-        # Use queue_job when available so cron is never blocked by the API.
-        if "queue.job" in self.env and not self.env.context.get("no_whatsapp_delay"):
-            try:
-                driver.with_delay().send_whatsapp(
-                    mobile, message, pdf_base64, filename
-                )
-                return True
-            except Exception as exc:  # noqa: BLE001
-                _logger.warning("Could not queue WhatsApp: %s", exc)
-        return bool(driver.send_whatsapp(mobile, message, pdf_base64, filename))
+    # === NOTIFICATION DISPATCH === #
+
+    def _get_notification_channels(self):
+        self.ensure_one()
+        if self.notification_channel_ids:
+            return self.notification_channel_ids.filtered("active")
+        return self.env["contract.notification.channel"].search(
+            [("code", "=", "email"), ("active", "=", True)], limit=1
+        )
+
+    def _get_notification_context(
+        self, record, purpose, channel_code, invoices=None
+    ):
+        self.ensure_one()
+        statement_url = ""
+        getter = getattr(record, "_get_notification_statement_url", None)
+        if getter:
+            statement_url = getter(channel_code=channel_code)
+        return {
+            "contract": self,
+            "record": record,
+            "purpose": purpose,
+            "channel_code": channel_code,
+            "invoices": invoices or self.env["account.move"],
+            "statement_url": statement_url,
+        }
+
+    def _get_notification_statement_url(self, channel_code=None):
+        """Hook for statement glue modules."""
+        self.ensure_one()
+        return ""
+
+    def _send_notification(self, record, purpose, channel_code, invoices=None):
+        self.ensure_one()
+        template = self._get_notification_template(
+            record, purpose, channel_code
+        )
+        context = self._get_notification_context(
+            record, purpose, channel_code, invoices=invoices
+        )
+        return self.env["contract.notification.driver"].send(
+            self,
+            record,
+            purpose,
+            channel_code,
+            template=template,
+            context=context,
+        )
+
+    # === INVOICE NOTIFICATION === #
 
     def _auto_validate_invoices(self, moves):
-        """Unified post + notify (overrides contract base to add WhatsApp).
+        """Unified post + notify for the configured channels.
 
         Keeps accounting untouched: overdue invoices are only REPORTED in
-        the message, never merged into the new invoice (decision punto 5).
+        the message, never merged into the new invoice.
         """
         for contract in self:
             contract_moves = moves & contract._get_related_invoices()
@@ -174,16 +183,13 @@ class ContractContract(models.Model):
                 continue
             if contract.invoicing_mode != "validate_send":
                 continue
-            mode = contract.send_notification_mode or "email"
+            channels = contract._get_notification_channels()
             for move in draft_moves.filtered(lambda m: m.state == "posted"):
-                if mode in ("email", "both"):
-                    contract._send_invoice_email(move)
-                if mode in ("whatsapp", "both"):
-                    contract.with_context(
-                        no_whatsapp_delay=self.env.context.get(
-                            "no_whatsapp_delay", False
-                        )
-                    )._send_invoice_whatsapp(move)
+                results = {}
+                for channel in channels:
+                    results[channel.code] = contract._send_notification(
+                        move, "invoice_notification", channel.code
+                    )
                 summary = move._get_overdue_summary()
                 extra = ""
                 if summary["count"]:
@@ -194,17 +200,24 @@ class ContractContract(models.Model):
                         "names": summary["names"],
                         "total": summary["total_residual"],
                     }
+                notified = ", ".join(
+                    code for code, sent in results.items() if sent
+                ) or _("no channel")
                 move.message_post(
                     body=Markup(
-                        _("Invoice auto-validated and notified (%(mode)s) "
-                          "from contract %(contract)s%(extra)s")
+                        _(
+                            "Invoice auto-validated and notified "
+                            "(%(mode)s) from contract %(contract)s%(extra)s"
+                        )
                         % {
-                            "mode": mode,
+                            "mode": notified,
                             "contract": contract._get_html_link(),
                             "extra": extra,
                         }
                     )
                 )
+
+    # === OVERDUE DIGEST === #
 
     def _get_overdue_reminder_candidates(self):
         """Digest per contract: overdue + grace/resend/max eligible invoices.
@@ -228,10 +241,6 @@ class ContractContract(models.Model):
 
     def _get_overdue_pay_all_url(self, invoices):
         self.ensure_one()
-        # No pay-all link: contract_portal_payment was discarded in the 19.0
-        # migration (native portal already offers Pay Now per invoice).
-        # Fallback: absolute portal URL of the oldest overdue invoice
-        # (absolute because it is sent as plain text over WhatsApp).
         try:
             if not invoices:
                 return ""
@@ -240,90 +249,56 @@ class ContractContract(models.Model):
         except Exception:  # noqa: BLE001
             return ""
 
-    def _get_overdue_whatsapp_text(self, invoices):
-        self.ensure_one()
-        total = sum(invoices.mapped("amount_residual"))
-        cur = invoices[:1].currency_id.name if invoices else self.currency_id.name
-        names = ", ".join(invoices.mapped("name"))
-        url = self._get_overdue_pay_all_url(invoices)
-        lines = [
-            f"Hola {self.partner_id.display_name},",
-            f"Contrato {self.name}: tienes {len(invoices)} factura(s) vencida(s) "
-            f"({names}) por {total} {cur}.",
-        ]
-        if url:
-            lines.append(f"Págalas todas aquí: {url}")
-        return "\n".join(lines)
-
     def _send_overdue_digest(self, invoices=None):
-        """Send one digest per contract via configured channel."""
+        """Send one digest per contract through the configured channels."""
         self.ensure_one()
         if not self.overdue_reminder_enabled:
             return False
-        if self.partner_id.opt_out_overdue_reminder if hasattr(
-            self.partner_id, "opt_out_overdue_reminder"
-        ) else False:
+        if hasattr(self.partner_id, "opt_out_overdue_reminder") and (
+            self.partner_id.opt_out_overdue_reminder
+        ):
             return False
         invoices = invoices or self._get_overdue_reminder_candidates()
         if not invoices:
             return False
-        mode = self.send_notification_mode or "email"
-        if mode in ("email", "both"):
-            template = self.env.ref(
-                "contract_invoice_notify.email_template_contract_overdue_digest",
-                raise_if_not_found=False,
+
+        successes = []
+        for channel in self._get_notification_channels():
+            if self._send_notification(
+                self, "overdue_digest", channel.code, invoices=invoices
+            ):
+                successes.append(channel.code)
+
+        if successes:
+            invoices._mark_overdue_reminder_sent()
+            self.message_post(
+                body=Markup(
+                    _("Overdue digest sent (%(mode)s): %(names)s")
+                    % {
+                        "mode": ", ".join(successes),
+                        "names": ", ".join(invoices.mapped("name")),
+                    }
+                )
             )
-            if template:
-                try:
-                    template.send_mail(
-                        self.id, force_send=False, raise_exception=False
-                    )
-                except Exception as exc:  # noqa: BLE001
-                    _logger.warning(
-                        "Could not send overdue digest for %s: %s",
-                        self.display_name,
-                        exc,
-                    )
-        if mode in ("whatsapp", "both"):
-            # Odoo 19 base only provides partner phone (no mobile field).
-            mobile = (self.partner_id.phone or "").strip()
-            if mobile:
-                message = self._get_overdue_whatsapp_text(invoices)
-                driver = self.env["contract.whatsapp.driver"]
-                if "queue.job" in self.env and not self.env.context.get(
-                    "no_whatsapp_delay"
-                ):
-                    try:
-                        driver.with_delay().send_whatsapp(mobile, message)
-                    except Exception as exc:  # noqa: BLE001
-                        _logger.warning("Could not queue overdue WhatsApp: %s", exc)
-                        driver.send_whatsapp(mobile, message)
-                else:
-                    driver.send_whatsapp(mobile, message)
-            else:
-                self.message_post(
+            for move in invoices:
+                move.message_post(
                     body=Markup(
-                        _("Overdue WhatsApp skipped: no mobile for %s.")
-                        % self.partner_id.display_name
+                        _("Overdue reminder sent from contract %s.")
+                        % self._get_html_link()
                     )
                 )
-        invoices._mark_overdue_reminder_sent()
+            return True
+
         self.message_post(
             body=Markup(
-                _("Overdue digest sent (%(mode)s): %(names)s") % {
-                    "mode": mode,
-                    "names": ", ".join(invoices.mapped("name")),
-                }
+                _(
+                    "Overdue digest not sent: no configured channel succeeded "
+                    "for %s."
+                )
+                % ", ".join(invoices.mapped("name"))
             )
         )
-        for move in invoices:
-            move.message_post(
-                body=Markup(
-                    _("Overdue reminder sent from contract %s.")
-                    % self._get_html_link()
-                )
-            )
-        return True
+        return False
 
     @api.model
     def cron_overdue_reminders(self):
@@ -351,7 +326,7 @@ class ContractContract(models.Model):
         return True
 
     def action_resend_last_invoice_notification(self):
-        """Manual resend for support (uses same channel + payment link)."""
+        """Manual resend for support (uses the configured channels)."""
         self.ensure_one()
         invoices = self._get_related_invoices().filtered(
             lambda m: m.state == "posted"
@@ -359,9 +334,8 @@ class ContractContract(models.Model):
         if not invoices:
             return False
         move = invoices[0]
-        mode = self.send_notification_mode or "email"
-        if mode in ("email", "both"):
-            self._send_invoice_email(move)
-        if mode in ("whatsapp", "both"):
-            self._send_invoice_whatsapp(move)
+        for channel in self._get_notification_channels():
+            self._send_notification(
+                move, "invoice_notification", channel.code
+            )
         return True

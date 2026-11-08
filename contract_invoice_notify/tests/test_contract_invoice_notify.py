@@ -1,8 +1,10 @@
 # Copyright 2026
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 from datetime import timedelta
+from unittest.mock import patch
 
 from odoo import fields
+from odoo.fields import Command
 
 from odoo.addons.contract.tests.test_contract import TestContractBase
 
@@ -20,6 +22,11 @@ class TestContractInvoiceNotify(TestContractBase):
         )
         return line
 
+    def _channel(self, code):
+        return self.env["contract.notification.channel"].search(
+            [("code", "=", code)], limit=1
+        )
+
     def test_validate_posts_without_sending(self):
         self.contract.write({"invoicing_mode": "validate"})
         self._prepare_line()
@@ -28,40 +35,50 @@ class TestContractInvoiceNotify(TestContractBase):
         self.assertEqual(set(invoices.mapped("state")), {"posted"})
 
     def test_validate_send_email_adds_overdue_info(self):
+        email = self._channel("email")
         self.contract.write(
-            {"invoicing_mode": "validate_send", "send_notification_mode": "email"}
+            {
+                "invoicing_mode": "validate_send",
+                "notification_channel_ids": [Command.set([email.id])],
+            }
         )
         self._prepare_line()
-        invoices = self.contract.recurring_create_invoice()
+        with patch(
+            "odoo.addons.mail.models.mail_template.MailTemplate.send_mail",
+            return_value=1,
+        ):
+            invoices = self.contract.recurring_create_invoice()
         self.assertEqual(set(invoices.mapped("state")), {"posted"})
         move = invoices[0]
         # Overdue helper must exclude itself and only count posted pending.
         self.assertNotIn(move.id, move._get_contract_overdue_invoices().ids)
-        text = move._get_whatsapp_text()
-        self.assertIn(move.name, text)
-        # Links must be absolute: WhatsApp messages are plain text, a
-        # relative /my/invoices/... URL cannot be opened from the chat.
+        template = self.contract._get_invoice_email_template()
+        body = template._render_field(
+            "body_html", [move.id], compute_lang=True
+        )[move.id]
+        self.assertIn(move.name, body)
+        # Links must be absolute.
         self.assertTrue(
             move._get_payment_portal_url().startswith("http"),
             "payment portal URL must be absolute",
         )
-        self.assertIn(
-            move._get_payment_portal_url(), move._get_whatsapp_text()
-        )
+        self.assertIn(move._get_payment_portal_url(), body)
 
     def test_validate_send_whatsapp_no_phone_does_not_break(self):
+        whatsapp = self._channel("whatsapp")
         self.contract.write(
-            {"invoicing_mode": "validate_send", "send_notification_mode": "whatsapp"}
+            {
+                "invoicing_mode": "validate_send",
+                "notification_channel_ids": [Command.set([whatsapp.id])],
+            }
         )
         self.contract.partner_id.write({"phone": False})
         self._prepare_line()
-        invoices = self.contract.with_context(no_whatsapp_delay=True).recurring_create_invoice()
+        invoices = self.contract.recurring_create_invoice()
         self.assertEqual(set(invoices.mapped("state")), {"posted"})
 
     def test_validate_send_whatsapp_uses_contract_template(self):
-        self.contract.write(
-            {"invoicing_mode": "validate_send", "send_notification_mode": "whatsapp"}
-        )
+        whatsapp = self._channel("whatsapp")
         template = self.env["mail.template"].create(
             {
                 "name": "WA custom",
@@ -75,23 +92,42 @@ class TestContractInvoiceNotify(TestContractBase):
                 ),
             }
         )
-        self.contract.write({"whatsapp_template_id": template.id})
-        self.contract.partner_id.write({"phone": "3001234567"})
+        self.contract.write(
+            {
+                "invoicing_mode": "validate_send",
+                "notification_channel_ids": [Command.set([whatsapp.id])],
+                "notification_template_ids": [
+                    Command.create(
+                        {
+                            "channel_id": whatsapp.id,
+                            "purpose": "invoice_notification",
+                            "template_id": template.id,
+                        }
+                    )
+                ],
+            }
+        )
+        self.contract.partner_id.write({"phone": "+573001234567"})
         self._prepare_line()
-        invoices = self.contract.with_context(no_whatsapp_delay=True).recurring_create_invoice()
+        invoices = self.contract.recurring_create_invoice()
         self.assertEqual(set(invoices.mapped("state")), {"posted"})
-        message = self.contract._get_invoice_whatsapp_message(invoices[0])
-        self.assertIn("AVISO PERSONALIZADO", message)
-        self.assertIn(invoices[0].name, message)
-        # Absolute link inside the custom message
-        self.assertIn(invoices[0]._get_payment_portal_url(), message)
-        self.assertTrue(invoices[0]._get_payment_portal_url().startswith("http"))
+        selected = self.contract._get_notification_template(
+            invoices[0], "invoice_notification", "whatsapp"
+        )
+        self.assertEqual(selected, template)
+        body = selected._render_field(
+            "body_html", [invoices[0].id], compute_lang=True
+        )[invoices[0].id]
+        self.assertIn("AVISO PERSONALIZADO", body)
+        self.assertIn(invoices[0].name, body)
+        self.assertIn(invoices[0]._get_payment_portal_url(), body)
 
     def test_overdue_digest_per_contract_respects_grace_resend_max(self):
+        email = self._channel("email")
         self.contract.write(
             {
                 "invoicing_mode": "validate",
-                "send_notification_mode": "whatsapp",
+                "notification_channel_ids": [Command.set([email.id])],
                 "overdue_reminder_enabled": True,
                 "overdue_grace_days": 3,
                 "overdue_resend_after_days": 7,
@@ -114,7 +150,11 @@ class TestContractInvoiceNotify(TestContractBase):
         )
         self.assertIn(move.id, self.contract._get_overdue_reminder_candidates().ids)
         # Digest sends once and marks the invoice
-        self.contract.with_context(no_whatsapp_delay=True)._send_overdue_digest()
+        with patch(
+            "odoo.addons.mail.models.mail_template.MailTemplate.send_mail",
+            return_value=1,
+        ):
+            self.assertTrue(self.contract._send_overdue_digest())
         move.invalidate_recordset()
         self.assertEqual(move.overdue_reminder_count, 1)
         self.assertEqual(move.last_overdue_reminder_date, fields.Date.today())

@@ -24,6 +24,15 @@
                     por <strong t-out="sum(overdue.mapped('amount_residual'))" />.
                     Puedes pagarlas todas desde tu portal.</p>
                 </t>
+                <t t-set="statement_url" t-value="object._get_notification_statement_url()" />
+                <t t-if="statement_url">
+                    <p>Consulta y paga todas tus facturas pendientes aquí:</p>
+                    <p>
+                        <a t-att-href="statement_url"
+                           target="_blank"
+                           style="background-color:#875A7B;padding:8px 16px;text-decoration:none;color:#fff;border-radius:5px;">Ver todas mis facturas</a>
+                    </p>
+                </t>
                 <p>Gracias por tu confianza.</p>
             </div>
         </field>
@@ -51,6 +60,15 @@
                        target="_blank"
                        style="background-color:#875A7B;padding:8px 16px;text-decoration:none;color:#fff;border-radius:5px;">Pagar todo</a>
                 </p>
+                <t t-set="statement_url" t-value="object._get_notification_statement_url()" />
+                <t t-if="statement_url">
+                    <p>Consulta y paga todas tus facturas pendientes aquí:</p>
+                    <p>
+                        <a t-att-href="statement_url"
+                           target="_blank"
+                           style="background-color:#875A7B;padding:8px 16px;text-decoration:none;color:#fff;border-radius:5px;">Ver todas mis facturas</a>
+                    </p>
+                </t>
                 <p>Si ya pagaste, ignora este mensaje.</p>
             </div>
         </field>
@@ -77,6 +95,10 @@
                     por <strong t-out="sum(overdue.mapped('amount_residual'))" />
                     <t t-out="object.currency_id.name" />.
                     Puedes pagarlas todas desde tu portal.</p>
+                </t>
+                <t t-set="statement_url" t-value="object._get_notification_statement_url()" />
+                <t t-if="statement_url">
+                    <p>Consulta y paga todas tus facturas pendientes aquí: <a t-att-href="statement_url">Ver todas mis facturas</a></p>
                 </t>
                 <p>Gracias por tu confianza.</p>
             </div>

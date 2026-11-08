@@ -1,6 +1,6 @@
 # Copyright 2026
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-from odoo import api, fields, models
+from odoo import fields, models
 
 
 class AccountMove(models.Model):
@@ -83,21 +83,11 @@ class AccountMove(models.Model):
         except Exception:  # noqa: BLE001
             return ""
 
-    def _get_whatsapp_text(self):
+    def _get_notification_statement_url(self, channel_code=None):
+        """Hook for statement glue modules.
+
+        The base contract module has no statement dependency, so it returns
+        an empty string. The glue overrides it to return the direct link.
+        """
         self.ensure_one()
-        base_url = self._get_payment_portal_url()
-        summary = self._get_overdue_summary()
-        lines = [
-            f"Hola {self.partner_id.display_name},",
-            f"Tu factura {self.name} por {self.amount_total} {self.currency_id.name} "
-            f"ya está disponible.",
-            f"Puedes verla y pagarla aquí: {base_url}" if base_url else "",
-        ]
-        if summary["count"]:
-            lines.append(
-                f"Además tienes {summary['count']} factura(s) pendiente(s) "
-                f"({summary['names']}) por "
-                f"{summary['total_residual']} {self.currency_id.name}. "
-                "Puedes pagarlas todas desde tu portal."
-            )
-        return "\n".join([line for line in lines if line])
+        return ""
