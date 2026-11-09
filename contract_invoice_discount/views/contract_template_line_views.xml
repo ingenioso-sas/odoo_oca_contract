@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 PayOnline Ing
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record
+        id="contract_template_line_form_view_invoice_discount"
+        model="ir.ui.view"
+    >
+        <field name="name">
+            contract.template.line.form.invoice.discount
+        </field>
+        <field name="model">contract.template.line</field>
+        <field name="inherit_id" ref="contract.contract_template_line_form_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='discount']" position="after">
+                <field name="promo_name" invisible="not promo_discount" />
+                <field name="promo_discount" />
+                <field
+                    name="promo_duration_months"
+                    invisible="not promo_discount"
+                />
+                <field name="promo_max_invoices" invisible="not promo_discount" />
+            </xpath>
+        </field>
+    </record>
+</odoo>

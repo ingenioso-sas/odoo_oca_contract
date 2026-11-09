@@ -1,0 +1,261 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* contract_invoice_discount
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-09 00:00+0000\n"
+"PO-Revision-Date: 2026-11-09 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__active
+msgid "Active"
+msgstr "Activo"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__applied_invoice_count
+msgid "Applied Invoices"
+msgstr "Facturas aplicadas"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_account_move_line__contract_discount_percent
+msgid "Applied Contract Discount (%)"
+msgstr "Descuento de contrato aplicado (%)"
+
+#. module: contract_invoice_discount
+#: model:ir.model,name:contract_invoice_discount.model_contract_invoice_discount
+msgid "Contract Invoice Discount"
+msgstr "Descuento de factura de contrato"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__name
+msgid "Name"
+msgstr "Nombre"
+
+#. module: contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_list_view
+msgid "Contract Invoice Discounts"
+msgstr "Descuentos de factura de contrato"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__contract_id
+msgid "Contract"
+msgstr "Contrato"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__contract_line_id
+msgid "Contract Line"
+msgstr "Línea de contrato"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_account_move_line__contract_discount_name
+msgid "Contract Discount"
+msgstr "Descuento de contrato"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_account_move_line__contract_discount_until
+msgid "Contract Discount Until"
+msgstr "Descuento de contrato hasta"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_account_move_line__contract_discount_source
+msgid "Contract Discount Source"
+msgstr "Origen del descuento de contrato"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_account_move_line__contract_discount_id
+msgid "Contract Discount Rule"
+msgstr "Regla de descuento de contrato"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__date_end
+msgid "Date end"
+msgstr "Fecha fin"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__date_start
+msgid "Date start"
+msgstr "Fecha inicio"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__discount
+msgid "Discount (%)"
+msgstr "Descuento (%)"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__state__exhausted
+msgid "Exhausted"
+msgstr "Agotado"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__state__expired
+msgid "Expired"
+msgstr "Vencido"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_line__invoice_discount_ids
+msgid "Invoice Discounts"
+msgstr "Descuentos de factura"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_line__invoice_discount_count
+msgid "Active Invoice Discounts"
+msgstr "Descuentos de factura activos"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__company_id
+msgid "Company"
+msgstr "Compañía"
+
+#. module: contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_line_form_view_invoice_discount
+msgid "Invoice Discounts"
+msgstr "Descuentos de factura"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__state__inactive
+msgid "Inactive"
+msgstr "Inactivo"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__max_invoices
+msgid "Max invoices"
+msgstr "Máximo de facturas"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__source__manual
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__account_move_line__contract_discount_source__manual
+msgid "Manual"
+msgstr "Manual"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_template_line__promo_discount
+msgid "Promotion Discount (%)"
+msgstr "Descuento de promoción (%)"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_template_line__promo_duration_months
+msgid "Promotion Duration (months)"
+msgstr "Duración de la promoción (meses)"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_template_line__promo_max_invoices
+msgid "Promotion Max Invoices"
+msgstr "Máximo de facturas de la promoción"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_template_line__promo_name
+msgid "Promotion Name"
+msgstr "Nombre de la promoción"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__source__promotion
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__account_move_line__contract_discount_source__promotion
+msgid "Promotion"
+msgstr "Promoción"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__source__referral
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__account_move_line__contract_discount_source__referral
+msgid "Referral"
+msgstr "Referido"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__remaining_invoices
+msgid "Remaining Invoices"
+msgstr "Facturas restantes"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__state__scheduled
+msgid "Scheduled"
+msgstr "Programado"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__sequence
+msgid "Sequence"
+msgstr "Secuencia"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__source
+msgid "Source"
+msgstr "Origen"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__state
+msgid "State"
+msgstr "Estado"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__state__active
+msgid "Active"
+msgstr "Activo"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_invoice_discount__applied_invoice_count
+msgid "Number of invoices where this rule was applied."
+msgstr "Cantidad de facturas donde se aplicó esta regla."
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_invoice_discount__discount
+msgid ""
+"Percentage applied to the invoice line. Only the highest applicable "
+"discount is used."
+msgstr ""
+"Porcentaje aplicado a la línea de factura. Solo se usa el descuento "
+"aplicable más alto."
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_invoice_discount__max_invoices
+msgid "Maximum number of invoices with this discount. 0 = unlimited."
+msgstr "Máximo de facturas con este descuento. 0 = sin límite."
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_invoice_discount__date_end
+msgid ""
+"Leave empty for no date limit. If set, the discount is prorated when the "
+"invoice period overlaps only partially."
+msgstr ""
+"Dejar vacío para sin límite de fecha. Si se define, el descuento se "
+"prorratea cuando el período de la factura se cruza parcialmente."
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_template_line__promo_discount
+msgid ""
+"Default promotional discount copied to new contracts created from this "
+"template line."
+msgstr ""
+"Descuento promocional por defecto que se copia a los contratos nuevos "
+"creados desde esta línea de plantilla."
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_template_line__promo_duration_months
+msgid ""
+"Number of months the promotion lasts from the contract line start. 0 = no "
+"date limit."
+msgstr ""
+"Cantidad de meses que dura la promoción desde el inicio de la línea del "
+"contrato. 0 = sin límite de fecha."
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_template_line__promo_max_invoices
+msgid "Maximum number of invoices with the promotion. 0 = unlimited."
+msgstr "Máximo de facturas con la promoción. 0 = sin límite."
+
+#. module: contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_search_view
+msgid "Promotions"
+msgstr "Promociones"
+
+#. module: contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_search_view
+msgid "Referrals"
+msgstr "Referidos"
