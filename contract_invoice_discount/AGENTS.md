@@ -12,6 +12,8 @@
   la regla actual para el histórico.
 - Las líneas de sección y nota no llevan descuento.
 - No cambiar `invoice_date` ni la fecha contable.
+- `pause_policy` define si la regla se extiende al pausar el contrato:
+  `service` extiende; `calendar` mantiene las fechas originales.
 - La promoción de plantilla se define en la línea de plantilla y se copia al
   crear el contrato.
 

@@ -15,6 +15,7 @@ Campos principales:
 - `date_start` / `date_end`;
 - `max_invoices`;
 - `source`;
+- `pause_policy` (`service` / `calendar`);
 - `active`;
 - `applied_invoice_count` y `remaining_invoices`.
 
@@ -52,6 +53,7 @@ al inicio de la línea del contrato.
 - Varias reglas: gana la de mayor porcentaje.
 - Facturas manuales: sin reglas, sin descuento temporal.
 - Histórico: la factura conserva el descuento aplicado aunque la regla cambie.
+- Pausa: `pause_policy=service` desplaza las fechas al reanudar.
 
 ## Limitaciones
 

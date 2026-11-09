@@ -24,6 +24,7 @@
                             <field name="applied_invoice_count" />
                             <field name="remaining_invoices" />
                             <field name="source" />
+                            <field name="pause_policy" optional="hide" />
                             <field name="state" />
                             <field name="active" />
                         </list>

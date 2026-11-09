@@ -58,6 +58,16 @@ class ContractInvoiceDiscount(models.Model):
         default="promotion",
         required=True,
     )
+    pause_policy = fields.Selection(
+        selection=[
+            ("service", "Extend during pause"),
+            ("calendar", "Do not extend"),
+        ],
+        default="service",
+        required=True,
+        help="Extend during pause keeps the benefit for the same amount of "
+        "service time. Do not extend keeps the original calendar dates.",
+    )
     active = fields.Boolean(default=True)
     applied_invoice_count = fields.Integer(
         compute="_compute_applied_invoice_count",

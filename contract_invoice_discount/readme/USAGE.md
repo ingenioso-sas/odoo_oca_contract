@@ -4,7 +4,8 @@
    - nombre;
    - porcentaje;
    - fecha de inicio y fin;
-   - máximo de facturas (0 = sin límite).
+   - máximo de facturas (0 = sin límite);
+   - política de pausa: extender durante la pausa o mantener fechas.
 4. Generar la factura desde el contrato.
 
 La factura muestra la columna estándar **Descuento** y, debajo de la

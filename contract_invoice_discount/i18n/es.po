@@ -259,3 +259,27 @@ msgstr "Promociones"
 #: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_search_view
 msgid "Referrals"
 msgstr "Referidos"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__pause_policy
+msgid "Pause policy"
+msgstr "Política de pausa"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__pause_policy__calendar
+msgid "Do not extend"
+msgstr "No extender"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__pause_policy__service
+msgid "Extend during pause"
+msgstr "Extender durante la pausa"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_invoice_discount__pause_policy
+msgid ""
+"Extend during pause keeps the benefit for the same amount of service time. "
+"Do not extend keeps the original calendar dates."
+msgstr ""
+"Extender durante la pausa conserva el beneficio por la misma cantidad de "
+"tiempo de servicio. No extender mantiene las fechas originales."
