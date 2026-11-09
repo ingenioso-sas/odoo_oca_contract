@@ -1,0 +1,5 @@
+"id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
+"contract_referral_invoice_user","Contract referrals - Invoicing user","model_contract_referral","account.group_account_invoice",1,1,1,1
+"contract_referral_invoice_manager","Contract referrals - Manager","model_contract_referral","account.group_account_manager",1,1,1,1
+"contract_referral_commission_invoice_user","Referral commissions - Invoicing user","model_contract_referral_commission","account.group_account_invoice",1,1,1,1
+"contract_referral_commission_invoice_manager","Referral commissions - Manager","model_contract_referral_commission","account.group_account_manager",1,1,1,1

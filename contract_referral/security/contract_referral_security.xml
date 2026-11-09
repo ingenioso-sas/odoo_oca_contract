@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 PayOnline Ing
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="rule_contract_referral_multi_company" model="ir.rule">
+        <field name="name">Contract referral multi-company</field>
+        <field name="model_id" ref="model_contract_referral" />
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_contract_referral_commission_multi_company" model="ir.rule">
+        <field name="name">Referral commission multi-company</field>
+        <field name="model_id" ref="model_contract_referral_commission" />
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

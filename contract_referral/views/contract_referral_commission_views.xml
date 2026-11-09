@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 PayOnline Ing
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="contract_referral_commission_form_view" model="ir.ui.view">
+        <field name="name">contract.referral.commission.form</field>
+        <field name="model">contract.referral.commission</field>
+        <field name="arch" type="xml">
+            <form string="Referral Commission">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="referral_id" />
+                            <field name="partner_id" />
+                            <field name="invoice_id" />
+                            <field name="date" />
+                        </group>
+                        <group>
+                            <field name="base_amount" />
+                            <field name="commission_percent" />
+                            <field name="commission_amount" />
+                            <field name="currency_id" groups="base.group_multi_currency" />
+                            <field name="state" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="contract_referral_commission_list_view" model="ir.ui.view">
+        <field name="name">contract.referral.commission.list</field>
+        <field name="model">contract.referral.commission</field>
+        <field name="arch" type="xml">
+            <list string="Referral Commissions">
+                <field name="date" />
+                <field name="partner_id" />
+                <field name="referral_id" />
+                <field name="invoice_id" />
+                <field name="base_amount" />
+                <field name="commission_percent" />
+                <field name="commission_amount" />
+                <field name="currency_id" groups="base.group_multi_currency" />
+                <field name="state" widget="badge" />
+            </list>
+        </field>
+    </record>
+
+    <record id="contract_referral_commission_search_view" model="ir.ui.view">
+        <field name="name">contract.referral.commission.search</field>
+        <field name="model">contract.referral.commission</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="partner_id" />
+                <field name="referral_id" />
+                <field name="invoice_id" />
+                <filter
+                    name="pending"
+                    string="Pending"
+                    domain="[('state', '=', 'pending')]"
+                />
+                <filter
+                    name="paid"
+                    string="Paid"
+                    domain="[('state', '=', 'paid')]"
+                />
+                <filter
+                    name="cancelled"
+                    string="Cancelled"
+                    domain="[('state', '=', 'cancelled')]"
+                />
+                <group>
+                    <filter
+                        name="group_by_referrer"
+                        string="Referrer"
+                        context="{'group_by': 'partner_id'}"
+                    />
+                    <filter
+                        name="group_by_state"
+                        string="State"
+                        context="{'group_by': 'state'}"
+                    />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_contract_referral_commission" model="ir.actions.act_window">
+        <field name="name">Referral Commissions</field>
+        <field name="res_model">contract.referral.commission</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="contract_referral_commission_search_view" />
+    </record>
+
+    <menuitem
+        id="menu_contract_referral_commission"
+        name="Referral Commissions"
+        parent="contract.menu_config_contract"
+        action="action_contract_referral_commission"
+        sequence="21"
+    />
+</odoo>

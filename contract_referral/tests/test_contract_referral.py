@@ -1,0 +1,185 @@
+# Copyright 2026 PayOnline Ing
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+from datetime import timedelta
+
+from dateutil.relativedelta import relativedelta
+
+from odoo import Command, fields
+from odoo.exceptions import ValidationError
+
+from odoo.addons.contract.tests.test_contract import TestContractBase
+
+
+class TestContractReferral(TestContractBase):
+    def setUp(self):
+        super().setUp()
+        self.today = fields.Date.context_today(self)
+        self.referred_partner = self.env["res.partner"].create(
+            {
+                "name": "Referred Customer",
+                "email": "referred@example.com",
+            }
+        )
+        self.referred_contract = self._create_referred_contract()
+
+    def _create_referred_contract(self, **line_overrides):
+        vals = {
+            "product_id": self.product_1.id,
+            "name": "Service",
+            "quantity": 1,
+            "uom_id": self.product_1.uom_id.id,
+            "price_unit": 100,
+            "recurring_rule_type": "monthly",
+            "recurring_interval": 1,
+            "date_start": self.today,
+            "recurring_next_date": self.today,
+            "recurring_invoicing_type": "pre-paid",
+        }
+        vals.update(line_overrides)
+        return self.env["contract.contract"].create(
+            {
+                "name": "Referred contract",
+                "partner_id": self.referred_partner.id,
+                "pricelist_id": self.pricelist.id,
+                "line_recurrence": True,
+                "invoicing_mode": "validate",
+                "contract_line_ids": [Command.create(vals)],
+            }
+        )
+
+    def _create_referral(self, **overrides):
+        vals = {
+            "company_id": self.env.company.id,
+            "referrer_id": self.partner.id,
+            "referred_id": self.referred_partner.id,
+            "referred_contract_id": self.referred_contract.id,
+            "start_date": self.today,
+            "max_months": 6,
+            "max_invoices": 6,
+            "referrer_commission_percent": 10,
+            "referred_discount_percent": 15,
+            "commission_base": "untaxed",
+            "state": "active",
+        }
+        vals.update(overrides)
+        return self.env["contract.referral"].create(vals)
+
+    def _product_line(self, invoice):
+        return invoice.invoice_line_ids.filtered(
+            lambda line: line.display_type in (False, "product")
+        )[:1]
+
+    def test_referral_creates_discount_rule_and_commission(self):
+        referral = self._create_referral()
+        rule = referral.discount_rule_ids
+        self.assertEqual(len(rule), 1)
+        self.assertEqual(rule.source, "referral")
+        self.assertEqual(rule.referral_id, referral)
+        self.assertEqual(rule.discount, 15.0)
+
+        invoice = self.referred_contract.recurring_create_invoice()
+        self.assertEqual(invoice.state, "posted")
+        line = self._product_line(invoice)
+        self.assertEqual(line.discount, 15.0)
+        self.assertEqual(line.contract_discount_id, rule)
+        self.assertEqual(line.contract_discount_source, "referral")
+
+        commission = self.env["contract.referral.commission"].search(
+            [("referral_id", "=", referral.id)]
+        )
+        self.assertEqual(len(commission), 1)
+        self.assertEqual(commission.invoice_id, invoice)
+        self.assertEqual(commission.base_amount, invoice.amount_untaxed)
+        self.assertAlmostEqual(
+            commission.commission_amount,
+            round(invoice.amount_untaxed * 0.10, 2),
+            places=2,
+        )
+        self.assertEqual(commission.state, "pending")
+
+    def test_overdue_invoice_loses_referral_discount_forever(self):
+        referral = self._create_referral()
+        invoice = self.referred_contract.recurring_create_invoice()
+        invoice.write({"invoice_date_due": self.today - timedelta(days=1)})
+
+        next_invoice = self.referred_contract.recurring_create_invoice()
+        self.assertEqual(self._product_line(next_invoice).discount, 0.0)
+        referral.invalidate_recordset()
+        self.assertTrue(referral.referred_discount_lost)
+        # The referrer commission continues while the contract is active.
+        self.assertEqual(len(referral.commission_ids), 2)
+        self.assertEqual(
+            referral.referred_discount_lost_date,
+            self.today,
+        )
+        self.assertFalse(referral.discount_rule_ids.filtered("active"))
+
+        third_invoice = self.referred_contract.recurring_create_invoice()
+        self.assertEqual(self._product_line(third_invoice).discount, 0.0)
+
+    def test_max_invoices_limits_discount_and_commission(self):
+        referral = self._create_referral(max_invoices=1)
+        first_invoice = self.referred_contract.recurring_create_invoice()
+        self.assertEqual(self._product_line(first_invoice).discount, 15.0)
+        self.assertEqual(len(referral.commission_ids), 1)
+
+        second_invoice = self.referred_contract.recurring_create_invoice()
+        self.assertEqual(self._product_line(second_invoice).discount, 0.0)
+        referral.invalidate_recordset()
+        self.assertEqual(len(referral.commission_ids), 1)
+
+    def test_promotion_wins_over_referral(self):
+        referral = self._create_referral()
+        contract_line = self.referred_contract.contract_line_ids[:1]
+        promo = self.env["contract.invoice.discount"].create(
+            {
+                "name": "Promotion",
+                "contract_line_id": contract_line.id,
+                "discount": 20,
+                "date_start": self.today,
+                "date_end": self.today
+                + relativedelta(months=1)
+                - relativedelta(days=1),
+                "max_invoices": 1,
+                "source": "promotion",
+            }
+        )
+        first_invoice = self.referred_contract.recurring_create_invoice()
+        first_line = self._product_line(first_invoice)
+        self.assertEqual(first_line.discount, 20.0)
+        self.assertEqual(first_line.contract_discount_id, promo)
+        self.assertEqual(referral.discount_rule_ids.applied_invoice_count, 0)
+
+        promo.active = False
+        second_invoice = self.referred_contract.recurring_create_invoice()
+        second_line = self._product_line(second_invoice)
+        self.assertEqual(second_line.discount, 15.0)
+        self.assertEqual(second_line.contract_discount_source, "referral")
+
+    def test_referrer_and_referred_must_be_different(self):
+        with self.assertRaises(ValidationError):
+            self._create_referral(referrer_id=self.referred_partner.id)
+
+    def test_duplicate_active_referral_is_blocked(self):
+        self._create_referral()
+        with self.assertRaises(ValidationError):
+            self._create_referral()
+
+    def test_max_months_stops_discount_and_commission(self):
+        referral = self._create_referral(max_months=1, max_invoices=0)
+        first_invoice = self.referred_contract.recurring_create_invoice()
+        self.assertEqual(self._product_line(first_invoice).discount, 15.0)
+        self.assertEqual(len(referral.commission_ids), 1)
+
+        second_invoice = self.referred_contract.recurring_create_invoice()
+        self.assertEqual(self._product_line(second_invoice).discount, 0.0)
+        referral.invalidate_recordset()
+        self.assertEqual(len(referral.commission_ids), 1)
+
+    def test_inactive_contract_stops_benefits(self):
+        referral = self._create_referral()
+        self.referred_contract.active = False
+        invoice = self.referred_contract.recurring_create_invoice()
+        self.assertEqual(self._product_line(invoice).discount, 0.0)
+        referral.invalidate_recordset()
+        self.assertFalse(referral.commission_ids)
