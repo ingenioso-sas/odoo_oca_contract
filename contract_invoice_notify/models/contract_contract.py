@@ -87,7 +87,22 @@ class ContractContract(models.Model):
             and line.purpose == purpose
         )[:1]
         if override:
-            return override.template_id
+            expected_model = (
+                "account.move"
+                if purpose == "invoice_notification"
+                else "contract.contract"
+            )
+            template = override.template_id
+            if template.model_id.model == expected_model:
+                return template
+            _logger.warning(
+                "Ignoring notification template override %s for contract %s: "
+                "expected model %s, got %s.",
+                template.display_name,
+                self.display_name,
+                expected_model,
+                template.model_id.model,
+            )
         if channel_code == "email":
             if purpose == "invoice_notification":
                 return self._get_invoice_email_template()

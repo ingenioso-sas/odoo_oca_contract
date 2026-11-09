@@ -12,6 +12,10 @@
 - Los glues implementan `contract.notification.driver`.
 - El recordatorio de vencidas usa los mismos canales que la notificación.
 - No consolidar deuda: solo listar facturas vencidas.
+- Validar que la plantilla de `invoice_notification` sea de `account.move` y
+  la de `overdue_digest` de `contract.contract`.
+- Si un override tiene modelo incompatible, ignorarlo y usar la plantilla por
+  defecto.
 - Respetar `opt_out_overdue_reminder`.
 - Mantener migraciones directas y subir la versión al modificar campos o
   datos.

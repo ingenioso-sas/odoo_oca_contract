@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from odoo import fields
+from odoo.exceptions import ValidationError
 from odoo.fields import Command
 
 from odoo.addons.contract.tests.test_contract import TestContractBase
@@ -164,3 +165,43 @@ class TestContractInvoiceNotify(TestContractBase):
         move.write({"overdue_reminder_count": 0, "last_overdue_reminder_date": False})
         self.contract.partner_id.write({"opt_out_overdue_reminder": True})
         self.assertFalse(self.contract._send_overdue_digest())
+
+    def test_invalid_template_override_is_rejected(self):
+        whatsapp = self._channel("whatsapp")
+        bad_template = self.env.ref("contract.email_contract_template")
+        with self.assertRaises(ValidationError):
+            self.env["contract.notification.template"].create(
+                {
+                    "contract_id": self.contract.id,
+                    "channel_id": whatsapp.id,
+                    "purpose": "invoice_notification",
+                    "template_id": bad_template.id,
+                }
+            )
+
+    def test_invalid_override_falls_back_to_default_template(self):
+        whatsapp = self._channel("whatsapp")
+        default_template = self.env.ref(
+            "contract_invoice_notify.whatsapp_template_contract_invoice"
+        )
+        bad_template = self.env.ref("contract.email_contract_template")
+        override = self.env["contract.notification.template"].create(
+            {
+                "contract_id": self.contract.id,
+                "channel_id": whatsapp.id,
+                "purpose": "invoice_notification",
+                "template_id": default_template.id,
+            }
+        )
+        self.env.cr.execute(
+            "UPDATE contract_notification_template SET template_id = %s "
+            "WHERE id = %s",
+            (bad_template.id, override.id),
+        )
+        override.invalidate_recordset()
+        self._prepare_line()
+        invoice = self.contract.recurring_create_invoice()
+        selected = self.contract._get_notification_template(
+            invoice, "invoice_notification", "whatsapp"
+        )
+        self.assertEqual(selected, default_template)

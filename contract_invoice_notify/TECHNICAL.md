@@ -36,6 +36,9 @@ Override por contrato:
 - `channel_id`;
 - `purpose` (`invoice_notification`, `overdue_digest`);
 - `template_id` (`mail.template`).
+  - `invoice_notification` must use model `account.move`.
+  - `overdue_digest` must use model `contract.contract`.
+  - An invalid override is ignored and the default template is used.
 
 ### `contract.notification.driver`
 
