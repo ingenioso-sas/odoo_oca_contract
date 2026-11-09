@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 PayOnline Ing
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="contract_contract_form_view_lifecycle" model="ir.ui.view">
+        <field name="name">contract.contract.form.lifecycle</field>
+        <field name="model">contract.contract</field>
+        <field name="inherit_id" ref="contract.contract_contract_form_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field
+                    name="lifecycle_state"
+                    widget="statusbar"
+                    statusbar_visible="running,paused,terminated"
+                />
+                <field name="is_paused" invisible="1" />
+                <field name="can_resume" invisible="1" />
+                <field name="current_pause_id" invisible="1" />
+                <button
+                    name="action_pause_contract"
+                    type="object"
+                    string="Pause Contract"
+                    groups="account.group_account_manager"
+                    invisible="is_paused or is_terminated"
+                />
+                <button
+                    name="action_resume_contract"
+                    type="object"
+                    string="Resume Contract"
+                    groups="account.group_account_manager"
+                    invisible="not can_resume"
+                />
+            </xpath>
+            <xpath
+                expr="(//button[@name='action_terminate_contract'])[1]"
+                position="attributes"
+            >
+                <attribute name="string">Finalizar contrato</attribute>
+            </xpath>
+            <xpath
+                expr="(//button[@name='action_terminate_contract'])[2]"
+                position="attributes"
+            >
+                <attribute name="string">Actualizar terminación</attribute>
+            </xpath>
+            <xpath
+                expr="//button[@name='action_cancel_contract_termination']"
+                position="attributes"
+            >
+                <attribute name="invisible">1</attribute>
+                <attribute name="string">Cancelar terminación</attribute>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Pauses" name="pauses">
+                    <field name="pause_ids" readonly="1">
+                        <list>
+                            <field name="start_date" />
+                            <field name="end_date" />
+                            <field name="is_indefinite" />
+                            <field name="resume_date" />
+                            <field name="pause_days" />
+                            <field name="reason_id" />
+                            <field name="state" widget="badge" />
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="contract_contract_tree_view_lifecycle" model="ir.ui.view">
+        <field name="name">contract.contract.list.lifecycle</field>
+        <field name="model">contract.contract</field>
+        <field name="inherit_id" ref="contract.contract_contract_tree_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field
+                    name="lifecycle_state"
+                    optional="show"
+                    widget="badge"
+                    decoration-info="lifecycle_state == 'upcoming'"
+                    decoration-success="lifecycle_state == 'running'"
+                    decoration-warning="lifecycle_state == 'paused'"
+                    decoration-danger="lifecycle_state == 'terminated'"
+                />
+            </xpath>
+        </field>
+    </record>
+
+    <record id="contract_contract_search_view_lifecycle" model="ir.ui.view">
+        <field name="name">contract.contract.search.lifecycle</field>
+        <field name="model">contract.contract</field>
+        <field name="inherit_id" ref="contract.contract_contract_search_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='not_finished']" position="after">
+                <filter
+                    name="paused"
+                    string="Paused"
+                    domain="[('is_paused', '=', True)]"
+                />
+                <filter
+                    name="terminated"
+                    string="Terminated"
+                    domain="[('is_terminated', '=', True)]"
+                />
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
