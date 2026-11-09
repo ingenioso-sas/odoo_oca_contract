@@ -326,3 +326,27 @@ msgstr "El referente y el cliente referido deben ser diferentes."
 #. module: contract_referral
 msgid "There is already an active referral for this contract."
 msgstr "Ya existe un referido activo para este contrato."
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__paused_days
+msgid "Paused days"
+msgstr "Días pausados"
+
+#. module: contract_referral
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__paused_days
+msgid "Days the referral was paused. They extend the maximum duration."
+msgstr "Días que el referido estuvo pausado. Extienden la duración máxima."
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__is_adjustment
+msgid "Is adjustment"
+msgstr "Es ajuste"
+
+#. module: contract_referral
+#: model:ir.model.fields,help:contract_referral.field_contract_referral_commission__is_adjustment
+msgid ""
+"True when this record reverses a commission because of a refund or credit "
+"note."
+msgstr ""
+"Verdadero cuando este registro reversa una comisión por una devolución o "
+"nota de crédito."

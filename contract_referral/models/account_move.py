@@ -14,6 +14,7 @@ class AccountMove(models.Model):
         result = super()._post(soft=soft)
         try:
             self._create_referral_commissions()
+            self._create_referral_commission_adjustments()
         except Exception:  # noqa: BLE001 - never block invoice posting
             _logger.exception("Could not create referral commissions")
         return result
@@ -56,3 +57,43 @@ class AccountMove(models.Model):
                             ),
                         }
                     )
+
+    def _create_referral_commission_adjustments(self):
+        """Reverse commissions when a referred invoice is refunded."""
+        commission_model = self.env["contract.referral.commission"]
+        for refund in self.filtered(
+            lambda move: move.move_type == "out_refund"
+            and move.state == "posted"
+        ):
+            contracts = refund.invoice_line_ids.contract_line_id.contract_id
+            for contract in contracts:
+                referral = self.env["contract.referral"].search(
+                    [("referred_contract_id", "=", contract.id)],
+                    limit=1,
+                )
+                if (
+                    not referral
+                    or referral.referrer_commission_percent <= 0
+                ):
+                    continue
+                existing = commission_model.search(
+                    [
+                        ("referral_id", "=", referral.id),
+                        ("invoice_id", "=", refund.id),
+                    ],
+                    limit=1,
+                )
+                if existing:
+                    continue
+                base_amount = referral._get_commission_base_amount(refund)
+                commission_model.create(
+                    {
+                        "referral_id": referral.id,
+                        "invoice_id": refund.id,
+                        "base_amount": -base_amount,
+                        "commission_percent": (
+                            referral.referrer_commission_percent
+                        ),
+                        "is_adjustment": True,
+                    }
+                )

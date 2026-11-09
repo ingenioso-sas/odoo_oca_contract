@@ -14,3 +14,8 @@ Si el referido tiene una factura vencida, pierde el descuento para la
 siguiente factura y no lo recupera. La comisión del referente se mantiene
 mientras el contrato del referido siga activo, dentro de los límites
 configurados.
+
+
+Cuando el contrato del referido se pausa, los meses máximos del beneficio se
+congelan. Durante la pausa no se generan comisiones. Las notas de crédito
+generan un ajuste negativo de comisión.

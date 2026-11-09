@@ -52,6 +52,12 @@ class ContractReferral(models.Model):
         default=0,
         help="Maximum number of invoices for the benefit. 0 = unlimited.",
     )
+    paused_days = fields.Integer(
+        default=0,
+        readonly=True,
+        copy=False,
+        help="Days the referral was paused. They extend the maximum duration.",
+    )
     end_date = fields.Date(
         compute="_compute_end_date",
         store=True,
@@ -119,13 +125,14 @@ class ContractReferral(models.Model):
                 f"{referral.referred_id.display_name or ''}"
             ).strip(" →")
 
-    @api.depends("start_date", "max_months")
+    @api.depends("start_date", "max_months", "paused_days")
     def _compute_end_date(self):
         for referral in self:
             if referral.start_date and referral.max_months:
                 referral.end_date = (
                     referral.start_date
                     + relativedelta(months=referral.max_months)
+                    + relativedelta(days=referral.paused_days)
                     - relativedelta(days=1)
                 )
             else:
@@ -342,7 +349,10 @@ class ContractReferral(models.Model):
             return False
         if self.max_invoices:
             commission_count = self.env["contract.referral.commission"].search_count(
-                [("referral_id", "=", self.id)]
+                [
+                    ("referral_id", "=", self.id),
+                    ("is_adjustment", "=", False),
+                ]
             )
             if commission_count >= self.max_invoices:
                 return False
@@ -353,6 +363,10 @@ class ContractReferral(models.Model):
         if self.commission_base == "total":
             return invoice.amount_total
         return invoice.amount_untaxed
+
+    def _add_paused_days(self, days):
+        for referral in self:
+            referral.paused_days = max(referral.paused_days + days, 0)
 
     def action_cancel(self):
         self.write({"state": "cancelled"})

@@ -183,3 +183,42 @@ class TestContractReferral(TestContractBase):
         self.assertEqual(self._product_line(invoice).discount, 0.0)
         referral.invalidate_recordset()
         self.assertFalse(referral.commission_ids)
+
+    def test_refund_creates_negative_commission_adjustment(self):
+        referral = self._create_referral()
+        invoice = self.referred_contract.recurring_create_invoice()
+        commission = self.env["contract.referral.commission"].search(
+            [("referral_id", "=", referral.id)]
+        )
+        self.assertEqual(len(commission), 1)
+        self.assertFalse(commission.is_adjustment)
+
+        contract_line = self.referred_contract.contract_line_ids[:1]
+        refund = self.env["account.move"].create(
+            {
+                "move_type": "out_refund",
+                "partner_id": self.referred_partner.id,
+                "invoice_line_ids": [
+                    Command.create(
+                        {
+                            "product_id": self.product_1.id,
+                            "name": "Refund",
+                            "quantity": 1,
+                            "price_unit": 100,
+                            "contract_line_id": contract_line.id,
+                        }
+                    )
+                ],
+            }
+        )
+        refund.action_post()
+        adjustment = self.env["contract.referral.commission"].search(
+            [
+                ("referral_id", "=", referral.id),
+                ("invoice_id", "=", refund.id),
+                ("is_adjustment", "=", True),
+            ]
+        )
+        self.assertEqual(len(adjustment), 1)
+        self.assertLess(adjustment.base_amount, 0)
+        self.assertLess(adjustment.commission_amount, 0)

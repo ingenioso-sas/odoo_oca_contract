@@ -10,7 +10,12 @@ class ContractLine(models.Model):
     def create(self, vals_list):
         lines = super().create(vals_list)
         for line in lines.filtered(
-            lambda line: not line.display_type and line.contract_id
+            lambda line: not line.display_type
+            and line.contract_id
+            and not (
+                "predecessor_contract_line_id" in line._fields
+                and line.predecessor_contract_line_id
+            )
         ):
             referrals = self.env["contract.referral"].search(
                 [

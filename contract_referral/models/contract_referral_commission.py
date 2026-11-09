@@ -42,6 +42,12 @@ class ContractReferralCommission(models.Model):
         related="invoice_id.invoice_date",
         store=True,
     )
+    is_adjustment = fields.Boolean(
+        readonly=True,
+        copy=False,
+        help="True when this record reverses a commission because of a "
+        "refund or credit note.",
+    )
     base_amount = fields.Monetary(
         string="Commission Base",
         currency_field="currency_id",

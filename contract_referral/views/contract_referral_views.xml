@@ -52,6 +52,7 @@
                             <field name="commission_base" />
                             <field name="max_months" />
                             <field name="max_invoices" />
+                            <field name="paused_days" />
                             <field
                                 name="referred_discount_lost"
                                 invisible="not referred_discount_lost"
@@ -85,6 +86,7 @@
                                     <field name="base_amount" />
                                     <field name="commission_percent" />
                                     <field name="commission_amount" />
+                                    <field name="is_adjustment" optional="hide" />
                                     <field name="state" />
                                 </list>
                             </field>
@@ -112,6 +114,7 @@
                 <field name="referred_discount_percent" />
                 <field name="referrer_commission_percent" />
                 <field name="commission_count" />
+                <field name="paused_days" optional="hide" />
                 <field name="state" widget="badge" />
             </list>
         </field>

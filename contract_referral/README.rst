@@ -19,6 +19,10 @@ siguiente factura y no lo recupera. La comisión del referente se mantiene
 mientras el contrato del referido siga activo, dentro de los límites
 configurados.
 
+Cuando el contrato se pausa, los meses máximos del beneficio se congelan y no
+se generan comisiones. Las notas de crédito generan ajustes negativos de
+comisión.
+
 Uso
 ===
 

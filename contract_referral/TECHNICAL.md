@@ -58,6 +58,13 @@ El estado de la comisión refleja el estado de cobro de la factura del
 referido: borrador, pendiente, pagada o cancelada. No genera
 automáticamente una factura de proveedor para pagar la comisión.
 
+Cuando se valida una nota de crédito de una factura del referido, se crea un
+registro de comisión negativo (`is_adjustment=True`) para reversar la
+comisión. Los ajustes no consumen el máximo de facturas.
+
+`paused_days` extiende la fecha de fin del referido cuando el contrato se
+pausa. Los meses máximos se congelan durante la pausa.
+
 ## Límites
 
 - `max_months = 0`: sin límite de meses.
@@ -73,3 +80,5 @@ automáticamente una factura de proveedor para pagar la comisión.
 - No recalcula facturas históricas.
 - La comisión se calcula sobre la factura después de los descuentos.
 - Un referido se asocia a un contrato específico.
+- La comisión se registra al validar la factura; no se paga automáticamente.
+- Las notas de crédito generan ajustes negativos, no una nueva comisión.
