@@ -177,6 +177,46 @@ class TestContractInvoiceDiscount(TestContractBase):
         rule.invalidate_recordset()
         self.assertEqual(rule.applied_invoice_count, 1)
 
+    def test_next_invoice_mode_consumes_multiple_invoices(self):
+        contract, period_start, _period_end = self._backdated_contract()
+        rule = self._add_rule(
+            contract,
+            start_mode="next_invoice",
+            date_end=False,
+            max_invoices=2,
+        )
+        self.assertEqual(rule.date_start, period_start)
+
+        first = contract.recurring_create_invoice()
+        second = contract.recurring_create_invoice()
+        third = contract.recurring_create_invoice()
+
+        self.assertEqual(self._product_line(first).discount, 20.0)
+        self.assertEqual(self._product_line(second).discount, 20.0)
+        self.assertEqual(self._product_line(third).discount, 0.0)
+        self.assertEqual(rule.date_start, period_start)
+        rule.invalidate_recordset()
+        self.assertEqual(rule.applied_invoice_count, 2)
+        self.assertEqual(rule.remaining_invoices, 0)
+
+    def test_recompute_start_date_updates_existing_rule(self):
+        contract, _period_start, _period_end = self._backdated_contract()
+        rule = self._add_rule(
+            contract,
+            start_mode="contract_start",
+            date_end=False,
+            max_invoices=1,
+        )
+        line = contract.contract_line_ids.filtered(
+            lambda item: not item.display_type
+        )[:1]
+        new_start = line.date_start - relativedelta(days=10)
+        line.date_start = new_start
+        self.assertNotEqual(rule.date_start, new_start)
+
+        rule.action_recompute_date_start()
+        self.assertEqual(rule.date_start, new_start)
+
     def test_first_month_discount_then_regular_price(self):
         contract = self._create_contract()
         rule = self._add_rule(contract)
