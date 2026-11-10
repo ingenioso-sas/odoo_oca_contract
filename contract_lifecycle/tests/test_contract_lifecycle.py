@@ -66,7 +66,9 @@ class TestContractLifecycle(TestContractBase):
             lambda line: not line.display_type
         )[:1]
 
-    def _add_promo(self, contract_line, max_invoices=2):
+    def _add_promo(
+        self, contract_line, max_invoices=2, pause_policy="service"
+    ):
         return self.env["contract.invoice.discount"].create(
             {
                 "name": "Promotion",
@@ -78,6 +80,7 @@ class TestContractLifecycle(TestContractBase):
                 - relativedelta(days=1),
                 "max_invoices": max_invoices,
                 "source": "promotion",
+                "pause_policy": pause_policy,
             }
         )
 
@@ -124,7 +127,20 @@ class TestContractLifecycle(TestContractBase):
         self.assertEqual(line.date_end, pause_start - timedelta(days=1))
         successor = line.successor_contract_line_id
         self.assertEqual(successor.date_start, pause_end + timedelta(days=1))
-        self.assertEqual(successor.invoice_discount_ids.max_invoices, 2)
+        successor_rule = successor.invoice_discount_ids
+        self.assertEqual(successor_rule.max_invoices, 2)
+        pause_days = (pause_end - pause_start).days + 1
+        self.assertEqual(
+            successor_rule.date_start,
+            self.today + timedelta(days=pause_days),
+        )
+        self.assertEqual(
+            successor_rule.date_end,
+            self.today
+            + relativedelta(months=6)
+            - relativedelta(days=1)
+            + timedelta(days=pause_days),
+        )
         self.assertFalse(
             line.invoice_discount_ids.filtered(lambda rule: rule.active)
         )
@@ -147,6 +163,24 @@ class TestContractLifecycle(TestContractBase):
             successor,
         )
         self.assertEqual(invoices.invoice_line_ids.discount, 20.0)
+
+    def test_calendar_pause_policy_keeps_discount_dates(self):
+        line = self._product_line()
+        promo = self._add_promo(line, pause_policy="calendar")
+        original_start = promo.date_start
+        original_end = promo.date_end
+        pause_start = self.today + timedelta(days=10)
+        pause_end = self.today + timedelta(days=40)
+
+        self.contract._pause_contract(
+            pause_start, pause_end, False, self.pause_reason, "planned"
+        )
+
+        successor = line.successor_contract_line_id
+        successor_rule = successor.invoice_discount_ids
+        self.assertEqual(successor_rule.date_start, original_start)
+        self.assertEqual(successor_rule.date_end, original_end)
+        self.assertFalse(promo.active)
 
     def test_indefinite_pause_can_be_resumed(self):
         line = self._product_line()
