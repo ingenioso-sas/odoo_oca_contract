@@ -3,7 +3,7 @@
 {
     "name": "Contract Invoice Discount",
     "summary": "Scheduled percentage discounts on contract invoices",
-    "version": "19.0.1.1.0",
+    "version": "19.0.1.2.0",
     "category": "Contract Management",
     "website": "https://github.com/OCA/contract",
     "author": "Odoo Community Association (OCA)",

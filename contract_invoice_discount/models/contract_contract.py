@@ -27,6 +27,7 @@ class ContractContract(models.Model):
                     {
                         "name": new_line.promo_name or self.env._("Promotion"),
                         "discount": new_line.promo_discount,
+                        "start_mode": "contract_start",
                         "date_start": date_start,
                         "date_end": date_end,
                         "max_invoices": new_line.promo_max_invoices,

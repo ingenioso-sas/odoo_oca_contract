@@ -37,9 +37,23 @@ class ContractInvoiceDiscount(models.Model):
         help="Percentage applied to the invoice line. Only the highest "
         "applicable discount is used.",
     )
+    start_mode = fields.Selection(
+        selection=[
+            ("fixed_date", "Fixed date"),
+            ("contract_start", "Contract start"),
+            ("next_invoice", "Next invoice"),
+        ],
+        default="fixed_date",
+        required=True,
+        help="Defines how the start date is calculated. Fixed date uses the "
+        "date entered. Contract start uses the start date of the contract "
+        "line. Next invoice uses the first day of the next invoice period.",
+    )
     date_start = fields.Date(
         required=True,
         default=fields.Date.context_today,
+        help="Start date of the discount. It is calculated automatically "
+        "when the start mode is not fixed date.",
     )
     date_end = fields.Date(
         help="Leave empty for no date limit. If set, the discount is prorated "
@@ -112,12 +126,77 @@ class ContractInvoiceDiscount(models.Model):
                     self.env._("Maximum invoices cannot be negative.")
                 )
 
+    def _get_resolved_date_start(self):
+        """Return the start date implied by the selected start mode."""
+        self.ensure_one()
+        line = self.contract_line_id
+        if self.start_mode == "contract_start" and line:
+            return line.date_start or fields.Date.context_today(self)
+        if self.start_mode == "next_invoice" and line:
+            period_start, _period_end, _billing_date = (
+                line._get_period_to_invoice(
+                    line.last_date_invoiced, line.recurring_next_date
+                )
+            )
+            return (
+                period_start
+                or line.date_start
+                or fields.Date.context_today(self)
+            )
+        return self.date_start or fields.Date.context_today(self)
+
+    @api.onchange("start_mode", "contract_line_id")
+    def _onchange_start_mode(self):
+        if self.start_mode and self.start_mode != "fixed_date":
+            self.date_start = self._get_resolved_date_start()
+
+    def action_recompute_date_start(self):
+        """Reapply the start mode to already created rules."""
+        for rule in self:
+            if rule.start_mode == "fixed_date":
+                continue
+            rule.write({"date_start": rule._get_resolved_date_start()})
+        return True
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if "start_mode" not in vals:
+                default_mode = self.default_get(["start_mode"]).get(
+                    "start_mode"
+                )
+                if default_mode:
+                    vals["start_mode"] = default_mode
+            mode = vals.get("start_mode", "fixed_date")
+            if mode != "fixed_date":
+                temp = self.new(vals)
+                vals["date_start"] = temp._get_resolved_date_start()
+        return super().create(vals_list)
+
+    def write(self, vals):
+        vals = dict(vals)
+        if "start_mode" in vals and vals["start_mode"] != "fixed_date":
+            vals.pop("date_start", None)
+        recompute = "start_mode" in vals or "contract_line_id" in vals
+        result = super().write(vals)
+        if recompute:
+            for rule in self:
+                if rule.start_mode == "fixed_date":
+                    continue
+                date_start = rule._get_resolved_date_start()
+                if date_start and date_start != rule.date_start:
+                    super(ContractInvoiceDiscount, rule).write(
+                        {"date_start": date_start}
+                    )
+        return result
+
     def _get_applied_invoice_count(self):
         """Count invoices directly to avoid stale computed caches."""
         self.ensure_one()
         moves = self.env["account.move"].search(
             [
                 ("invoice_line_ids.contract_discount_id", "=", self.id),
+                ("move_type", "=", "out_invoice"),
                 ("state", "!=", "cancel"),
             ]
         )

@@ -61,6 +61,122 @@ class TestContractInvoiceDiscount(TestContractBase):
         vals.update(overrides)
         return self.env["contract.invoice.discount"].create(vals)
 
+    def _backdated_contract(self, line_start=None):
+        """Create a contract whose next invoice period is in the past."""
+        today = fields.Date.context_today(self)
+        month_start = today.replace(day=1)
+        period_start = month_start - relativedelta(months=2)
+        period_end = (
+            month_start - relativedelta(months=1) - relativedelta(days=1)
+        )
+        recurring_next_date = month_start - relativedelta(months=1)
+        last_date_invoiced = period_start - relativedelta(days=1)
+        contract = self._create_contract(
+            date_start=line_start or period_start - relativedelta(months=1),
+            last_date_invoiced=last_date_invoiced,
+            recurring_next_date=recurring_next_date,
+            recurring_invoicing_type="post-paid",
+        )
+        return contract, period_start, period_end
+
+    def test_next_invoice_start_mode_uses_next_period(self):
+        contract, period_start, _period_end = self._backdated_contract()
+        rule = self._add_rule(
+            contract,
+            start_mode="next_invoice",
+            date_end=False,
+            max_invoices=1,
+        )
+        self.assertEqual(rule.date_start, period_start)
+
+        invoice = contract.recurring_create_invoice()
+        line = self._product_line(invoice)
+        self.assertEqual(line.discount, 20.0)
+        self.assertEqual(line.contract_discount_id, rule)
+        self.assertEqual(rule.applied_invoice_count, 1)
+        self.assertEqual(rule.remaining_invoices, 0)
+
+    def test_contract_start_mode_uses_contract_line_start(self):
+        today = fields.Date.context_today(self)
+        line_start = today.replace(day=1) - relativedelta(months=4)
+        contract, _period_start, _period_end = self._backdated_contract(
+            line_start=line_start
+        )
+        rule = self._add_rule(
+            contract,
+            start_mode="contract_start",
+            date_end=False,
+            max_invoices=1,
+        )
+        self.assertEqual(rule.date_start, line_start)
+
+        invoice = contract.recurring_create_invoice()
+        self.assertEqual(self._product_line(invoice).discount, 20.0)
+
+    def test_fixed_date_start_mode_keeps_manual_date(self):
+        contract, period_start, _period_end = self._backdated_contract()
+        fixed_date = period_start - relativedelta(days=5)
+        rule = self._add_rule(
+            contract,
+            start_mode="fixed_date",
+            date_start=fixed_date,
+            date_end=False,
+            max_invoices=1,
+        )
+        self.assertEqual(rule.date_start, fixed_date)
+
+    def test_context_default_start_mode_is_next_invoice(self):
+        contract, period_start, _period_end = self._backdated_contract()
+        line = contract.contract_line_ids.filtered(
+            lambda item: not item.display_type
+        )[:1]
+        rule = (
+            self.env["contract.invoice.discount"]
+            .with_context(default_start_mode="next_invoice")
+            .create(
+                {
+                    "name": "Manual discount",
+                    "contract_line_id": line.id,
+                    "discount": 10,
+                    "max_invoices": 1,
+                }
+            )
+        )
+        self.assertEqual(rule.start_mode, "next_invoice")
+        self.assertEqual(rule.date_start, period_start)
+
+    def test_credit_note_does_not_consume_extra_invoice(self):
+        contract, _period_start, _period_end = self._backdated_contract()
+        rule = self._add_rule(
+            contract,
+            start_mode="next_invoice",
+            date_end=False,
+            max_invoices=2,
+        )
+        invoice = contract.recurring_create_invoice()
+        self.assertEqual(rule.applied_invoice_count, 1)
+
+        product_line = self._product_line(invoice)
+        self.env["account.move"].create(
+            {
+                "move_type": "out_refund",
+                "partner_id": self.partner.id,
+                "invoice_line_ids": [
+                    Command.create(
+                        {
+                            "name": "Refund",
+                            "quantity": 1,
+                            "price_unit": product_line.price_unit,
+                            "account_id": product_line.account_id.id,
+                            "contract_discount_id": rule.id,
+                        }
+                    )
+                ],
+            }
+        )
+        rule.invalidate_recordset()
+        self.assertEqual(rule.applied_invoice_count, 1)
+
     def test_first_month_discount_then_regular_price(self):
         contract = self._create_contract()
         rule = self._add_rule(contract)
@@ -154,7 +270,9 @@ class TestContractInvoiceDiscount(TestContractBase):
             form.contract_template_id = template
             contract = form.save()
 
-        self.assertTrue(contract.contract_line_ids.invoice_discount_ids)
+        rule = contract.contract_line_ids.invoice_discount_ids[:1]
+        self.assertTrue(rule)
+        self.assertEqual(rule.start_mode, "contract_start")
         invoice = contract.recurring_create_invoice()
         line = self._product_line(invoice)
         self.assertEqual(line.discount, 20.0)

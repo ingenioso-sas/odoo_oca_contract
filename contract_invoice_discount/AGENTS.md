@@ -16,6 +16,15 @@
   `service` extiende; `calendar` mantiene las fechas originales.
 - La promoción de plantilla se define en la línea de plantilla y se copia al
   crear el contrato.
+- `start_mode` resuelve `date_start` al crear la regla:
+  `fixed_date` usa la fecha manual, `contract_start` usa el inicio de la
+  línea y `next_invoice` usa el inicio del próximo período a facturar.
+- La fecha resuelta se guarda; no recalcularla en cada factura para no
+  duplicar el desplazamiento por pausa.
+- Las reglas de referido y las copias por sucesión usan `fixed_date` para
+  conservar su fecha explícita.
+- `applied_invoice_count` cuenta solo facturas de cliente (`out_invoice`),
+  no notas de crédito.
 
 ## Archivos clave
 

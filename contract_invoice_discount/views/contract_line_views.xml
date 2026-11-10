@@ -13,12 +13,28 @@
                     name="invoice_discounts"
                     invisible="display_type"
                 >
-                    <field name="invoice_discount_ids" nolabel="1">
+                    <field
+                        name="invoice_discount_ids"
+                        nolabel="1"
+                        context="{'default_start_mode': 'next_invoice'}"
+                    >
                         <list editable="bottom">
+                            <button
+                                name="action_recompute_date_start"
+                                type="object"
+                                icon="fa-refresh"
+                                title="Recalculate start date"
+                                invisible="start_mode == 'fixed_date'"
+                            />
                             <field name="sequence" widget="handle" />
                             <field name="name" />
                             <field name="discount" />
-                            <field name="date_start" />
+                            <field name="start_mode" />
+                            <field
+                                name="date_start"
+                                readonly="start_mode != 'fixed_date'"
+                                force_save="1"
+                            />
                             <field name="date_end" />
                             <field name="max_invoices" />
                             <field name="applied_invoice_count" />

@@ -283,3 +283,49 @@ msgid ""
 msgstr ""
 "Extender durante la pausa conserva el beneficio por la misma cantidad de "
 "tiempo de servicio. No extender mantiene las fechas originales."
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__start_mode
+msgid "Start Mode"
+msgstr "Modo de inicio"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__start_mode__fixed_date
+msgid "Fixed date"
+msgstr "Fecha fija"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__start_mode__contract_start
+msgid "Contract start"
+msgstr "Inicio del contrato"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__start_mode__next_invoice
+msgid "Next invoice"
+msgstr "Próxima factura"
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_invoice_discount__start_mode
+msgid ""
+"Defines how the start date is calculated. Fixed date uses the date entered. "
+"Contract start uses the start date of the contract line. Next invoice uses "
+"the first day of the next invoice period."
+msgstr ""
+"Define cómo se calcula la fecha de inicio. Fecha fija usa la fecha "
+"ingresada. Inicio del contrato usa la fecha de inicio de la línea del "
+"contrato. Próxima factura usa el primer día del próximo período a facturar."
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_invoice_discount__date_start
+msgid ""
+"Start date of the discount. It is calculated automatically when the start "
+"mode is not fixed date."
+msgstr ""
+"Fecha de inicio del descuento. Se calcula automáticamente cuando el modo de "
+"inicio no es fecha fija."
+
+#. module: contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_form_view
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_line_form_view_invoice_discount
+msgid "Recalculate start date"
+msgstr "Recalcular fecha de inicio"

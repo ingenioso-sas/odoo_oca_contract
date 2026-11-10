@@ -12,6 +12,7 @@ Campos principales:
 - `contract_line_id`;
 - `name`;
 - `discount`;
+- `start_mode` (`fixed_date` / `contract_start` / `next_invoice`);
 - `date_start` / `date_end`;
 - `max_invoices`;
 - `source`;
@@ -20,6 +21,23 @@ Campos principales:
 - `applied_invoice_count` y `remaining_invoices`.
 
 El estado se calcula como programado, activo, vencido, agotado o inactivo.
+
+## Modo de inicio
+
+`start_mode` define cómo se obtiene `date_start` al crear la regla:
+
+- `fixed_date`: usa la fecha ingresada manualmente.
+- `contract_start`: usa `contract_line_id.date_start`.
+- `next_invoice`: usa el primer día del próximo período a facturar,
+  calculado con `_get_period_to_invoice()`.
+
+La fecha resuelta se guarda en `date_start`. No se recalcula en cada factura
+para no interferir con `pause_policy`. Si la línea del contrato cambia, se
+puede volver a aplicar con `action_recompute_date_start`.
+
+Las reglas creadas desde una plantilla usan `contract_start`. Las reglas de
+referido y las copias por sucesión conservan su fecha explícita con
+`fixed_date`.
 
 ## Cálculo
 

@@ -3,10 +3,17 @@
 3. Crear una regla con:
    - nombre;
    - porcentaje;
+   - modo de inicio: fecha fija, inicio del contrato o próxima factura;
    - fecha de inicio y fin;
    - máximo de facturas (0 = sin límite);
    - política de pausa: extender durante la pausa o mantener fechas.
 4. Generar la factura desde el contrato.
+
+Con **Próxima factura**, la regla empieza en el próximo período que se va a
+facturar, aunque el contrato esté atrasado o tenga fecha de inicio anterior.
+Con **Inicio del contrato**, empieza en la fecha de inicio de la línea. En
+ambos casos la fecha se calcula al guardar la regla y queda visible en
+**Fecha inicio**.
 
 La factura muestra la columna estándar **Descuento** y, debajo de la
 descripción de la línea, el nombre y la vigencia del descuento aplicado.
