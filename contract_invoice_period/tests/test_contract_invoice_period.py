@@ -113,6 +113,47 @@ class TestContractInvoicePeriod(TestContractBase):
             },
         )
 
+    def test_consecutive_invoices_keep_their_own_periods(self):
+        contract = self._create_contract()
+
+        first = contract.recurring_create_invoice()
+        second = contract.recurring_create_invoice()
+        third = contract.recurring_create_invoice()
+
+        self.assertEqual(first.contract_period_start, date(2026, 1, 1))
+        self.assertEqual(first.contract_period_end, date(2026, 1, 31))
+        self.assertEqual(second.contract_period_start, date(2026, 2, 1))
+        self.assertEqual(second.contract_period_end, date(2026, 2, 28))
+        self.assertEqual(third.contract_period_start, date(2026, 3, 1))
+        self.assertEqual(third.contract_period_end, date(2026, 3, 31))
+
+    def test_section_lines_do_not_get_contract_period(self):
+        contract = self._create_contract(
+            lines=[
+                self._line_vals(),
+                {
+                    "display_type": "line_section",
+                    "name": "Services",
+                },
+            ]
+        )
+        section = contract.contract_line_ids.filtered(
+            lambda line: line.display_type == "line_section"
+        )
+        product = contract.contract_line_ids.filtered(
+            lambda line: not line.display_type
+        )[:1]
+
+        section_vals = section._prepare_invoice_line() or {}
+        product_vals = product._prepare_invoice_line() or {}
+
+        self.assertNotIn("contract_period_start", section_vals)
+        self.assertNotIn("contract_period_end", section_vals)
+        self.assertNotIn("contract_billing_date", section_vals)
+        self.assertIn("contract_period_start", product_vals)
+        self.assertIn("contract_period_end", product_vals)
+        self.assertIn("contract_billing_date", product_vals)
+
     def test_manual_invoice_without_contract_has_empty_period(self):
         invoice = self.env["account.move"].create(
             {
