@@ -22,7 +22,7 @@ class TestContractReferral(TestContractBase):
         )
         self.referred_contract = self._create_referred_contract()
 
-    def _create_referred_contract(self, **line_overrides):
+    def _create_referred_contract(self, line_count=1, **line_overrides):
         vals = {
             "product_id": self.product_1.id,
             "name": "Service",
@@ -36,6 +36,12 @@ class TestContractReferral(TestContractBase):
             "recurring_invoicing_type": "pre-paid",
         }
         vals.update(line_overrides)
+        lines = []
+        for index in range(line_count):
+            line_vals = dict(vals)
+            if index:
+                line_vals["name"] = f"{vals['name']} {index + 1}"
+            lines.append(Command.create(line_vals))
         return self.env["contract.contract"].create(
             {
                 "name": "Referred contract",
@@ -43,7 +49,7 @@ class TestContractReferral(TestContractBase):
                 "pricelist_id": self.pricelist.id,
                 "line_recurrence": True,
                 "invoicing_mode": "validate",
-                "contract_line_ids": [Command.create(vals)],
+                "contract_line_ids": lines,
             }
         )
 
@@ -76,6 +82,8 @@ class TestContractReferral(TestContractBase):
         self.assertEqual(rule.source, "referral")
         self.assertEqual(rule.referral_id, referral)
         self.assertEqual(rule.discount, 15.0)
+        self.assertEqual(rule.start_mode, "fixed_date")
+        self.assertEqual(rule.date_start, self.today)
 
         invoice = self.referred_contract.recurring_create_invoice()
         self.assertEqual(invoice.state, "posted")
@@ -96,6 +104,37 @@ class TestContractReferral(TestContractBase):
             places=2,
         )
         self.assertEqual(commission.state, "pending")
+
+    def test_commission_base_total_uses_total_amount(self):
+        referral = self._create_referral(commission_base="total")
+        invoice = self.referred_contract.recurring_create_invoice()
+        commission = self.env["contract.referral.commission"].search(
+            [("referral_id", "=", referral.id)]
+        )
+        self.assertEqual(len(commission), 1)
+        self.assertEqual(commission.base_amount, invoice.amount_total)
+        self.assertAlmostEqual(
+            commission.commission_amount,
+            round(invoice.amount_total * 0.10, 2),
+            places=2,
+        )
+
+    def test_multiple_lines_get_discount_and_single_commission(self):
+        contract = self._create_referred_contract(line_count=2)
+        referral = self._create_referral(referred_contract_id=contract.id)
+        self.assertEqual(len(referral.discount_rule_ids), 2)
+
+        invoice = contract.recurring_create_invoice()
+        product_lines = invoice.invoice_line_ids.filtered(
+            lambda line: line.display_type in (False, "product")
+        )
+        self.assertEqual(len(product_lines), 2)
+        self.assertEqual(set(product_lines.mapped("discount")), {15.0})
+        self.assertEqual(
+            set(product_lines.mapped("contract_discount_source")),
+            {"referral"},
+        )
+        self.assertEqual(len(referral.commission_ids), 1)
 
     def test_overdue_invoice_loses_referral_discount_forever(self):
         referral = self._create_referral()
