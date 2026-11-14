@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 PayOnline Ing
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="contract_line_form_view_invoice_discount" model="ir.ui.view">
+        <field name="name">contract.line.form.invoice.discount</field>
+        <field name="model">contract.line</field>
+        <field name="inherit_id" ref="contract.contract_line_form_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page
+                    string="Invoice Discounts"
+                    name="invoice_discounts"
+                    invisible="display_type"
+                >
+                    <field
+                        name="invoice_discount_ids"
+                        nolabel="1"
+                        context="{'default_start_mode': 'next_invoice'}"
+                    >
+                        <list editable="bottom">
+                            <button
+                                name="action_recompute_date_start"
+                                type="object"
+                                icon="fa-refresh"
+                                title="Recalculate start date"
+                                invisible="start_mode == 'fixed_date'"
+                            />
+                            <field name="sequence" widget="handle" />
+                            <field name="name" />
+                            <field name="discount" />
+                            <field name="start_mode" />
+                            <field
+                                name="date_start"
+                                readonly="start_mode != 'fixed_date'"
+                                force_save="1"
+                            />
+                            <field name="date_end" />
+                            <field name="max_invoices" />
+                            <field name="applied_invoice_count" />
+                            <field name="remaining_invoices" />
+                            <field name="source" />
+                            <field name="pause_policy" optional="hide" />
+                            <field name="state" />
+                            <field name="active" />
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+            <xpath expr="//field[@name='promo_name']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='promo_discount']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath
+                expr="//field[@name='promo_duration_months']"
+                position="attributes"
+            >
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath
+                expr="//field[@name='promo_max_invoices']"
+                position="attributes"
+            >
+                <attribute name="invisible">1</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="contract_line_tree_view_invoice_discount" model="ir.ui.view">
+        <field name="name">contract.line.list.invoice.discount</field>
+        <field name="model">contract.line</field>
+        <field name="inherit_id" ref="contract.contract_line_tree_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='discount']" position="after">
+                <field name="invoice_discount_count" optional="hide" />
+            </xpath>
+        </field>
+    </record>
+</odoo>

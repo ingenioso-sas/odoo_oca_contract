@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 PayOnline Ing
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <template
+        id="portal_contract_page_lifecycle"
+        inherit_id="contract.portal_contract_page"
+        name="Contract portal lifecycle"
+    >
+        <xpath expr="//div[@t-if='contract.date_end']" position="after">
+            <div t-if="contract.lifecycle_state" class="row mb-2 mb-sm-1">
+                <div class="col-12 col-sm-4">
+                    <strong>Status</strong>
+                </div>
+                <div class="col-12 col-sm-8">
+                    <span t-out="contract.lifecycle_state" />
+                </div>
+            </div>
+            <div
+                t-if="contract.current_pause_id"
+                class="row mb-2 mb-sm-1"
+            >
+                <div class="col-12 col-sm-4">
+                    <strong>Paused until</strong>
+                </div>
+                <div class="col-12 col-sm-8">
+                    <span
+                        t-if="contract.current_pause_id.end_date"
+                        t-field="contract.current_pause_id.end_date"
+                    />
+                    <span t-else="">Indefinite</span>
+                </div>
+            </div>
+            <div t-if="contract.is_terminated" class="row mb-2 mb-sm-1">
+                <div class="col-12 col-sm-4">
+                    <strong>Terminated on</strong>
+                </div>
+                <div class="col-12 col-sm-8">
+                    <span t-field="contract.terminate_date" />
+                </div>
+            </div>
+        </xpath>
+    </template>
+</odoo>

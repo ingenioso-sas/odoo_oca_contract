@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+contract_notification_channel_manager,Contract notification channel manager,model_contract_notification_channel,account.group_account_manager,1,1,1,1
+contract_notification_channel_user,Contract notification channel user,model_contract_notification_channel,account.group_account_invoice,1,0,0,0
+contract_notification_template_manager,Contract notification template manager,model_contract_notification_template,account.group_account_manager,1,1,1,1
+contract_notification_template_user,Contract notification template user,model_contract_notification_template,account.group_account_invoice,1,0,0,0

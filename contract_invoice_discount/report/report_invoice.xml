@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 PayOnline Ing
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record
+        id="report_invoice_document_invoice_discount"
+        model="ir.ui.view"
+    >
+        <field name="name">
+            account.report_invoice_document.invoice.discount
+        </field>
+        <field name="model" eval="False" />
+        <field name="inherit_id" ref="account.report_invoice_document" />
+        <field name="arch" type="xml">
+            <xpath
+                expr="//td[@name='account_invoice_line_name']"
+                position="inside"
+            >
+                <div
+                    t-if="line.contract_discount_name"
+                    class="text-muted small"
+                    name="contract_discount_note"
+                >
+                    <t t-out="line.contract_discount_name" />
+                    <t t-if="line.contract_discount_until">
+                        — <t t-out="line.contract_discount_until" />
+                    </t>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 PayOnline Ing
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="contract_line_form_view_referral" model="ir.ui.view">
+        <field name="name">contract.line.form.referral</field>
+        <field name="model">contract.line</field>
+        <field name="inherit_id" ref="contract_invoice_discount.contract_line_form_view_invoice_discount" />
+        <field name="arch" type="xml">
+            <xpath
+                expr="//field[@name='invoice_discount_ids']/list/field[@name='source']"
+                position="after"
+            >
+                <field name="referral_id" optional="hide" />
+            </xpath>
+        </field>
+    </record>
+</odoo>

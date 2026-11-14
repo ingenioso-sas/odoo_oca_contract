@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 PayOnline Ing
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="view_move_form_contract_invoice_period" model="ir.ui.view">
+        <field name="name">account.move.form.contract.invoice.period</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form" />
+        <field name="arch" type="xml">
+            <xpath
+                expr="//group[@id='header_right_group']/field[@name='delivery_date']"
+                position="after"
+            >
+                <field
+                    name="contract_id"
+                    invisible="not contract_id"
+                    readonly="1"
+                />
+                <field
+                    name="contract_billing_date"
+                    invisible="not contract_billing_date"
+                    readonly="1"
+                />
+                <field
+                    name="contract_period_start"
+                    invisible="not contract_period_start"
+                    readonly="1"
+                />
+                <field
+                    name="contract_period_end"
+                    invisible="not contract_period_end"
+                    readonly="1"
+                />
+            </xpath>
+            <xpath
+                expr="//field[@name='invoice_line_ids']/list/field[@name='name']"
+                position="after"
+            >
+                <field name="contract_billing_date" optional="hide" readonly="1" />
+                <field
+                    name="contract_period_start"
+                    optional="hide"
+                    readonly="1"
+                />
+                <field name="contract_period_end" optional="hide" readonly="1" />
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_invoice_tree_contract_invoice_period" model="ir.ui.view">
+        <field name="name">account.invoice.list.contract.invoice.period</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='invoice_origin']" position="after">
+                <field name="contract_billing_date" optional="hide" />
+                <field name="contract_period_start" optional="hide" />
+                <field name="contract_period_end" optional="hide" />
+            </xpath>
+        </field>
+    </record>
+
+    <record
+        id="view_account_invoice_filter_contract_invoice_period"
+        model="ir.ui.view"
+    >
+        <field name="name">account.invoice.select.contract.invoice.period</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_account_invoice_filter" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='invoice_user_id']" position="after">
+                <field name="contract_id" />
+            </xpath>
+            <xpath expr="//filter[@name='out_refund']" position="after">
+                <filter
+                    name="contract_invoice"
+                    string="Contract invoices"
+                    domain="[('contract_id', '!=', False)]"
+                />
+            </xpath>
+            <xpath expr="//filter[@name='duedate']" position="after">
+                <filter
+                    name="group_by_contract"
+                    string="Contract"
+                    context="{'group_by': 'contract_id'}"
+                />
+                <filter
+                    name="group_by_contract_period"
+                    string="Invoiced Period"
+                    context="{'group_by': 'contract_period_start'}"
+                />
+            </xpath>
+        </field>
+    </record>
+</odoo>

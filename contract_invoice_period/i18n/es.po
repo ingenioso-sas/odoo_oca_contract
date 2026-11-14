@@ -1,0 +1,112 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* contract_invoice_period
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-08 00:00+0000\n"
+"PO-Revision-Date: 2026-11-08 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: contract_invoice_period
+#: model:ir.model.fields,field_description:contract_invoice_period.field_account_move__contract_id
+#: model:ir.model.fields,field_description:contract_invoice_period.field_account_move_line__contract_id
+#: model_terms:ir.ui.view,arch_db:contract_invoice_period.view_account_invoice_filter_contract_invoice_period
+msgid "Contract"
+msgstr "Contrato"
+
+#. module: contract_invoice_period
+#: model:ir.model.fields,field_description:contract_invoice_period.field_account_move__contract_billing_date
+#: model:ir.model.fields,field_description:contract_invoice_period.field_account_move_line__contract_billing_date
+msgid "Contract Billing Date"
+msgstr "Fecha de facturación del contrato"
+
+#. module: contract_invoice_period
+#: model_terms:ir.ui.view,arch_db:contract_invoice_period.report_invoice_document_contract_invoice_period
+msgid "<strong>Contract Billing Date</strong>"
+msgstr "<strong>Fecha de facturación del contrato</strong>"
+
+#. module: contract_invoice_period
+#: model:ir.model.fields,field_description:contract_invoice_period.field_account_move__contract_period_end
+#: model:ir.model.fields,field_description:contract_invoice_period.field_account_move_line__contract_period_end
+msgid "Contract Period End"
+msgstr "Fin del período facturado"
+
+#. module: contract_invoice_period
+#: model:ir.model.fields,field_description:contract_invoice_period.field_account_move__contract_period_start
+#: model:ir.model.fields,field_description:contract_invoice_period.field_account_move_line__contract_period_start
+msgid "Contract Period Start"
+msgstr "Inicio del período facturado"
+
+#. module: contract_invoice_period
+#: model_terms:ir.ui.view,arch_db:contract_invoice_period.view_account_invoice_filter_contract_invoice_period
+msgid "Contract invoices"
+msgstr "Facturas de contrato"
+
+#. module: contract_invoice_period
+#: model:ir.model.fields,help:contract_invoice_period.field_account_move__contract_billing_date
+#: model:ir.model.fields,help:contract_invoice_period.field_account_move_line__contract_billing_date
+msgid "Contract next invoice date used to generate this invoice."
+msgstr "Fecha de próxima factura del contrato usada para generar esta factura."
+
+#. module: contract_invoice_period
+#: model:ir.model.fields,help:contract_invoice_period.field_account_move__contract_period_end
+#: model:ir.model.fields,help:contract_invoice_period.field_account_move_line__contract_period_end
+msgid ""
+"Last date of the invoiced period. For invoices with lines from different "
+"periods it is the latest end date."
+msgstr ""
+"Última fecha del período facturado. Para facturas con líneas de períodos "
+"distintos, es la fecha de fin más tardía."
+
+#. module: contract_invoice_period
+#: model:ir.model.fields,help:contract_invoice_period.field_account_move__contract_period_start
+#: model:ir.model.fields,help:contract_invoice_period.field_account_move_line__contract_period_start
+msgid ""
+"First date of the invoiced period. For invoices with lines from different "
+"periods it is the earliest start date."
+msgstr ""
+"Primera fecha del período facturado. Para facturas con líneas de períodos "
+"distintos, es la fecha de inicio más temprana."
+
+#. module: contract_invoice_period
+#: model:ir.model.fields,help:contract_invoice_period.field_account_move__contract_id
+msgid ""
+"Contract that originated this invoice. Empty when the invoice was not "
+"generated from a contract."
+msgstr ""
+"Contrato que originó esta factura. Vacío cuando la factura no se generó "
+"desde un contrato."
+
+#. module: contract_invoice_period
+#: model:ir.model.fields,help:contract_invoice_period.field_account_move_line__contract_period_start
+msgid "First date of the period covered by this contract invoice line."
+msgstr "Primera fecha del período cubierto por esta línea de factura de contrato."
+
+#. module: contract_invoice_period
+#: model:ir.model.fields,help:contract_invoice_period.field_account_move_line__contract_period_end
+msgid "Last date of the period covered by this contract invoice line."
+msgstr "Última fecha del período cubierto por esta línea de factura de contrato."
+
+#. module: contract_invoice_period
+#: model:ir.model.fields,help:contract_invoice_period.field_account_move_line__contract_billing_date
+msgid "Date of the next contract invoice used to generate this line."
+msgstr "Fecha de la próxima factura del contrato usada para generar esta línea."
+
+#. module: contract_invoice_period
+#: model_terms:ir.ui.view,arch_db:contract_invoice_period.view_account_invoice_filter_contract_invoice_period
+msgid "Invoiced Period"
+msgstr "Período facturado"
+
+#. module: contract_invoice_period
+#: model_terms:ir.ui.view,arch_db:contract_invoice_period.report_invoice_document_contract_invoice_period
+msgid "<strong>Invoiced Period</strong>"
+msgstr "<strong>Período facturado</strong>"

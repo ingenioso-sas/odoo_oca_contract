@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 PayOnline Ing
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="contract_pause_wizard_form_view" model="ir.ui.view">
+        <field name="name">contract.pause.wizard.form</field>
+        <field name="model">contract.pause.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Pause Contract">
+                <group>
+                    <field name="contract_id" readonly="1" />
+                    <field name="start_date" />
+                    <field name="is_indefinite" />
+                    <field name="end_date" invisible="is_indefinite" />
+                    <field name="reason_id" />
+                    <field name="requires_comment" invisible="1" />
+                    <field
+                        name="comment"
+                        required="requires_comment"
+                        placeholder="Required for this reason"
+                    />
+                </group>
+                <footer>
+                    <button
+                        name="action_pause"
+                        string="Pause Contract"
+                        type="object"
+                        class="btn-primary"
+                        confirm="The contract will stop invoicing during the pause. Continue?"
+                    />
+                    <button string="Cancel" class="btn-default" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="contract_resume_wizard_form_view" model="ir.ui.view">
+        <field name="name">contract.resume.wizard.form</field>
+        <field name="model">contract.resume.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Resume Contract">
+                <group>
+                    <field name="contract_id" readonly="1" />
+                    <field name="pause_id" readonly="1" />
+                    <field name="resume_date" />
+                </group>
+                <footer>
+                    <button
+                        name="action_resume"
+                        string="Resume Contract"
+                        type="object"
+                        class="btn-primary"
+                    />
+                    <button string="Cancel" class="btn-default" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

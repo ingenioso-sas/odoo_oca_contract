@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 PayOnline Ing
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="contract_contract_terminate_form_view_lifecycle" model="ir.ui.view">
+        <field name="name">contract.contract.terminate.form.lifecycle</field>
+        <field name="model">contract.contract.terminate</field>
+        <field
+            name="inherit_id"
+            ref="contract_termination.contract_contract_terminate_form_view"
+        />
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes">
+                <attribute name="string">Finalizar contrato</attribute>
+            </xpath>
+            <field name="terminate_date" position="attributes">
+                <attribute name="string">Fecha de terminación</attribute>
+            </field>
+            <field name="terminate_reason_id" position="attributes">
+                <attribute name="string">Motivo de terminación</attribute>
+            </field>
+            <field name="terminate_comment" position="attributes">
+                <attribute name="string">Comentario de terminación</attribute>
+            </field>
+            <field name="terminate_with_last_date_invoiced" position="attributes">
+                <attribute name="string">Terminar con la última fecha facturada</attribute>
+            </field>
+            <button name="terminate_contract" position="attributes">
+                <attribute name="string">Finalizar contrato</attribute>
+            </button>
+            <xpath expr="//button[@special='cancel']" position="attributes">
+                <attribute name="string">Cancelar</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

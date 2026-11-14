@@ -141,6 +141,15 @@ class ContractContract(models.Model):
         readonly=True,
         copy=False,
     )
+    # === Recurring revenue ===
+    recurring_monthly_total = fields.Monetary(
+        compute="_compute_recurring_monthly_total",
+        store=True,
+        string="Monthly Recurring Total",
+        help="Sum of lines monthly recurring amounts (MRR), based on the "
+        "native monthly_recurring field of contract lines.",
+    )
+
     # === Compute Methods ===
 
     def _compute_access_url(self):
@@ -225,6 +234,19 @@ class ContractContract(models.Model):
             date_end = contract.contract_line_ids.mapped("date_end")
             if date_end and all(date_end):
                 contract.date_end = max(date_end)
+
+    @api.depends(
+        "contract_line_ids.monthly_recurring",
+        "contract_line_ids.is_canceled",
+        "contract_line_ids.display_type",
+    )
+    def _compute_recurring_monthly_total(self):
+        for contract in self:
+            contract.recurring_monthly_total = sum(
+                contract.contract_line_ids.filtered(
+                    lambda line: not line.display_type and not line.is_canceled
+                ).mapped("monthly_recurring")
+            )
 
     def _inverse_partner_id(self):
         for rec in self:
@@ -671,7 +693,66 @@ class ContractContract(models.Model):
         self._add_contract_origin(moves)
         self._invoice_followers(moves)
         self._compute_recurring_next_date()
+        self._auto_validate_invoices(moves)
         return moves
+
+    def _auto_validate_invoices(self, moves):
+        """Post/send invoices per contract invoicing mode.
+
+        Unified entry point (replaces the old global
+        contract_invoice_auto_validate behaviour). Can be set per
+        contract/template instead of globally per company.
+        """
+        for contract in self:
+            contract_moves = moves & contract._get_related_invoices()
+            if not contract_moves or contract.invoicing_mode == "draft":
+                continue
+            draft_moves = contract_moves.filtered(lambda m: m.state == "draft")
+            if not draft_moves:
+                continue
+            try:
+                draft_moves.action_post()
+            except Exception as exc:  # noqa: BLE001 - keep cron robust
+                _logger.warning(
+                    "Could not auto-validate invoices %s for contract %s: %s",
+                    draft_moves.ids,
+                    contract.display_name,
+                    exc,
+                )
+                contract.message_post(
+                    body=Markup(
+                        self.env._("Automatic validation failed: %s") % exc,
+                    )
+                )
+                continue
+            if contract.invoicing_mode == "validate_send":
+                template = contract.invoice_mail_template_id
+                if not template:
+                    # Fallback to the standard EDI invoice template which
+                    # already includes portal access_url + Pay Now link when
+                    # a payment provider is configured.
+                    template = self.env.ref(
+                        "account.email_template_edi_invoice",
+                        raise_if_not_found=False,
+                    )
+                for move in draft_moves.filtered(lambda m: m.state == "posted"):
+                    if template:
+                        try:
+                            template.send_mail(
+                                move.id, force_send=False, raise_exception=False
+                            )
+                        except Exception as exc:  # noqa: BLE001
+                            _logger.warning(
+                                "Could not send invoice %s: %s", move.id, exc
+                            )
+                    move.message_post(
+                        body=Markup(
+                            self.env._(
+                                "Invoice auto-validated and sent from contract %s"
+                            )
+                            % contract._get_html_link()
+                        )
+                    )
 
     @api.model
     def _get_recurring_create_func(self, create_type="invoice"):

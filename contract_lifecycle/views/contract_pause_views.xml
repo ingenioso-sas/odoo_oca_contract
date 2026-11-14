@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 PayOnline Ing
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="contract_pause_form_view" model="ir.ui.view">
+        <field name="name">contract.pause.form</field>
+        <field name="model">contract.pause</field>
+        <field name="arch" type="xml">
+            <form string="Contract Pause">
+                <header>
+                    <field name="state" widget="statusbar" />
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="contract_id" />
+                            <field name="company_id" groups="base.group_multi_company" />
+                            <field name="start_date" />
+                            <field name="end_date" invisible="is_indefinite" />
+                            <field name="is_indefinite" />
+                            <field name="pause_days" />
+                            <field name="resume_date" />
+                        </group>
+                        <group>
+                            <field name="reason_id" />
+                            <field name="comment" />
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Paused Lines" name="lines">
+                            <field name="line_ids" readonly="1">
+                                <list>
+                                    <field name="contract_line_id" />
+                                    <field name="action" />
+                                    <field name="original_date_start" />
+                                    <field name="original_date_end" />
+                                    <field name="successor_contract_line_id" />
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="contract_pause_list_view" model="ir.ui.view">
+        <field name="name">contract.pause.list</field>
+        <field name="model">contract.pause</field>
+        <field name="arch" type="xml">
+            <list string="Contract Pauses">
+                <field name="name" />
+                <field name="contract_id" />
+                <field name="start_date" />
+                <field name="end_date" />
+                <field name="is_indefinite" />
+                <field name="resume_date" />
+                <field name="pause_days" />
+                <field name="reason_id" />
+                <field name="state" widget="badge" />
+            </list>
+        </field>
+    </record>
+
+    <record id="contract_pause_search_view" model="ir.ui.view">
+        <field name="name">contract.pause.search</field>
+        <field name="model">contract.pause</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="contract_id" />
+                <field name="reason_id" />
+                <filter
+                    name="active"
+                    string="Active"
+                    domain="[('state', '=', 'active')]"
+                />
+                <filter
+                    name="indefinite"
+                    string="Indefinite"
+                    domain="[('is_indefinite', '=', True)]"
+                />
+                <group>
+                    <filter
+                        name="group_by_contract"
+                        string="Contract"
+                        context="{'group_by': 'contract_id'}"
+                    />
+                    <filter
+                        name="group_by_state"
+                        string="State"
+                        context="{'group_by': 'state'}"
+                    />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_contract_pause" model="ir.actions.act_window">
+        <field name="name">Contract Pauses</field>
+        <field name="res_model">contract.pause</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="contract_pause_search_view" />
+    </record>
+
+    <menuitem
+        id="menu_contract_pause"
+        name="Contract Pauses"
+        parent="contract.menu_config_contract"
+        action="action_contract_pause"
+        sequence="23"
+    />
+</odoo>

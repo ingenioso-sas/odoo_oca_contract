@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <record id="notification_channel_email" model="contract.notification.channel">
+        <field name="code">email</field>
+        <field name="name">Email</field>
+        <field name="sequence">10</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <record id="notification_channel_whatsapp" model="contract.notification.channel">
+        <field name="code">whatsapp</field>
+        <field name="name">WhatsApp</field>
+        <field name="sequence">20</field>
+        <field name="active" eval="True"/>
+    </record>
+
+</odoo>

@@ -17,3 +17,13 @@ class TestContractAutoValidate(TestContractBase):
         invoice = contracts._recurring_create_invoice()
         self.assertTrue(invoice.exists())
         self.assertEqual(invoice.state, "posted")
+
+    def test_invoicing_mode_validate_skips_legacy_fallback(self):
+        """invoicing_mode=validate is handled by contract._auto_validate_invoices;
+        the legacy company-flag fallback must skip it (no double post)."""
+        contracts = self.contract2
+        contracts.invoicing_mode = "validate"
+        contracts.company_id.auto_post_contract_invoice = True
+        invoice = contracts._recurring_create_invoice()
+        self.assertTrue(invoice.exists())
+        self.assertEqual(invoice.state, "posted")
