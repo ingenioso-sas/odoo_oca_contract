@@ -316,3 +316,29 @@ class TestProductTemplate(BaseCommon):
             "monthlylastday", 1, "pre-paid", "2018-04-16", "2018-04-16", False
         )
         self._assert_prorated(0.5)
+
+    def test_prorated_month_end_clamping_returns_one(self):
+        """Full cycles starting on Jan 31 or Feb 29 must return exactly 1.0."""
+        self._prepare_contract_line(
+            "monthly", 1, "pre-paid", "2025-01-31", "2025-01-31", False
+        )
+        self._assert_prorated(1.0)
+        self._prepare_contract_line(
+            "yearly", 1, "pre-paid", "2024-02-29", "2024-02-29", False
+        )
+        self._assert_prorated(1.0)
+
+    def test_prorated_post_paid_early_stop_uses_current_month_days(self):
+        """Early stop in March 2025 must divide by 31 days, not 28 of February."""
+        self._prepare_contract_line(
+            "monthly", 1, "post-paid", "2025-03-01", "2025-03-28", "2025-03-27"
+        )
+        dates = self.contract_line._get_period_to_invoice(
+            self.contract_line.last_date_invoiced,
+            self.contract_line.recurring_next_date,
+        )
+        self.assertAlmostEqual(
+            27 / 31,
+            self.contract_line.compute_prorated(*dates),
+            places=4,
+        )

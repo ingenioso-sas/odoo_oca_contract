@@ -121,10 +121,18 @@ class ContractContract(models.Model):
         comment=False,
     ):
         self.ensure_one()
+        if not self.env.user.has_group("account.group_account_manager"):
+            raise UserError(
+                self.env._("Only accounting managers can pause contracts.")
+            )
         if self.is_terminated:
             raise UserError(self.env._("A terminated contract cannot be paused."))
-        if self.is_paused:
+        if self.is_paused or self.pause_ids.filtered(
+            lambda item: item.state in ("active", "scheduled")
+        ):
             raise UserError(self.env._("The contract is already paused."))
+        if not reason:
+            raise ValidationError(self.env._("A pause reason is required."))
         if not start_date:
             raise ValidationError(self.env._("The pause start date is required."))
         if is_indefinite:
@@ -139,6 +147,15 @@ class ContractContract(models.Model):
             raise ValidationError(
                 self.env._("The selected pause reason requires a comment.")
             )
+        eligible_lines = self._get_product_lines().filtered(
+            lambda line: not line.date_end or line.date_end >= start_date
+        )
+        if not eligible_lines:
+            raise ValidationError(
+                self.env._("There are no active contract lines eligible to pause.")
+            )
+        today = fields.Date.context_today(self)
+        pause_state = "scheduled" if start_date > today else "active"
         pause_days = 0 if is_indefinite else (end_date - start_date).days + 1
         pause = self.env["contract.pause"].create(
             {
@@ -148,24 +165,32 @@ class ContractContract(models.Model):
                 "is_indefinite": is_indefinite,
                 "reason_id": reason.id,
                 "comment": comment,
-                "state": "active",
+                "state": pause_state,
             }
         )
-        self.is_paused = True
-        for line in self._get_product_lines():
-            if line.date_end and line.date_end < start_date:
-                continue
+        self.is_paused = pause_state == "active"
+        for line in eligible_lines:
             original = {
                 "original_date_start": line.date_start,
                 "original_date_end": line.date_end,
                 "original_recurring_next_date": line.recurring_next_date,
+                "original_is_auto_renew": line.is_auto_renew,
             }
             action = "delayed"
             successor = self.env["contract.line"]
-            if line.date_start and line.date_start >= start_date:
+            if (
+                line.date_start
+                and line.date_start >= start_date
+                and not line.last_date_invoiced
+            ):
                 if not is_indefinite:
                     old_start = line.date_start
-                    line.stop_plan_successor(start_date, end_date, False)
+                    preserve_renew = bool(
+                        original["original_is_auto_renew"] and line.date_end
+                    )
+                    line.with_context(skip_referral_sync=True).stop_plan_successor(
+                        start_date, end_date, preserve_renew
+                    )
                     shift_days = (
                         (line.date_start - old_start).days
                         if line.date_start and old_start
@@ -173,25 +198,63 @@ class ContractContract(models.Model):
                     )
                     if shift_days:
                         self._shift_discount_rules(line, shift_days)
-                # Indefinite future lines stay untouched; the paused flag
-                # prevents the invoice cron from processing them.
+                # Indefinite future un-invoiced lines stay untouched until resume.
             elif is_indefinite:
                 if not line.is_stop_allowed:
                     continue
                 line.stop(start_date - timedelta(days=1), manual_renew_needed=True)
-                line.recurring_next_date = start_date
                 action = "stopped"
+            elif line.date_start and line.date_start >= start_date:
+                # Future/today line already invoiced: stop/refund then recreate resumed line.
+                if not line.is_stop_allowed:
+                    continue
+                new_start = end_date + timedelta(days=1)
+                new_end = (
+                    line.date_end + timedelta(days=pause_days)
+                    if line.date_end
+                    else False
+                )
+                line.stop(start_date - timedelta(days=1), manual_renew_needed=True)
+                action = "stopped"
+                rec_next = line.get_next_invoice_date(
+                    new_start,
+                    line.recurring_invoicing_type,
+                    line.recurring_invoicing_offset,
+                    line.recurring_rule_type,
+                    line.recurring_interval,
+                    max_date_end=new_end,
+                )
+                vals = line.copy_data(
+                    {
+                        "date_start": new_start,
+                        "date_end": new_end,
+                        "recurring_next_date": rec_next,
+                        "is_auto_renew": bool(
+                            original["original_is_auto_renew"] and new_end
+                        ),
+                        "manual_renew_needed": False,
+                        "is_canceled": False,
+                    }
+                )[0]
+                successor = (
+                    self.env["contract.line"]
+                    .with_context(skip_referral_sync=True)
+                    .create(vals)
+                )
+                self._copy_discount_rules(line, successor, pause_days)
             else:
                 if not line.is_stop_plan_successor_allowed:
                     continue
-                line.stop_plan_successor(start_date, end_date, False)
+                preserve_renew = bool(
+                    original["original_is_auto_renew"] and line.date_end
+                )
+                line.with_context(skip_referral_sync=True).stop_plan_successor(
+                    start_date, end_date, preserve_renew
+                )
                 successor = line.successor_contract_line_id
                 if successor:
                     action = "stopped"
                     self._copy_discount_rules(line, successor, pause_days)
-                    line.recurring_next_date = (
-                        successor.recurring_next_date or successor.date_start
-                    )
                 else:
                     old_start = original["original_date_start"]
                     shift_days = (
@@ -212,22 +275,28 @@ class ContractContract(models.Model):
             )
         if not is_indefinite:
             self._add_referral_paused_days(pause_days)
-        self.message_post(
-            body=self.env._(
-                "Contract paused from %(start)s%(end)s. Reason: %(reason)s",
+        if is_indefinite:
+            body = self.env._(
+                "Contract paused from %(start)s with no end date. Reason: %(reason)s",
                 start=start_date,
-                end=(
-                    self.env._(" with no end date")
-                    if is_indefinite
-                    else self.env._(" to %(date)s", date=end_date)
-                ),
                 reason=reason.name,
             )
-        )
+        else:
+            body = self.env._(
+                "Contract paused from %(start)s to %(end)s. Reason: %(reason)s",
+                start=start_date,
+                end=end_date,
+                reason=reason.name,
+            )
+        self.message_post(body=body)
         return pause
 
     def _resume_contract(self, pause, resume_date):
         self.ensure_one()
+        if not self.env.user.has_group("account.group_account_manager"):
+            raise UserError(
+                self.env._("Only accounting managers can resume contracts.")
+            )
         if pause.state != "active" or not pause.is_indefinite:
             raise UserError(self.env._("This pause cannot be resumed manually."))
         if resume_date < pause.start_date:
@@ -258,17 +327,34 @@ class ContractContract(models.Model):
                     line.recurring_interval,
                     max_date_end=new_end,
                 )
-                successor = line.plan_successor(
-                    new_start,
-                    new_end,
-                    False,
-                    recurring_next_date=recurring_next_date,
-                )
+                preserve_renew = bool(pause_line.original_is_auto_renew and new_end)
+                if line.is_canceled:
+                    vals = line.copy_data(
+                        {
+                            "date_start": new_start,
+                            "date_end": new_end,
+                            "recurring_next_date": recurring_next_date,
+                            "is_auto_renew": preserve_renew,
+                            "manual_renew_needed": False,
+                            "is_canceled": False,
+                        }
+                    )[0]
+                    successor = (
+                        self.env["contract.line"]
+                        .with_context(skip_referral_sync=True)
+                        .create(vals)
+                    )
+                else:
+                    successor = line.with_context(
+                        skip_referral_sync=True
+                    ).plan_successor(
+                        new_start,
+                        new_end,
+                        preserve_renew,
+                        recurring_next_date=recurring_next_date,
+                    )
                 pause_line.successor_contract_line_id = successor
                 self._copy_discount_rules(line, successor, pause_days)
-                line.recurring_next_date = (
-                    successor.recurring_next_date or successor.date_start
-                )
         self._add_referral_paused_days(pause_days)
         pause.write(
             {
@@ -285,14 +371,17 @@ class ContractContract(models.Model):
     def _shift_line_dates(self, line, days):
         if not days:
             return
+        vals = {}
         if line.date_start:
-            line.date_start = line.date_start + timedelta(days=days)
+            vals["date_start"] = line.date_start + timedelta(days=days)
         if line.date_end:
-            line.date_end = line.date_end + timedelta(days=days)
+            vals["date_end"] = line.date_end + timedelta(days=days)
         if line.recurring_next_date:
-            line.recurring_next_date = (
-                line.recurring_next_date + timedelta(days=days)
+            vals["recurring_next_date"] = line.recurring_next_date + timedelta(
+                days=days
             )
+        if vals:
+            line.write(vals)
 
     def _shift_discount_rules(self, line, days):
         if not days:
@@ -300,15 +389,17 @@ class ContractContract(models.Model):
         for rule in line.invoice_discount_ids.filtered("active"):
             if rule.pause_policy != "service":
                 continue
-            rule.date_start = rule.date_start + timedelta(days=days)
+            vals = {"date_start": rule.date_start + timedelta(days=days)}
             if rule.date_end:
-                rule.date_end = rule.date_end + timedelta(days=days)
+                vals["date_end"] = rule.date_end + timedelta(days=days)
+            rule.write(vals)
 
     def _copy_discount_rules(self, source_line, target_line, pause_days):
         for rule in source_line.invoice_discount_ids.filtered("active"):
             if rule.max_invoices:
                 remaining = rule.max_invoices - rule.applied_invoice_count
                 if remaining <= 0:
+                    rule.active = False
                     continue
             else:
                 remaining = 0
@@ -323,7 +414,9 @@ class ContractContract(models.Model):
                 Command.create(
                     {
                         "name": rule.name,
+                        "sequence": rule.sequence,
                         "discount": rule.discount,
+                        "start_mode": "fixed_date",
                         "date_start": date_start,
                         "date_end": date_end,
                         "max_invoices": remaining,
@@ -347,7 +440,9 @@ class ContractContract(models.Model):
         referrals._add_paused_days(days)
 
     def _close_active_pauses_for_termination(self, terminate_date):
-        pauses = self.pause_ids.filtered(lambda item: item.state == "active")
+        pauses = self.pause_ids.filtered(
+            lambda item: item.state in ("active", "scheduled")
+        )
         for pause in pauses:
             if (
                 not pause.is_indefinite
@@ -407,16 +502,19 @@ class ContractContract(models.Model):
             [domain, [("is_paused", "=", False)]]
         )
 
-    def recurring_create_invoice(self):
+    def recurring_create_invoice(self, date_ref=False):
         self.ensure_one()
-        self.env["contract.pause"]._close_planned_pauses(
-            fields.Date.context_today(self)
-        )
-        return super().recurring_create_invoice()
+        today = date_ref or fields.Date.context_today(self)
+        Pause = self.env["contract.pause"]
+        Pause._activate_scheduled_pauses(today, contract_ids=self.ids)
+        Pause._close_planned_pauses(today, contract_ids=self.ids)
+        return super().recurring_create_invoice(date_ref=date_ref)
 
     @api.model
     def _cron_recurring_create(self, date_ref=False, create_type="invoice"):
         if not date_ref:
             date_ref = fields.Date.context_today(self)
-        self.env["contract.pause"]._close_planned_pauses(date_ref)
+        Pause = self.env["contract.pause"]
+        Pause._activate_scheduled_pauses(date_ref)
+        Pause._close_planned_pauses(date_ref)
         return super()._cron_recurring_create(date_ref, create_type)

@@ -40,7 +40,7 @@ class TestContractRefund(TestContractBase):
         """
         self.contract.recurring_create_invoice()
         self.assertEqual(len(self._get_contract_invoices()), 1)
-        self.acct_line.stop(self.acct_line.last_date_invoiced - timedelta(days=30))
+        self.acct_line.stop(self.acct_line.date_start - timedelta(days=1))
         self.assertEqual(len(self._get_contract_invoices()), 2)
         refund = self._get_contract_invoices().filtered(
             lambda m: m.move_type == "out_refund"
@@ -67,33 +67,30 @@ class TestContractRefund(TestContractBase):
         )
         self.assertTrue(refund)
         refund_line = refund.invoice_line_ids
-        self.assertEqual(refund_line.quantity, expected_quantity)
+        self.assertAlmostEqual(refund_line.quantity, expected_quantity, places=2)
 
     def test_3(self):
         """stop after creating two invoices, refund 2 periods"""
         self.contract.recurring_create_invoice()
         self.contract.recurring_create_invoice()
         self.assertEqual(self.acct_line.last_date_invoiced, to_date("2018-02-28"))
-        self._test_refund_quantity_prorated(to_date("2018-01-01"), 2)
+        self._test_refund_quantity_prorated(to_date("2017-12-31"), 2)
 
     def test_4(self):
         """stop after creating two invoices, refund one period and a half"""
         self.contract.recurring_create_invoice()
         self.contract.recurring_create_invoice()
         self.assertEqual(self.acct_line.last_date_invoiced, to_date("2018-02-28"))
-        self._test_refund_quantity_prorated(to_date("2018-01-15"), 1.5)
+        self._test_refund_quantity_prorated(to_date("2018-01-14"), 1.5)
 
     def test_5(self):
-        """stop after creating two invoices, refund 3 periods"""
+        """stop before date_start cancels line and refunds entire invoiced range"""
         self.contract.recurring_create_invoice()
         self.contract.recurring_create_invoice()
         self.assertEqual(self.acct_line.last_date_invoiced, to_date("2018-02-28"))
-        with self.assertRaisesRegex(
-            ValidationError,
-            "You can't have the start date after the date of last invoice"
-            " for the contract line",
-        ):
-            self._test_refund_quantity_prorated(to_date("2017-12-01"), 3)
+        self._test_refund_quantity_prorated(to_date("2017-12-01"), 2)
+        self.assertTrue(self.acct_line.is_canceled)
+        self.assertFalse(self.acct_line.last_date_invoiced)
 
     def test_6(self):
         """monthlylastday post-paid stop after creating two invoices, refund 2
@@ -104,7 +101,7 @@ class TestContractRefund(TestContractBase):
         self.contract.recurring_create_invoice()
         self.contract.recurring_create_invoice()
         self.assertEqual(self.acct_line.last_date_invoiced, to_date("2018-02-28"))
-        self._test_refund_quantity_prorated(to_date("2018-01-01"), 2)
+        self._test_refund_quantity_prorated(to_date("2017-12-31"), 2)
 
     def test_7(self):
         """monthlylastday post-paid stop after creating two invoices, refund 1.5
@@ -115,7 +112,7 @@ class TestContractRefund(TestContractBase):
         self.contract.recurring_create_invoice()
         self.contract.recurring_create_invoice()
         self.assertEqual(self.acct_line.last_date_invoiced, to_date("2018-02-28"))
-        self._test_refund_quantity_prorated(to_date("2018-01-16"), 1.52)
+        self._test_refund_quantity_prorated(to_date("2018-01-15"), 1.52)
 
     def test_8(self):
         """monthlylastday pre-paid stop after creating two invoices, refund 1.5
@@ -126,7 +123,7 @@ class TestContractRefund(TestContractBase):
         self.contract.recurring_create_invoice()
         self.contract.recurring_create_invoice()
         self.assertEqual(self.acct_line.last_date_invoiced, to_date("2018-02-28"))
-        self._test_refund_quantity_prorated(to_date("2018-01-16"), 1.52)
+        self._test_refund_quantity_prorated(to_date("2018-01-15"), 1.52)
 
     def test_9(self):
         """yearly pre-paid stop after creating one invoice, refund 0.5 periods"""
@@ -135,4 +132,16 @@ class TestContractRefund(TestContractBase):
         self.assertEqual(self.acct_line.recurring_next_date, to_date("2018-01-01"))
         self.contract.recurring_create_invoice()
         self.assertEqual(self.acct_line.last_date_invoiced, to_date("2018-12-31"))
-        self._test_refund_quantity_prorated(to_date("2018-06-30"), 0.51)
+        self._test_refund_quantity_prorated(to_date("2018-06-30"), 0.50)
+
+    def test_single_day_refund_not_dropped(self):
+        """Stopping 1 day before last_date_invoiced must refund that 1 day."""
+        self.contract.recurring_create_invoice()
+        self.assertEqual(self.acct_line.last_date_invoiced, to_date("2018-01-31"))
+        self.acct_line.stop(to_date("2018-01-30"))
+        refund = self._get_contract_invoices().filtered(
+            lambda m: m.move_type == "out_refund"
+        )
+        self.assertTrue(refund)
+        self.assertGreater(refund.invoice_line_ids.quantity, 0)
+        self.assertAlmostEqual(refund.invoice_line_ids.quantity, 0.04, places=2)

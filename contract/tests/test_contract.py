@@ -1883,3 +1883,24 @@ class TestContract(TestContractBase):
             self.acct_line._insert_markers(start, False),
             f"{start.strftime(date_format)} -  (January)",
         )
+
+    def test_postpaid_cron_last_invoice_and_finished_next_date(self):
+        self.acct_line.write(
+            {
+                "date_start": "2018-01-01",
+                "date_end": "2018-01-31",
+                "recurring_rule_type": "monthly",
+                "recurring_interval": 1,
+                "recurring_invoicing_type": "post-paid",
+                "recurring_next_date": "2018-02-01",
+            }
+        )
+        self.contract.contract_line_ids.filtered(
+            lambda l: l != self.acct_line
+        ).unlink()
+        self.env["contract.contract"].cron_recurring_create_invoice(
+            date_ref=to_date("2018-02-01")
+        )
+        self.assertEqual(self.acct_line.last_date_invoiced, to_date("2018-01-31"))
+        self.assertFalse(self.acct_line.recurring_next_date)
+        self.assertFalse(self.contract.recurring_next_date)

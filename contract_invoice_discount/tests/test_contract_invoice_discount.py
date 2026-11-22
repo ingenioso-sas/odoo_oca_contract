@@ -330,3 +330,23 @@ class TestContractInvoiceDiscount(TestContractBase):
         )
         text = html.decode() if isinstance(html, bytes) else str(html)
         self.assertIn("First month promotion", text)
+
+    def test_write_start_mode_and_date_end_together(self):
+        contract, _period_start, _period_end = self._backdated_contract()
+        today = fields.Date.context_today(self)
+        rule = self._add_rule(
+            contract,
+            start_mode="fixed_date",
+            date_start=today + relativedelta(months=2),
+            date_end=today + relativedelta(months=3),
+            max_invoices=1,
+        )
+        line = contract.contract_line_ids.filtered(lambda l: not l.display_type)[:1]
+        rule.write(
+            {
+                "start_mode": "contract_start",
+                "date_end": line.date_start + relativedelta(days=20),
+            }
+        )
+        self.assertEqual(rule.date_start, line.date_start)
+        self.assertEqual(rule.date_end, line.date_start + relativedelta(days=20))

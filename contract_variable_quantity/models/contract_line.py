@@ -45,6 +45,7 @@ class ContractLine(models.Model):
         if (
             "quantity" in vals
             and not self.display_type
+            and not self.env.context.get("skip_zero_qty_check")
             and self.contract_id.skip_zero_qty
             and float_is_zero(
                 vals["quantity"],

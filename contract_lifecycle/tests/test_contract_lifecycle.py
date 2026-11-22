@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 
 from odoo import Command, fields
 from odoo.exceptions import UserError
+from odoo.tests.common import new_test_user
 
 from odoo.addons.contract.tests.test_contract import TestContractBase
 
@@ -111,6 +112,39 @@ class TestContractLifecycle(TestContractBase):
             ]
         )
 
+    def test_pause_and_resume_wizards_allow_account_manager(self):
+        manager = new_test_user(
+            self.env,
+            login="lifecycle_manager",
+            groups="base.group_user,account.group_account_manager",
+        )
+        pause_wizard = (
+            self.env["contract.pause.wizard"]
+            .with_user(manager)
+            .create(
+                {
+                    "contract_id": self.contract.id,
+                    "start_date": self.today,
+                    "is_indefinite": True,
+                    "reason_id": self.pause_reason.id,
+                }
+            )
+        )
+        pause_wizard.action_pause()
+
+        resume_wizard = (
+            self.env["contract.resume.wizard"]
+            .with_user(manager)
+            .create(
+                {
+                    "contract_id": self.contract.id,
+                    "pause_id": self.contract.current_pause_id.id,
+                    "resume_date": self.today + timedelta(days=5),
+                }
+            )
+        )
+        resume_wizard.action_resume()
+
     def test_planned_pause_blocks_invoices_and_resumes(self):
         line = self._product_line()
         self._add_promo(line)
@@ -121,8 +155,10 @@ class TestContractLifecycle(TestContractBase):
             pause_start, pause_end, False, self.pause_reason, "planned"
         )
 
-        self.assertTrue(self.contract.is_paused)
-        self.assertEqual(self.contract.lifecycle_state, "paused")
+        # Future scheduled pause must not mark the contract paused yet.
+        self.assertEqual(pause.state, "scheduled")
+        self.assertFalse(self.contract.is_paused)
+        self.assertEqual(self.contract.lifecycle_state, "running")
         self.assertTrue(line.successor_contract_line_id)
         self.assertEqual(line.date_end, pause_start - timedelta(days=1))
         successor = line.successor_contract_line_id
@@ -145,6 +181,11 @@ class TestContractLifecycle(TestContractBase):
             line.invoice_discount_ids.filtered(lambda rule: rule.active)
         )
 
+        # Once pause_start arrives, the scheduled pause activates and blocks invoicing.
+        self.env["contract.pause"]._activate_scheduled_pauses(pause_start)
+        self.assertEqual(pause.state, "active")
+        self.assertTrue(self.contract.is_paused)
+        self.assertEqual(self.contract.lifecycle_state, "paused")
         self.contract._cron_recurring_create(pause_start + timedelta(days=5))
         self.assertFalse(self._invoices())
 
@@ -159,10 +200,13 @@ class TestContractLifecycle(TestContractBase):
         invoices = self._invoices()
         self.assertEqual(len(invoices), 1)
         self.assertEqual(
-            invoices.invoice_line_ids.contract_line_id,
-            successor,
+            invoices.invoice_line_ids.mapped("contract_line_id"),
+            line | successor,
         )
-        self.assertEqual(invoices.invoice_line_ids.discount, 20.0)
+        successor_inv_line = invoices.invoice_line_ids.filtered(
+            lambda inv_line: inv_line.contract_line_id == successor
+        )
+        self.assertEqual(successor_inv_line.discount, 20.0)
 
     def test_calendar_pause_policy_keeps_discount_dates(self):
         line = self._product_line()
@@ -190,6 +234,8 @@ class TestContractLifecycle(TestContractBase):
             pause_start, False, True, self.pause_reason, "indefinite"
         )
 
+        self.assertEqual(pause.state, "scheduled")
+        self.env["contract.pause"]._activate_scheduled_pauses(pause_start)
         self.assertTrue(self.contract.is_paused)
         self.assertFalse(line.successor_contract_line_id)
         self.contract._cron_recurring_create(pause_start + timedelta(days=5))
@@ -210,7 +256,10 @@ class TestContractLifecycle(TestContractBase):
         self.contract._cron_recurring_create(resume_date + timedelta(days=1))
         invoices = self._invoices()
         self.assertEqual(len(invoices), 1)
-        self.assertEqual(invoices.invoice_line_ids.discount, 20.0)
+        successor_inv_line = invoices.invoice_line_ids.filtered(
+            lambda inv_line: inv_line.contract_line_id == successor
+        )
+        self.assertEqual(successor_inv_line.discount, 20.0)
 
     def test_planned_pause_freezes_referral_and_keeps_remaining_invoices(self):
         first_invoice = self.contract.recurring_create_invoice()
@@ -255,6 +304,17 @@ class TestContractLifecycle(TestContractBase):
         self.assertTrue(refund)
         self.assertEqual(refund.state, "draft")
 
+    def test_terminate_wizard_has_reasons_and_allows_creating_one(self):
+        self.assertTrue(
+            self.env.ref(
+                "contract_lifecycle.contract_terminate_reason_end_of_service"
+            ).exists()
+        )
+        arch = self.env["contract.contract.terminate"].get_view(view_type="form")[
+            "arch"
+        ]
+        self.assertNotIn('widget="selection"', arch)
+
     def test_termination_is_final_and_finishes_referral(self):
         referral = self._create_referral()
         line = self._product_line()
@@ -271,3 +331,21 @@ class TestContractLifecycle(TestContractBase):
         self.assertFalse(line._can_be_invoiced(self.today + timedelta(days=10)))
         with self.assertRaises(UserError):
             self.contract.action_cancel_contract_termination()
+
+    def test_pause_on_invoiced_start_date_and_post_resume_invoicing(self):
+        line = self._product_line()
+        first_invoice = self.contract.recurring_create_invoice()
+        self.assertTrue(first_invoice)
+        # Pause starting on the already-invoiced date_start
+        pause = self.contract._pause_contract(
+            self.today, False, True, self.pause_reason, "same day pause"
+        )
+        self.assertTrue(line.is_canceled)
+        self.assertFalse(line.last_date_invoiced)
+        resume_date = self.today + timedelta(days=10)
+        self.contract._resume_contract(pause, resume_date)
+        self.assertFalse(self.contract.is_paused)
+        next_inv = self.contract.recurring_create_invoice()
+        self.assertTrue(next_inv)
+        # Contract recurring_next_date must advance past the resumed invoice
+        self.assertGreater(self.contract.recurring_next_date, resume_date)

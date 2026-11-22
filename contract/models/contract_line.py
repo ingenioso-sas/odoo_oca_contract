@@ -156,6 +156,11 @@ class ContractLine(models.Model):
     @api.constrains("recurring_next_date")
     def _check_recurring_next_date_recurring_invoices(self):
         for rec in self:
+            if (
+                (rec.display_type and not rec.is_recurring_note)
+                or rec.is_canceled
+            ):
+                continue
             if not rec.recurring_next_date and (
                 not rec.date_end
                 or not rec.last_date_invoiced

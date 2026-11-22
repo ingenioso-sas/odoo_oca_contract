@@ -31,11 +31,15 @@ class AccountMove(models.Model):
                 referrals = self.env["contract.referral"].search(
                     [
                         ("referred_contract_id", "=", contract.id),
+                        ("company_id", "=", invoice.company_id.id),
                         ("state", "=", "active"),
                     ]
                 )
                 for referral in referrals:
                     if not referral._can_create_commission(invoice):
+                        continue
+                    base_amount = referral._get_commission_base_amount(invoice)
+                    if base_amount <= 0:
                         continue
                     existing = commission_model.search(
                         [
@@ -45,14 +49,21 @@ class AccountMove(models.Model):
                         limit=1,
                     )
                     if existing:
+                        if existing.state in ("draft", "cancelled"):
+                            existing.write(
+                                {
+                                    "base_amount": base_amount,
+                                    "commission_percent": (
+                                        referral.referrer_commission_percent
+                                    ),
+                                }
+                            )
                         continue
                     commission_model.create(
                         {
                             "referral_id": referral.id,
                             "invoice_id": invoice.id,
-                            "base_amount": referral._get_commission_base_amount(
-                                invoice
-                            ),
+                            "base_amount": base_amount,
                             "commission_percent": (
                                 referral.referrer_commission_percent
                             ),
@@ -66,35 +77,88 @@ class AccountMove(models.Model):
             lambda move: move.move_type == "out_refund"
             and move.state == "posted"
         ):
+            if refund.reversed_entry_id:
+                orig_commissions = commission_model.search(
+                    [
+                        ("invoice_id", "=", refund.reversed_entry_id.id),
+                        ("is_adjustment", "=", False),
+                        ("state", "!=", "cancelled"),
+                    ]
+                )
+                for orig in orig_commissions:
+                    referral = orig.referral_id
+                    if commission_model.search_count(
+                        [
+                            ("referral_id", "=", referral.id),
+                            ("invoice_id", "=", refund.id),
+                        ]
+                    ):
+                        continue
+                    refund_base = referral._get_commission_base_amount(refund)
+                    capped_base = min(abs(refund_base), abs(orig.base_amount))
+                    if capped_base <= 0 or orig.commission_percent <= 0:
+                        continue
+                    commission_model.create(
+                        {
+                            "referral_id": referral.id,
+                            "invoice_id": refund.id,
+                            "base_amount": -capped_base,
+                            "commission_percent": orig.commission_percent,
+                            "is_adjustment": True,
+                        }
+                    )
+                continue
+
             contracts = refund.invoice_line_ids.contract_line_id.contract_id
             for contract in contracts:
-                referral = self.env["contract.referral"].search(
-                    [("referred_contract_id", "=", contract.id)],
-                    limit=1,
-                )
-                if (
-                    not referral
-                    or referral.referrer_commission_percent <= 0
-                ):
-                    continue
-                existing = commission_model.search(
+                referrals = self.env["contract.referral"].search(
                     [
-                        ("referral_id", "=", referral.id),
-                        ("invoice_id", "=", refund.id),
+                        ("referred_contract_id", "=", contract.id),
+                        ("company_id", "=", refund.company_id.id),
                     ],
-                    limit=1,
+                    order="id desc",
                 )
-                if existing:
-                    continue
-                base_amount = referral._get_commission_base_amount(refund)
-                commission_model.create(
-                    {
-                        "referral_id": referral.id,
-                        "invoice_id": refund.id,
-                        "base_amount": -base_amount,
-                        "commission_percent": (
-                            referral.referrer_commission_percent
-                        ),
-                        "is_adjustment": True,
-                    }
-                )
+                for referral in referrals:
+                    if commission_model.search_count(
+                        [
+                            ("referral_id", "=", referral.id),
+                            ("invoice_id", "=", refund.id),
+                        ]
+                    ):
+                        continue
+                    prior = commission_model.search(
+                        [
+                            ("referral_id", "=", referral.id),
+                            ("is_adjustment", "=", False),
+                            ("state", "!=", "cancelled"),
+                        ]
+                    )
+                    if not prior:
+                        continue
+                    prior_adjustments = commission_model.search(
+                        [
+                            ("referral_id", "=", referral.id),
+                            ("is_adjustment", "=", True),
+                            ("state", "!=", "cancelled"),
+                        ]
+                    )
+                    net_commissioned = sum(prior.mapped("base_amount")) + sum(
+                        prior_adjustments.mapped("base_amount")
+                    )
+                    if net_commissioned <= 0:
+                        continue
+                    refund_base = referral._get_commission_base_amount(refund)
+                    capped_base = min(abs(refund_base), net_commissioned)
+                    percent = prior[0].commission_percent
+                    if capped_base <= 0 or percent <= 0:
+                        continue
+                    commission_model.create(
+                        {
+                            "referral_id": referral.id,
+                            "invoice_id": refund.id,
+                            "base_amount": -capped_base,
+                            "commission_percent": percent,
+                            "is_adjustment": True,
+                        }
+                    )
+                    break

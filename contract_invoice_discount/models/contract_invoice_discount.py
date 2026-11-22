@@ -1,7 +1,10 @@
 # Copyright 2026 PayOnline Ing
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+from dateutil.relativedelta import relativedelta
+
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
+from odoo.tools import float_round
 
 
 class ContractInvoiceDiscount(models.Model):
@@ -160,7 +163,9 @@ class ContractInvoiceDiscount(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        for vals in vals_list:
+        prepared = []
+        for raw_vals in vals_list:
+            vals = dict(raw_vals)
             if "start_mode" not in vals:
                 default_mode = self.default_get(["start_mode"]).get(
                     "start_mode"
@@ -171,41 +176,84 @@ class ContractInvoiceDiscount(models.Model):
             if mode != "fixed_date":
                 temp = self.new(vals)
                 vals["date_start"] = temp._get_resolved_date_start()
-        return super().create(vals_list)
+                if (
+                    mode == "contract_start"
+                    and vals.get("source") == "promotion"
+                    and temp.contract_line_id.promo_duration_months
+                    and vals["date_start"]
+                ):
+                    vals["date_end"] = (
+                        vals["date_start"]
+                        + relativedelta(
+                            months=temp.contract_line_id.promo_duration_months
+                        )
+                        - relativedelta(days=1)
+                    )
+            prepared.append(vals)
+        return super().create(prepared)
 
     def write(self, vals):
         vals = dict(vals)
+        recompute = (
+            "start_mode" in vals
+            or "contract_line_id" in vals
+            or "date_end" in vals
+        )
         if "start_mode" in vals and vals["start_mode"] != "fixed_date":
             vals.pop("date_start", None)
-        recompute = "start_mode" in vals or "contract_line_id" in vals
-        result = super().write(vals)
-        if recompute:
-            for rule in self:
-                if rule.start_mode == "fixed_date":
-                    continue
-                date_start = rule._get_resolved_date_start()
-                if date_start and date_start != rule.date_start:
-                    super(ContractInvoiceDiscount, rule).write(
-                        {"date_start": date_start}
+        if not recompute:
+            return super().write(vals)
+        res = True
+        for rule in self:
+            rule_vals = dict(vals)
+            target_mode = rule_vals.get("start_mode", rule.start_mode)
+            if target_mode != "fixed_date" and (
+                "start_mode" in rule_vals or "contract_line_id" in rule_vals
+            ):
+                line = (
+                    self.env["contract.line"].browse(
+                        rule_vals["contract_line_id"]
                     )
-        return result
+                    if "contract_line_id" in rule_vals
+                    else rule.contract_line_id
+                )
+                temp = rule.new(
+                    {
+                        "start_mode": target_mode,
+                        "contract_line_id": line.id,
+                        "date_start": rule.date_start,
+                    }
+                )
+                resolved_start = temp._get_resolved_date_start()
+                if resolved_start:
+                    rule_vals["date_start"] = resolved_start
+            res = super(ContractInvoiceDiscount, rule).write(rule_vals) and res
+        return res
+
+    def _get_applied_invoice_counts_by_rule(self):
+        if not self.ids:
+            return {}
+        rows = self.env["account.move.line"]._read_group(
+            domain=[
+                ("contract_discount_id", "in", self.ids),
+                ("move_id.move_type", "in", ("out_invoice", "in_invoice")),
+                ("move_id.state", "!=", "cancel"),
+            ],
+            groupby=["contract_discount_id"],
+            aggregates=["move_id:count_distinct"],
+        )
+        return {rule.id: count for rule, count in rows}
 
     def _get_applied_invoice_count(self):
         """Count invoices directly to avoid stale computed caches."""
         self.ensure_one()
-        moves = self.env["account.move"].search(
-            [
-                ("invoice_line_ids.contract_discount_id", "=", self.id),
-                ("move_type", "=", "out_invoice"),
-                ("state", "!=", "cancel"),
-            ]
-        )
-        return len(moves)
+        return self._get_applied_invoice_counts_by_rule().get(self.id, 0)
 
     @api.depends("max_invoices")
     def _compute_applied_invoice_count(self):
+        counts = self._get_applied_invoice_counts_by_rule()
         for rule in self:
-            applied_count = rule._get_applied_invoice_count()
+            applied_count = counts.get(rule.id, 0)
             rule.applied_invoice_count = applied_count
             if rule.max_invoices:
                 rule.remaining_invoices = max(
@@ -226,15 +274,15 @@ class ContractInvoiceDiscount(models.Model):
         for rule in self:
             if not rule.active:
                 rule.state = "inactive"
+            elif (
+                rule.max_invoices
+                and rule.applied_invoice_count >= rule.max_invoices
+            ):
+                rule.state = "exhausted"
             elif rule.date_start and rule.date_start > today:
                 rule.state = "scheduled"
             elif rule.date_end and rule.date_end < today:
                 rule.state = "expired"
-            elif (
-                rule.max_invoices
-                and rule._get_applied_invoice_count() >= rule.max_invoices
-            ):
-                rule.state = "exhausted"
             else:
                 rule.state = "active"
 
@@ -271,4 +319,8 @@ class ContractInvoiceDiscount(models.Model):
         period_days = (period_end - period_start).days + 1
         if period_days <= 0:
             return 0.0
-        return round(self.discount * overlap_days / period_days, 2)
+        precision = self.env["decimal.precision"].precision_get("Discount")
+        return float_round(
+            self.discount * overlap_days / period_days,
+            precision_digits=precision,
+        )

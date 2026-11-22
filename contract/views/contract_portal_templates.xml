@@ -111,7 +111,7 @@
                                 role="button"
                                 target="_blank"
                                 title="View Details"
-                                t-att-href="'/my/contracts/%s?report_type=pdf' % (contract.id,)"
+                                t-att-href="contract.get_portal_url(report_type='pdf')"
                             >
                                 <i class="fa fa-print me-1" />View Details
                             </a>

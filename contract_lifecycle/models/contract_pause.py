@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class ContractPause(models.Model):
@@ -38,6 +39,7 @@ class ContractPause(models.Model):
     comment = fields.Text()
     state = fields.Selection(
         selection=[
+            ("scheduled", "Scheduled"),
             ("active", "Active"),
             ("resumed", "Resumed"),
             ("cancelled", "Cancelled"),
@@ -78,16 +80,60 @@ class ContractPause(models.Model):
             else:
                 pause.pause_days = 0
 
+    @api.constrains("start_date", "end_date", "is_indefinite", "state", "contract_id")
+    def _check_pause_consistency(self):
+        for pause in self:
+            if not pause.is_indefinite and not pause.end_date:
+                raise ValidationError(
+                    self.env._("An end date is required unless the pause is indefinite.")
+                )
+            if pause.end_date and pause.start_date and pause.end_date < pause.start_date:
+                raise ValidationError(
+                    self.env._("The pause end date cannot be before the start date.")
+                )
+            if pause.state in ("scheduled", "active") and pause.contract_id:
+                overlap = self.search_count(
+                    [
+                        ("id", "!=", pause.id),
+                        ("contract_id", "=", pause.contract_id.id),
+                        ("state", "in", ("scheduled", "active")),
+                    ]
+                )
+                if overlap:
+                    raise ValidationError(
+                        self.env._(
+                            "A contract cannot have multiple active or scheduled pauses."
+                        )
+                    )
+
     @api.model
-    def _close_planned_pauses(self, date_ref=None):
+    def _activate_scheduled_pauses(self, date_ref=None, contract_ids=None):
         date_ref = date_ref or fields.Date.context_today(self)
-        pauses = self.search(
-            [
-                ("state", "=", "active"),
-                ("is_indefinite", "=", False),
-                ("end_date", "<", date_ref),
-            ]
-        )
+        domain = [
+            ("state", "=", "scheduled"),
+            ("start_date", "<=", date_ref),
+        ]
+        if contract_ids is not None:
+            domain.append(("contract_id", "in", list(contract_ids)))
+        pauses = self.sudo().search(domain)
+        for pause in pauses:
+            if not pause.is_indefinite and pause.end_date and pause.end_date < date_ref:
+                continue
+            pause.write({"state": "active"})
+            pause.contract_id.sudo().is_paused = True
+        return pauses
+
+    @api.model
+    def _close_planned_pauses(self, date_ref=None, contract_ids=None):
+        date_ref = date_ref or fields.Date.context_today(self)
+        domain = [
+            ("state", "in", ("scheduled", "active")),
+            ("is_indefinite", "=", False),
+            ("end_date", "<", date_ref),
+        ]
+        if contract_ids is not None:
+            domain.append(("contract_id", "in", list(contract_ids)))
+        pauses = self.sudo().search(domain)
         for pause in pauses:
             pause.write(
                 {
@@ -95,8 +141,8 @@ class ContractPause(models.Model):
                     "resume_date": pause.end_date + timedelta(days=1),
                 }
             )
-            pause.contract_id.is_paused = False
-            pause.contract_id.message_post(
+            pause.contract_id.sudo().is_paused = False
+            pause.contract_id.sudo().message_post(
                 body=self.env._(
                     "Contract resumed automatically after the scheduled pause "
                     "ended on %(date)s.",
@@ -136,6 +182,7 @@ class ContractPauseLine(models.Model):
     original_date_start = fields.Date()
     original_date_end = fields.Date()
     original_recurring_next_date = fields.Date()
+    original_is_auto_renew = fields.Boolean()
     successor_contract_line_id = fields.Many2one(
         comodel_name="contract.line",
         ondelete="set null",

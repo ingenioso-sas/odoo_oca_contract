@@ -9,6 +9,7 @@
 
 import logging
 
+from dateutil.relativedelta import relativedelta
 from markupsafe import Markup
 
 from odoo import Command, api, fields, models
@@ -190,25 +191,25 @@ class ContractContract(models.Model):
         "recurring_invoicing_offset",
         "recurring_rule_type",
         "recurring_interval",
+        "date_start",
         "date_end",
         "contract_line_ids.recurring_next_date",
         "contract_line_ids.is_canceled",
+        "contract_line_ids.display_type",
+        "contract_line_ids.is_recurring_note",
     )
     def _compute_recurring_next_date(self):
         for contract in self:
-            recurring_next_date = contract.contract_line_ids.filtered(
-                lambda line: (
-                    line.recurring_next_date
-                    and not line.is_canceled
-                    and (not line.display_type or line.is_recurring_note)
-                )
+            billable_lines = contract.contract_line_ids.filtered(
+                lambda line: not line.display_type or line.is_recurring_note
+            )
+            recurring_next_date = billable_lines.filtered(
+                lambda line: line.recurring_next_date and not line.is_canceled
             ).mapped("recurring_next_date")
-            # we give priority to computation from date_start if modified
-            if (
-                contract._origin
-                and contract._origin.date_start != contract.date_start
-                or not recurring_next_date
-            ):
+            # If the contract has recurring lines and none has an active
+            # recurring_next_date (all ended or canceled), the contract has no
+            # next invoice date unless header date_start was just modified.
+            if contract._origin and contract._origin.date_start != contract.date_start:
                 contract.recurring_next_date = self.get_next_invoice_date(
                     contract.next_period_date_start,
                     contract.recurring_invoicing_type,
@@ -217,8 +218,19 @@ class ContractContract(models.Model):
                     contract.recurring_interval,
                     max_date_end=contract.date_end,
                 )
-            else:
+            elif recurring_next_date:
                 contract.recurring_next_date = min(recurring_next_date)
+            elif billable_lines:
+                contract.recurring_next_date = False
+            else:
+                contract.recurring_next_date = self.get_next_invoice_date(
+                    contract.next_period_date_start,
+                    contract.recurring_invoicing_type,
+                    contract.recurring_invoicing_offset,
+                    contract.recurring_rule_type,
+                    contract.recurring_interval,
+                    max_date_end=contract.date_end,
+                )
 
     @api.depends("contract_line_ids.create_invoice_visibility")
     def _compute_create_invoice_visibility(self):
@@ -295,7 +307,7 @@ class ContractContract(models.Model):
         contract_template_id = self.contract_template_id
         if not contract_template_id:
             return
-        self.line_recurrence = True
+        self.line_recurrence = contract_template_id.line_recurrence
         for field_name, field in contract_template_id._fields.items():
             if field.name == "contract_line_ids":
                 lines = self._convert_contract_lines(contract_template_id)
@@ -406,14 +418,14 @@ class ContractContract(models.Model):
             "context": ctx,
         }
 
-    def recurring_create_invoice(self):
+    def recurring_create_invoice(self, date_ref=False):
         """
         Button action
         This method triggers the creation of the next invoices of the contracts
         even if their next invoicing date is in the future.
         """
         self.ensure_one()
-        invoices = self._recurring_create_invoice()
+        invoices = self._recurring_create_invoice(date_ref=date_ref)
         for invoice in invoices:
             body = Markup(
                 self.env._("Contract manually invoiced: %(invoice_link)s")
@@ -508,12 +520,25 @@ class ContractContract(models.Model):
         self.ensure_one()
         new_lines = self.env["contract.line"]
         contract_line_model = self.env["contract.line"]
+        today = fields.Date.context_today(self)
         for contract_line in contract.contract_line_ids:
             vals = contract_line._convert_to_write(contract_line.read()[0])
-            # Remove template link field
+            # Remove template record identity and link
+            vals.pop("id", None)
+            vals.pop("contract_id", None)
             vals.pop("contract_template_id", False)
-            vals["date_start"] = fields.Date.context_today(contract_line)
-            vals["recurring_next_date"] = fields.Date.context_today(contract_line)
+            vals["date_start"] = today
+            if not contract_line.display_type or contract_line.is_recurring_note:
+                vals["recurring_next_date"] = contract_line.get_next_invoice_date(
+                    today,
+                    contract_line.recurring_invoicing_type,
+                    contract_line.recurring_invoicing_offset,
+                    contract_line.recurring_rule_type,
+                    contract_line.recurring_interval,
+                    max_date_end=False,
+                )
+            else:
+                vals["recurring_next_date"] = False
             new_lines += contract_line_model.new(vals)
         return new_lines
 
@@ -656,7 +681,8 @@ class ContractContract(models.Model):
                     invoice_vals["invoice_line_ids"].append(
                         Command.create(invoice_line_vals)
                     )
-            invoices_values.append(invoice_vals)
+            if invoice_vals["invoice_line_ids"]:
+                invoices_values.append(invoice_vals)
             # Force the recomputation of journal items
             contract_lines._update_last_date_invoiced()
         return invoices_values
@@ -727,33 +753,38 @@ class ContractContract(models.Model):
                 )
                 continue
             if contract.invoicing_mode == "validate_send":
-                template = contract.invoice_mail_template_id
-                if not template:
-                    # Fallback to the standard EDI invoice template which
-                    # already includes portal access_url + Pay Now link when
-                    # a payment provider is configured.
-                    template = self.env.ref(
-                        "account.email_template_edi_invoice",
-                        raise_if_not_found=False,
-                    )
                 for move in draft_moves.filtered(lambda m: m.state == "posted"):
-                    if template:
-                        try:
-                            template.send_mail(
-                                move.id, force_send=False, raise_exception=False
-                            )
-                        except Exception as exc:  # noqa: BLE001
-                            _logger.warning(
-                                "Could not send invoice %s: %s", move.id, exc
-                            )
-                    move.message_post(
-                        body=Markup(
-                            self.env._(
-                                "Invoice auto-validated and sent from contract %s"
+                    template = contract.invoice_mail_template_id
+                    if not template and move.is_sale_document():
+                        # Fallback to the standard EDI invoice template which
+                        # already includes portal access_url + Pay Now link when
+                        # a payment provider is configured.
+                        template = self.env.ref(
+                            "account.email_template_edi_invoice",
+                            raise_if_not_found=False,
+                        )
+                    if not template:
+                        continue
+                    sent = False
+                    try:
+                        mail_id = template.send_mail(
+                            move.id, force_send=False, raise_exception=False
+                        )
+                        sent = bool(mail_id)
+                    except Exception as exc:  # noqa: BLE001
+                        _logger.warning(
+                            "Could not send invoice %s: %s", move.id, exc
+                        )
+                    if sent:
+                        move.is_move_sent = True
+                        move.message_post(
+                            body=Markup(
+                                self.env._(
+                                    "Invoice auto-validated and sent from contract %s"
+                                )
                             )
                             % contract._get_html_link()
                         )
-                    )
 
     @api.model
     def _get_recurring_create_func(self, create_type="invoice"):
@@ -804,6 +835,16 @@ class ContractContract(models.Model):
                 and (
                     not contract.date_end
                     or contract.recurring_next_date <= contract.date_end
+                    or any(
+                        line.recurring_invoicing_type == "post-paid"
+                        and not line.is_canceled
+                        and (not line.display_type or line.is_recurring_note)
+                        and line.recurring_next_date
+                        and line.recurring_next_date
+                        <= contract.date_end
+                        + relativedelta(days=line.recurring_invoicing_offset)
+                        for line in contract.contract_line_ids
+                    )
                 )
             ).with_company(company)
             if not contracts_to_invoice:

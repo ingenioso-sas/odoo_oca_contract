@@ -9,8 +9,6 @@ class ContractLine(models.Model):
     def _can_be_invoiced(self, date_ref):
         if not super()._can_be_invoiced(date_ref):
             return False
-        if self.successor_contract_line_id:
-            return False
         if self.contract_id.is_paused or self.contract_id.is_terminated:
             return False
         return True

@@ -10,25 +10,25 @@ class AccountMoveLine(models.Model):
         comodel_name="contract.invoice.discount",
         string="Contract Discount Rule",
         readonly=True,
-        copy=True,
+        copy=False,
         ondelete="set null",
         index=True,
     )
     contract_discount_name = fields.Char(
         string="Contract Discount",
         readonly=True,
-        copy=True,
+        copy=False,
     )
     contract_discount_percent = fields.Float(
         string="Applied Contract Discount (%)",
         digits="Discount",
         readonly=True,
-        copy=True,
+        copy=False,
     )
     contract_discount_until = fields.Date(
         string="Contract Discount Until",
         readonly=True,
-        copy=True,
+        copy=False,
     )
     contract_discount_source = fields.Selection(
         selection=[
@@ -38,5 +38,5 @@ class AccountMoveLine(models.Model):
         ],
         string="Contract Discount Source",
         readonly=True,
-        copy=True,
+        copy=False,
     )

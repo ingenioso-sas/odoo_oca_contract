@@ -16,12 +16,18 @@ class ContractLine(models.Model):
         vals = super()._prepare_invoice_line()
         if not vals or self.display_type:
             return vals
-        period_start, period_end, _billing_date = self._get_period_to_invoice(
-            self.last_date_invoiced, self.recurring_next_date
-        )
+        refund_period = self.env.context.get("contract_refund_period")
+        if refund_period:
+            period_start, period_end = refund_period
+            billing_date = period_start
+        else:
+            period_start, period_end, _billing_date = self._get_period_to_invoice(
+                self.last_date_invoiced, self.recurring_next_date
+            )
+            billing_date = self.recurring_next_date
         vals.update(
             {
-                "contract_billing_date": self.recurring_next_date,
+                "contract_billing_date": billing_date,
                 "contract_period_start": period_start,
                 "contract_period_end": period_end,
             }

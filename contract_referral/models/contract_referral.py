@@ -10,6 +10,7 @@ class ContractReferral(models.Model):
     _name = "contract.referral"
     _description = "Contract Referral"
     _order = "create_date desc, id desc"
+    _check_company_auto = True
 
     name = fields.Char(compute="_compute_name", store=True)
     company_id = fields.Many2one(
@@ -23,6 +24,7 @@ class ContractReferral(models.Model):
         string="Referrer",
         required=True,
         index=True,
+        check_company=True,
         help="Customer that receives the commission.",
     )
     referred_id = fields.Many2one(
@@ -30,6 +32,7 @@ class ContractReferral(models.Model):
         string="Referred Customer",
         required=True,
         index=True,
+        check_company=True,
         help="Customer that receives the referral discount.",
     )
     referred_contract_id = fields.Many2one(
@@ -37,6 +40,7 @@ class ContractReferral(models.Model):
         string="Referred Contract",
         required=True,
         index=True,
+        check_company=True,
         ondelete="cascade",
     )
     start_date = fields.Date(
@@ -104,6 +108,7 @@ class ContractReferral(models.Model):
         inverse_name="referral_id",
         string="Referred Discount Rules",
         copy=False,
+        context={"active_test": False},
     )
     commission_ids = fields.One2many(
         comodel_name="contract.referral.commission",
@@ -177,12 +182,54 @@ class ContractReferral(models.Model):
                     )
                 )
 
+    @api.onchange("referred_id")
+    def _onchange_referred_id(self):
+        if (
+            self.referred_contract_id
+            and self.referred_id
+            and self.referred_contract_id.partner_id.commercial_partner_id
+            != self.referred_id.commercial_partner_id
+        ):
+            self.referred_contract_id = False
+
     @api.constrains("referrer_id", "referred_id")
     def _check_partners(self):
         for referral in self:
-            if referral.referrer_id == referral.referred_id:
+            if (
+                referral.referrer_id
+                and referral.referred_id
+                and referral.referrer_id.commercial_partner_id
+                == referral.referred_id.commercial_partner_id
+            ):
                 raise ValidationError(
                     self.env._("Referrer and referred customer must be different.")
+                )
+
+    @api.constrains("company_id", "referred_contract_id", "referred_id")
+    def _check_referred_contract(self):
+        for referral in self:
+            contract = referral.referred_contract_id
+            if not contract:
+                continue
+            if contract.company_id != referral.company_id:
+                raise ValidationError(
+                    self.env._(
+                        "Referred contract must belong to the same company as the referral."
+                    )
+                )
+            if contract.contract_type != "sale":
+                raise ValidationError(
+                    self.env._("Referrals are only allowed on customer contracts.")
+                )
+            if (
+                referral.referred_id
+                and contract.partner_id.commercial_partner_id
+                != referral.referred_id.commercial_partner_id
+            ):
+                raise ValidationError(
+                    self.env._(
+                        "Referred contract must belong to the referred customer."
+                    )
                 )
 
     @api.constrains(
@@ -227,12 +274,16 @@ class ContractReferral(models.Model):
                 "start_date",
                 "max_months",
                 "max_invoices",
+                "paused_days",
+                "referrer_id",
                 "referred_discount_percent",
                 "referred_discount_lost",
                 "referred_contract_id",
             )
         ):
-            self._sync_referred_discount_rules()
+            self.with_context(
+                sync_referral_start_date="start_date" in vals
+            )._sync_referred_discount_rules()
         return res
 
     def _sync_referred_discount_rules(self):
@@ -247,6 +298,11 @@ class ContractReferral(models.Model):
                 continue
             product_lines = referral.referred_contract_id.contract_line_ids.filtered(
                 lambda line: not line.display_type
+                and not line.is_canceled
+                and not (
+                    "successor_contract_line_id" in line._fields
+                    and line.successor_contract_line_id
+                )
             )
             for line in product_lines:
                 referral._sync_rule_for_line(line)
@@ -256,17 +312,31 @@ class ContractReferral(models.Model):
 
     def _sync_rule_for_line(self, line):
         self.ensure_one()
-        rule = self.env["contract.invoice.discount"].search(
-            [
-                ("referral_id", "=", self.id),
-                ("contract_line_id", "=", line.id),
-            ],
-            limit=1,
+        rule = (
+            self.env["contract.invoice.discount"]
+            .with_context(active_test=False)
+            .search(
+                [
+                    ("referral_id", "=", self.id),
+                    ("contract_line_id", "=", line.id),
+                ],
+                limit=1,
+            )
         )
         active = (
             self.state == "active"
             and not self.referred_discount_lost
             and bool(self.referred_discount_percent)
+        )
+        other_applied = sum(
+            self.discount_rule_ids.filtered(
+                lambda r: not rule or r.id != rule.id
+            ).mapped("applied_invoice_count")
+        )
+        effective_max = (
+            max(self.max_invoices - other_applied, 0)
+            if self.max_invoices
+            else 0
         )
         vals = {
             "name": self.env._(
@@ -274,12 +344,13 @@ class ContractReferral(models.Model):
                 referrer=self.referrer_id.display_name or "",
             ),
             "discount": self.referred_discount_percent,
-            "date_start": self.start_date or fields.Date.context_today(self),
             "date_end": self.end_date,
-            "max_invoices": self.max_invoices,
+            "max_invoices": effective_max,
             "source": "referral",
             "active": active,
         }
+        if not rule or self.env.context.get("sync_referral_start_date") or not self.paused_days:
+            vals["date_start"] = self.start_date or fields.Date.context_today(self)
         if rule:
             rule.write(vals)
         else:
@@ -316,17 +387,21 @@ class ContractReferral(models.Model):
             }
         )
 
-    def _check_referred_discount_condition(self):
+    def _check_referred_discount_condition(self, period_start=None, period_end=None):
         self.ensure_one()
         if self.state != "active" or self.referred_discount_lost:
             return False
         contract = self.referred_contract_id
         today = fields.Date.context_today(self)
+        eval_start = period_start or today
+        eval_end = period_end or today
         if not contract or not contract.active:
             return False
-        if contract.date_end and contract.date_end < today:
+        if contract.date_end and contract.date_end < eval_start:
             return False
-        if self.end_date and today > self.end_date:
+        if self.start_date and eval_end < self.start_date:
+            return False
+        if self.end_date and eval_start > self.end_date:
             return False
         if self._has_overdue_invoice():
             self._mark_referred_discount_lost()
@@ -338,20 +413,42 @@ class ContractReferral(models.Model):
         if self.state != "active" or self.referrer_commission_percent <= 0:
             return False
         contract = self.referred_contract_id
-        invoice_date = invoice.invoice_date or invoice.date
-        if not contract or not contract.active:
+        if (
+            not contract
+            or not contract.active
+            or contract.company_id != invoice.company_id
+            or self.company_id != invoice.company_id
+        ):
             return False
-        if contract.date_end and invoice_date and contract.date_end < invoice_date:
+        period_start = (
+            invoice.contract_period_start
+            if "contract_period_start" in invoice._fields and invoice.contract_period_start
+            else None
+        )
+        period_end = (
+            invoice.contract_period_end
+            if "contract_period_end" in invoice._fields and invoice.contract_period_end
+            else None
+        )
+        if period_start:
+            eval_start = period_start
+            eval_end = period_end or period_start
+        else:
+            invoice_date = invoice.invoice_date or invoice.date
+            eval_start = invoice_date
+            eval_end = invoice_date
+        if contract.date_end and eval_start and contract.date_end < eval_start:
             return False
-        if self.start_date and invoice_date and invoice_date < self.start_date:
+        if self.start_date and eval_end and eval_end < self.start_date:
             return False
-        if self.end_date and invoice_date and invoice_date > self.end_date:
+        if self.end_date and eval_start and eval_start > self.end_date:
             return False
         if self.max_invoices:
             commission_count = self.env["contract.referral.commission"].search_count(
                 [
                     ("referral_id", "=", self.id),
                     ("is_adjustment", "=", False),
+                    ("state", "!=", "cancelled"),
                 ]
             )
             if commission_count >= self.max_invoices:
@@ -360,9 +457,14 @@ class ContractReferral(models.Model):
 
     def _get_commission_base_amount(self, invoice):
         self.ensure_one()
-        if self.commission_base == "total":
-            return invoice.amount_total
-        return invoice.amount_untaxed
+        contract_lines = invoice.invoice_line_ids.filtered(
+            lambda line: line.display_type in (False, "product")
+            and line.contract_line_id.contract_id == self.referred_contract_id
+        )
+        if not contract_lines:
+            return 0.0
+        field_name = "price_total" if self.commission_base == "total" else "price_subtotal"
+        return sum(contract_lines.mapped(field_name))
 
     def _add_paused_days(self, days):
         for referral in self:

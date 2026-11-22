@@ -11,11 +11,15 @@ class ContractInvoiceDiscount(models.Model):
         string="Referral",
         ondelete="cascade",
         index=True,
+        copy=False,
+        check_company=True,
     )
 
     def _check_conditions(self, period_start, period_end):
         if not super()._check_conditions(period_start, period_end):
             return False
         if self.referral_id:
-            return self.referral_id._check_referred_discount_condition()
+            return self.referral_id._check_referred_discount_condition(
+                period_start, period_end
+            )
         return True

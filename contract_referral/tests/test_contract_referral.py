@@ -261,3 +261,63 @@ class TestContractReferral(TestContractBase):
         self.assertEqual(len(adjustment), 1)
         self.assertLess(adjustment.base_amount, 0)
         self.assertLess(adjustment.commission_amount, 0)
+
+    def test_referral_commission_scope_reversal_and_reactivation(self):
+        referral = self._create_referral(max_invoices=2)
+        rule = referral.discount_rule_ids
+        # Contract copy must not inherit referral link
+        copied = self.referred_contract.copy()
+        self.assertFalse(copied.contract_line_ids.invoice_discount_ids.filtered("referral_id"))
+
+        # Deactivate & reactivate referral preserves existing discount rule
+        referral.action_cancel()
+        self.assertFalse(rule.active)
+        referral.action_activate()
+        self.assertTrue(rule.active)
+        self.assertEqual(len(referral.discount_rule_ids), 1)
+
+        # Invoice with extra non-contract line only commissions contract line
+        invoice = self.referred_contract.recurring_create_invoice()
+        commission = referral.commission_ids
+        self.assertEqual(len(commission), 1)
+        self.assertEqual(commission.base_amount, 85.0)
+
+        # Reversing invoice marks original commission as reversed
+        reversal = (
+            self.env["account.move.reversal"]
+            .with_context(active_model="account.move", active_ids=invoice.ids)
+            .create({"reason": "Reversal", "journal_id": invoice.journal_id.id})
+        )
+        res = reversal.reverse_moves()
+        credit_note = self.env["account.move"].browse(res["res_id"])
+        if credit_note.state == "draft":
+            credit_note.action_post()
+        (invoice.line_ids + credit_note.line_ids).filtered(
+            lambda l: l.account_id.account_type == "asset_receivable" and not l.reconciled
+        ).reconcile()
+        commission.invalidate_recordset()
+        self.assertEqual(commission.state, "reversed")
+
+    def test_refund_without_prior_commission_creates_no_adjustment(self):
+        referral = self._create_referral(referrer_commission_percent=10)
+        referral.action_cancel()
+        contract_line = self.referred_contract.contract_line_ids[:1]
+        refund = self.env["account.move"].create(
+            {
+                "move_type": "out_refund",
+                "partner_id": self.referred_partner.id,
+                "invoice_line_ids": [
+                    Command.create(
+                        {
+                            "product_id": self.product_1.id,
+                            "name": "Manual refund",
+                            "quantity": 1,
+                            "price_unit": 100,
+                            "contract_line_id": contract_line.id,
+                        }
+                    )
+                ],
+            }
+        )
+        refund.action_post()
+        self.assertFalse(referral.commission_ids)

@@ -7,6 +7,7 @@ class ContractReferralCommission(models.Model):
     _name = "contract.referral.commission"
     _description = "Referral Commission"
     _order = "date desc, id desc"
+    _check_company_auto = True
 
     name = fields.Char(compute="_compute_name", store=True)
     referral_id = fields.Many2one(
@@ -14,6 +15,7 @@ class ContractReferralCommission(models.Model):
         required=True,
         ondelete="cascade",
         index=True,
+        check_company=True,
     )
     invoice_id = fields.Many2one(
         comodel_name="account.move",
@@ -21,7 +23,8 @@ class ContractReferralCommission(models.Model):
         required=True,
         ondelete="cascade",
         index=True,
-        domain=[("move_type", "=", "out_invoice")],
+        check_company=True,
+        domain=[("move_type", "in", ("out_invoice", "out_refund"))],
     )
     partner_id = fields.Many2one(
         related="referral_id.referrer_id",
@@ -77,6 +80,7 @@ class ContractReferralCommission(models.Model):
             ("draft", "Draft"),
             ("pending", "Pending payment"),
             ("paid", "Paid"),
+            ("reversed", "Reversed"),
             ("cancelled", "Cancelled"),
         ],
         string="Collection Status",
@@ -103,7 +107,11 @@ class ContractReferralCommission(models.Model):
     def _compute_commission_amount(self):
         for commission in self:
             amount = commission.base_amount * commission.commission_percent / 100
-            commission.commission_amount = commission.currency_id.round(amount)
+            commission.commission_amount = (
+                commission.currency_id.round(amount)
+                if commission.currency_id
+                else amount
+            )
 
     @api.depends(
         "invoice_id.state",
@@ -118,6 +126,8 @@ class ContractReferralCommission(models.Model):
                 commission.state = "cancelled"
             elif invoice.state == "draft":
                 commission.state = "draft"
+            elif invoice.payment_state == "reversed":
+                commission.state = "reversed"
             elif invoice.payment_state in ("paid", "in_payment"):
                 commission.state = "paid"
             else:

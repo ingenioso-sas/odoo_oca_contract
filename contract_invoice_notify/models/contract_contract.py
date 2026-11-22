@@ -80,6 +80,30 @@ class ContractContract(models.Model):
             or self.env["mail.template"]
         )
 
+    def _get_explicit_notification_template(self, record, purpose, channel_code):
+        """Return only an explicit per-contract template override (no default fallback)."""
+        self.ensure_one()
+        override = self.notification_template_ids.filtered(
+            lambda line: line.channel_id.code == channel_code
+            and line.purpose == purpose
+        )[:1]
+        if override:
+            expected_model = (
+                "account.move"
+                if purpose == "invoice_notification"
+                else "contract.contract"
+            )
+            template = override.template_id
+            if template.model_id.model == expected_model:
+                return template
+        if (
+            channel_code == "email"
+            and purpose == "invoice_notification"
+            and self.invoice_mail_template_id
+        ):
+            return self.invoice_mail_template_id
+        return self.env["mail.template"]
+
     def _get_notification_template(self, record, purpose, channel_code):
         self.ensure_one()
         override = self.notification_template_ids.filtered(

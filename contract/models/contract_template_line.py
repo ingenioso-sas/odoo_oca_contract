@@ -191,9 +191,11 @@ class ContractTemplateLine(models.Model):
         "automatic_price",
         "specific_price",
         "product_id",
+        "uom_id",
         "quantity",
         "contract_id.pricelist_id",
         "contract_id.partner_id",
+        "contract_id.company_id",
     )
     def _compute_price_unit(self):
         for line in self:
@@ -205,16 +207,23 @@ class ContractTemplateLine(models.Model):
                     ).property_product_pricelist
                 )
                 qty = line.env.context.get("contract_line_qty", line.quantity)
-                product = line.product_id.with_context(
-                    quantity=qty,
-                    pricelist=pricelist.id,
-                    partner=line.contract_id.partner_id.id,
-                    uom=line.uom_id.id,
-                    date=line.env.context.get(
-                        "old_date", fields.Date.context_today(line)
-                    ),
+                price_date = line.env.context.get(
+                    "old_date", fields.Date.context_today(line)
                 )
-                line.price_unit = pricelist._get_product_price(product, quantity=qty)
+                if pricelist:
+                    line.price_unit = pricelist._get_product_price(
+                        line.product_id,
+                        quantity=qty,
+                        uom=line.uom_id,
+                        date=price_date,
+                    )
+                else:
+                    price = line.product_id.list_price
+                    if line.uom_id and line.product_id.uom_id != line.uom_id:
+                        price = line.product_id.uom_id._compute_price(
+                            price, line.uom_id
+                        )
+                    line.price_unit = price
             else:
                 line.price_unit = line.specific_price
 

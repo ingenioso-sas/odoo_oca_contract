@@ -9,20 +9,22 @@ class ContractLine(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         lines = super().create(vals_list)
-        for line in lines.filtered(
-            lambda line: not line.display_type
-            and line.contract_id
-            and not (
-                "predecessor_contract_line_id" in line._fields
-                and line.predecessor_contract_line_id
-            )
-        ):
-            referrals = self.env["contract.referral"].search(
-                [
-                    ("referred_contract_id", "=", line.contract_id.id),
-                    ("state", "=", "active"),
-                ]
-            )
-            for referral in referrals:
+        if self.env.context.get("skip_referral_sync"):
+            return lines
+        eligible_lines = lines.filtered(
+            lambda line: not line.display_type and line.contract_id
+        )
+        if not eligible_lines:
+            return lines
+        referrals = self.env["contract.referral"].search(
+            [
+                ("referred_contract_id", "in", eligible_lines.contract_id.ids),
+                ("state", "=", "active"),
+            ]
+        )
+        for line in eligible_lines:
+            for referral in referrals.filtered(
+                lambda r, c=line.contract_id: r.referred_contract_id == c
+            ):
                 referral._sync_rule_for_line(line)
         return lines

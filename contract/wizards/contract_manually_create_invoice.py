@@ -58,7 +58,9 @@ class ContractManuallyCreateInvoice(models.TransientModel):
         invoices = self.env["account.move"]
         for contract in self.contract_to_invoice_ids:
             try:
-                invoices |= contract.recurring_create_invoice()
+                invoices |= contract.recurring_create_invoice(
+                    date_ref=self.invoice_date
+                )
             except (
                 AccessDenied,
                 AccessError,
