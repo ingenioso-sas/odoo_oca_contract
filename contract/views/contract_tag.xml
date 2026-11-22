@@ -8,7 +8,7 @@
             <form>
                 <group>
                     <field name="name" />
-                    <field name="color" />
+                    <field name="color" widget="color_picker" />
                     <field
                         name="company_id"
                         options="{'no_create': True}"
@@ -21,8 +21,9 @@
     <record model="ir.ui.view" id="contract_tag_tree_view">
         <field name="model">contract.tag</field>
         <field name="arch" type="xml">
-            <list>
+            <list editable="bottom">
                 <field name="name" />
+                <field name="color" widget="color_picker" />
                 <field
                     name="company_id"
                     options="{'no_create': True}"

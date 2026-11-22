@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 PayOnline Ing
+     License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl). -->
+<odoo noupdate="1">
+    <record id="contract_pause_reason_customer_request" model="contract.pause.reason">
+        <field name="name">Customer request</field>
+        <field name="sequence">10</field>
+        <field name="requires_comment" eval="False" />
+    </record>
+    <record id="contract_pause_reason_suspension" model="contract.pause.reason">
+        <field name="name">Temporary suspension</field>
+        <field name="sequence">20</field>
+        <field name="requires_comment" eval="True" />
+    </record>
+    <record id="contract_pause_reason_payment_hold" model="contract.pause.reason">
+        <field name="name">Payment hold</field>
+        <field name="sequence">30</field>
+        <field name="requires_comment" eval="False" />
+    </record>
+    <record id="contract_pause_reason_other" model="contract.pause.reason">
+        <field name="name">Other</field>
+        <field name="sequence">40</field>
+        <field name="requires_comment" eval="True" />
+    </record>
+</odoo>

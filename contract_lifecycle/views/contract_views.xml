@@ -5,14 +5,9 @@
     <record id="contract_contract_form_view_lifecycle" model="ir.ui.view">
         <field name="name">contract.contract.form.lifecycle</field>
         <field name="model">contract.contract</field>
-        <field name="inherit_id" ref="contract.contract_contract_form_view" />
+        <field name="inherit_id" ref="contract_termination.contract_contract_form_view" />
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <field
-                    name="lifecycle_state"
-                    widget="statusbar"
-                    statusbar_visible="running,paused,terminated"
-                />
                 <field name="is_paused" invisible="1" />
                 <field name="can_resume" invisible="1" />
                 <field name="current_pause_id" invisible="1" />
@@ -30,25 +25,50 @@
                     groups="account.group_account_manager"
                     invisible="not can_resume"
                 />
+                <field
+                    name="lifecycle_state"
+                    widget="statusbar"
+                    statusbar_visible="running,paused,terminated"
+                />
+            </xpath>
+            <xpath expr="//header" position="before">
+                <div
+                    class="alert alert-warning"
+                    role="alert"
+                    style="margin-bottom:0px;"
+                    invisible="not is_paused"
+                >
+                    This contract is currently paused. Recurring invoicing is suspended until resumption.
+                </div>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button
+                    name="action_show_pauses"
+                    type="object"
+                    icon="fa-pause-circle"
+                    class="oe_stat_button"
+                    invisible="pause_count == 0"
+                >
+                    <field
+                        string="Pauses"
+                        name="pause_count"
+                        widget="statinfo"
+                    />
+                </button>
             </xpath>
             <xpath
-                expr="(//button[@name='action_terminate_contract'])[1]"
+                expr="//button[@name='recurring_create_invoice']"
                 position="attributes"
             >
-                <attribute name="string">Finalizar contrato</attribute>
-            </xpath>
-            <xpath
-                expr="(//button[@name='action_terminate_contract'])[2]"
-                position="attributes"
-            >
-                <attribute name="string">Actualizar terminación</attribute>
+                <attribute
+                    name="invisible"
+                >is_paused or is_terminated or not create_invoice_visibility or generation_type != 'invoice'</attribute>
             </xpath>
             <xpath
                 expr="//button[@name='action_cancel_contract_termination']"
                 position="attributes"
             >
                 <attribute name="invisible">1</attribute>
-                <attribute name="string">Cancelar terminación</attribute>
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page string="Pauses" name="pauses">
@@ -92,6 +112,11 @@
         <field name="model">contract.contract</field>
         <field name="inherit_id" ref="contract.contract_contract_search_view" />
         <field name="arch" type="xml">
+            <xpath expr="//filter[@name='not_finished']" position="attributes">
+                <attribute
+                    name="domain"
+                >[('is_terminated', '=', False), '|', '|', '|', ('is_paused', '=', True), ('date_end', '&gt;=', context_today().strftime('%Y-%m-%d')), ('date_end', '=', False), ('recurring_next_date', '!=', False)]</attribute>
+            </xpath>
             <xpath expr="//filter[@name='not_finished']" position="after">
                 <filter
                     name="paused"

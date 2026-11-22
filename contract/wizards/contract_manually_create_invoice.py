@@ -15,7 +15,10 @@ class ContractManuallyCreateInvoice(models.TransientModel):
     _name = "contract.manually.create.invoice"
     _description = "Contract Manually Create Invoice Wizard"
 
-    invoice_date = fields.Date(required=True)
+    invoice_date = fields.Date(
+        required=True,
+        default=fields.Date.context_today,
+    )
     contract_to_invoice_count = fields.Integer(
         compute="_compute_contract_to_invoice_ids"
     )
@@ -73,7 +76,7 @@ class ContractManuallyCreateInvoice(models.TransientModel):
                         "Failed to process the contract %(name)s [id: %(id)s]:\n%(ue)s",
                         name=contract.name,
                         id=contract.id,
-                        ue=repr(oe),
+                        ue=str(oe),
                     )
                 ) from oe
         return invoices

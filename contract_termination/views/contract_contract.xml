@@ -40,19 +40,26 @@
                     <p>
                         This contract was terminated for the reason
                         <strong>
-                        <field name="terminate_reason_id" options="{'no_open':True}" />
-                    </strong>
+                            <field name="terminate_reason_id" options="{'no_open':True}" />
+                        </strong>
                         on
-                        <field name="terminate_date" />
-                        .
+                        <field name="terminate_date" />.
                     </p>
-                    <p>
+                    <p invisible="not terminate_comment">
                         <field name="terminate_comment" />
                     </p>
                 </div>
             </xpath>
             <xpath expr="//button[@name='action_contract_send']" position="attributes">
                 <attribute name="invisible">is_terminated</attribute>
+            </xpath>
+            <xpath
+                expr="//button[@name='recurring_create_invoice']"
+                position="attributes"
+            >
+                <attribute
+                    name="invisible"
+                >is_terminated or not create_invoice_visibility or generation_type != 'invoice'</attribute>
             </xpath>
             <xpath expr="//field[@name='name']" position="attributes">
                 <attribute name="readonly">is_terminated</attribute>
@@ -100,6 +107,45 @@
                 <attribute name="readonly">is_terminated</attribute>
             </xpath>
             <xpath expr="//field[@name='invoice_partner_id']" position="attributes">
+                <attribute name="readonly">is_terminated</attribute>
+            </xpath>
+            <xpath expr="//field[@name='date']" position="attributes">
+                <attribute name="readonly">is_terminated</attribute>
+            </xpath>
+            <xpath expr="//field[@name='tag_ids']" position="attributes">
+                <attribute name="readonly">is_terminated</attribute>
+            </xpath>
+            <xpath expr="//field[@name='line_recurrence']" position="attributes">
+                <attribute name="readonly">is_terminated or (line_recurrence and invoice_count != 0)</attribute>
+            </xpath>
+            <xpath expr="(//field[@name='date_start'])[1]" position="attributes">
+                <attribute name="readonly">is_terminated</attribute>
+            </xpath>
+            <xpath expr="(//field[@name='date_end'])[1]" position="attributes">
+                <attribute name="readonly">is_terminated</attribute>
+            </xpath>
+            <xpath expr="(//field[@name='recurring_next_date'])[1]" position="attributes">
+                <attribute name="readonly">is_terminated</attribute>
+            </xpath>
+            <xpath expr="//page[@name='invoicing']//field[@name='recurring_invoicing_type']" position="attributes">
+                <attribute name="readonly">is_terminated</attribute>
+            </xpath>
+            <xpath expr="//page[@name='invoicing']//field[@name='recurring_interval']" position="attributes">
+                <attribute name="readonly">is_terminated</attribute>
+            </xpath>
+            <xpath expr="//page[@name='invoicing']//field[@name='recurring_rule_type']" position="attributes">
+                <attribute name="readonly">is_terminated</attribute>
+            </xpath>
+            <xpath expr="//field[@name='generation_type']" position="attributes">
+                <attribute name="readonly">is_terminated</attribute>
+            </xpath>
+            <xpath expr="//field[@name='invoicing_mode']" position="attributes">
+                <attribute name="readonly">is_terminated</attribute>
+            </xpath>
+            <xpath expr="//field[@name='invoice_mail_template_id']" position="attributes">
+                <attribute name="readonly">is_terminated</attribute>
+            </xpath>
+            <xpath expr="(//field[@name='note'])[1]" position="attributes">
                 <attribute name="readonly">is_terminated</attribute>
             </xpath>
         </field>

@@ -10,27 +10,10 @@
             ref="contract_termination.contract_contract_terminate_form_view"
         />
         <field name="arch" type="xml">
-            <xpath expr="//form" position="attributes">
-                <attribute name="string">Finalizar contrato</attribute>
-            </xpath>
-            <field name="terminate_date" position="attributes">
-                <attribute name="string">Fecha de terminación</attribute>
-            </field>
             <field name="terminate_reason_id" position="attributes">
-                <attribute name="string">Motivo de terminación</attribute>
+                <!-- Allow searching/creating a reason when none is configured. -->
+                <attribute name="widget" remove="selection" />
             </field>
-            <field name="terminate_comment" position="attributes">
-                <attribute name="string">Comentario de terminación</attribute>
-            </field>
-            <field name="terminate_with_last_date_invoiced" position="attributes">
-                <attribute name="string">Terminar con la última fecha facturada</attribute>
-            </field>
-            <button name="terminate_contract" position="attributes">
-                <attribute name="string">Finalizar contrato</attribute>
-            </button>
-            <xpath expr="//button[@special='cancel']" position="attributes">
-                <attribute name="string">Cancelar</attribute>
-            </xpath>
         </field>
     </record>
 </odoo>

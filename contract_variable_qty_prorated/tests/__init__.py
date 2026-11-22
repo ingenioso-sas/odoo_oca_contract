@@ -1,1 +1,1 @@
-from . import test_compute_proprata
+from . import test_compute_prorata

@@ -9,7 +9,7 @@
     "website": "https://github.com/OCA/contract",
     "author": "Odoo Community Association (OCA)",
     "license": "AGPL-3",
-    "depends": ["contract_invoice_discount", "account"],
+    "depends": ["contract_invoice_discount", "account", "mail"],
     "data": [
         "security/ir.model.access.csv",
         "security/contract_referral_security.xml",

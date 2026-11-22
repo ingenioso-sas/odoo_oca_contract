@@ -9,17 +9,18 @@
                 <field
                     name="notification_channel_ids"
                     widget="many2many_tags"
+                    options="{'no_create': True}"
                     invisible="invoicing_mode != 'validate_send' and not overdue_reminder_enabled"
                 />
             </field>
-            <field name="notification_channel_ids" position="after">
-                <group string="Overdue reminders">
+            <xpath expr="//group[@name='group_main']" position="after">
+                <group name="overdue_reminders" string="Overdue reminders">
                     <field name="overdue_reminder_enabled" />
                     <field name="overdue_grace_days" invisible="not overdue_reminder_enabled" />
                     <field name="overdue_resend_after_days" invisible="not overdue_reminder_enabled" />
                     <field name="overdue_max_reminders" invisible="not overdue_reminder_enabled" />
                 </group>
-            </field>
+            </xpath>
         </field>
     </record>
 </odoo>

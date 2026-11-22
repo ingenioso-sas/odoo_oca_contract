@@ -1,6 +1,3 @@
-# Translation of Odoo Server.
-# This file contains the translation of the following modules:
-# 	* contract_referral
 #
 msgid ""
 msgstr ""
@@ -17,126 +14,48 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__active
+#: model:ir.model.constraint,message:contract_referral.constraint_contract_referral_commission_referral_invoice_uniq
+msgid "A commission already exists for this referral and invoice."
+msgstr "Ya existe una comisión para este referido y factura."
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__message_needaction
+msgid "Action Needed"
+msgstr "Acción necesaria"
+
+#. module: contract_referral
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
+msgid "Activate"
+msgstr "Activar"
+
+#. module: contract_referral
+#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral__state__active
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_search_view
 msgid "Active"
 msgstr "Activo"
 
 #. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__commission_base
-msgid "Commission Base"
-msgstr "Base de comisión"
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__message_attachment_count
+msgid "Attachment Count"
+msgstr "Nº de archivos adjuntos"
 
 #. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__commission_amount
-msgid "Commission Amount"
-msgstr "Monto de comisión"
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
+msgid "Benefits"
+msgstr "Beneficios"
 
 #. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__commission_percent
-msgid "Commission (%)"
-msgstr "Comisión (%)"
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
+msgid "Cancel"
+msgstr "Cancelar"
 
 #. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__commission_count
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__commission_ids
-msgid "Commissions"
-msgstr "Comisiones"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__company_id
-msgid "Company"
-msgstr "Compañía"
-
-#. module: contract_referral
-#: model:ir.model,name:contract_referral.model_contract_referral
-msgid "Contract Referral"
-msgstr "Referido de contrato"
-
-#. module: contract_referral
-#: model:ir.model,name:contract_referral.model_contract_referral_commission
-msgid "Referral Commission"
-msgstr "Comisión por referido"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__date
-msgid "Date"
-msgstr "Fecha"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__discount_rule_ids
-msgid "Referred Discount Rules"
-msgstr "Reglas de descuento del referido"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__end_date
-msgid "End date"
-msgstr "Fecha fin"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__max_invoices
-msgid "Max invoices"
-msgstr "Máximo de facturas"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__max_months
-msgid "Max months"
-msgstr "Máximo de meses"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__name
-msgid "Name"
-msgstr "Nombre"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__notes
-msgid "Notes"
-msgstr "Notas"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__partner_id
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__referrer_id
-msgid "Referrer"
-msgstr "Referente"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__referrer_commission_percent
-msgid "Referrer Commission (%)"
-msgstr "Comisión del referente (%)"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__referred_contract_id
-msgid "Referred Contract"
-msgstr "Contrato del referido"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__referred_discount_lost
-msgid "Referred discount lost"
-msgstr "Descuento del referido perdido"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__referred_discount_lost_date
-msgid "Referred discount lost date"
-msgstr "Fecha de pérdida del descuento del referido"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__referred_discount_percent
-msgid "Referred Discount (%)"
-msgstr "Descuento del referido (%)"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__referred_id
-msgid "Referred Customer"
-msgstr "Cliente referido"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__start_date
-msgid "Start date"
-msgstr "Fecha inicio"
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__state
-msgid "State"
-msgstr "Estado"
+#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral__state__cancelled
+#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral_commission__state__cancelled
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_commission_search_view
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_search_view
+msgid "Cancelled"
+msgstr "Cancelado"
 
 #. module: contract_referral
 #: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__state
@@ -144,63 +63,88 @@ msgid "Collection Status"
 msgstr "Estado de cobro"
 
 #. module: contract_referral
-#: model:ir.model.fields,help:contract_referral.field_contract_referral_commission__state
-msgid ""
-"Status based on the payment of the referred invoice. It is not the payment "
-"status of the commission to the referrer."
-msgstr ""
-"Estado basado en el pago de la factura del referido. No es el estado de "
-"pago de la comisión al referente."
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__commission_percent
+msgid "Commission (%)"
+msgstr "Comisión (%)"
 
 #. module: contract_referral
-#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral__state__active
-msgid "Active"
-msgstr "Activo"
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__commission_amount
+msgid "Commission Amount"
+msgstr "Monto de comisión"
 
 #. module: contract_referral
-#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral__state__cancelled
-msgid "Cancelled"
-msgstr "Cancelado"
-
-#. module: contract_referral
-#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral__state__finished
-msgid "Finished"
-msgstr "Finalizado"
-
-#. module: contract_referral
-#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral_commission__state__draft
-msgid "Draft"
-msgstr "Borrador"
-
-#. module: contract_referral
-#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral_commission__state__paid
-msgid "Paid"
-msgstr "Pagado"
-
-#. module: contract_referral
-#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral_commission__state__pending
-msgid "Pending payment"
-msgstr "Pendiente de pago"
-
-#. module: contract_referral
-#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral_commission__state__cancelled
-msgid "Cancelled"
-msgstr "Cancelado"
-
-#. module: contract_referral
-#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral__commission_base__total
-msgid "Total amount"
-msgstr "Monto total"
-
-#. module: contract_referral
-#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral__commission_base__untaxed
-msgid "Untaxed amount"
-msgstr "Monto sin impuestos"
-
-#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__commission_base
 #: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__base_amount
 msgid "Commission Base"
 msgstr "Base de comisión"
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+msgid "Commission percentage must be between 0 and 100."
+msgstr "El porcentaje de comisión debe estar entre 0 y 100."
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__commission_count
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__commission_ids
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_list_view
+msgid "Commissions"
+msgstr "Comisiones"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__company_id
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__company_id
+msgid "Company"
+msgstr "Compañía"
+
+#. module: contract_referral
+#: model:ir.model,name:contract_referral.model_res_partner
+msgid "Contact"
+msgstr "Contacto"
+
+#. module: contract_referral
+#: model:ir.model,name:contract_referral.model_contract_contract
+msgid "Contract"
+msgstr "Contrato"
+
+#. module: contract_referral
+#: model:ir.model,name:contract_referral.model_contract_invoice_discount
+msgid "Contract Invoice Discount"
+msgstr "Descuento de factura de contrato"
+
+#. module: contract_referral
+#: model:ir.model,name:contract_referral.model_contract_line
+msgid "Contract Line"
+msgstr "Línea de contrato"
+
+#. module: contract_referral
+#: model:ir.model,name:contract_referral.model_contract_referral
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
+msgid "Contract Referral"
+msgstr "Referido de contrato"
+
+#. module: contract_referral
+#: model:ir.actions.server,name:contract_referral.ir_cron_contract_referral_finish_expired_ir_actions_server
+msgid "Contract Referral: finish expired referrals"
+msgstr "Referidos de contrato: finalizar referidos expirados"
+
+#. module: contract_referral
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_list_view
+msgid "Contract Referrals"
+msgstr "Referidos de contrato"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__create_uid
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__create_uid
+msgid "Created by"
+msgstr "Creado por"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__create_date
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__create_date
+msgid "Created on"
+msgstr "Creado en"
 
 #. module: contract_referral
 #: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__currency_id
@@ -208,9 +152,128 @@ msgid "Currency"
 msgstr "Moneda"
 
 #. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__invoice_id
-msgid "Referred Invoice"
-msgstr "Factura del referido"
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__referrer_id
+#: model:ir.model.fields,help:contract_referral.field_contract_referral_commission__partner_id
+msgid "Customer that receives the commission."
+msgstr "Cliente que recibe la comisión."
+
+#. module: contract_referral
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__referred_id
+msgid "Customer that receives the referral discount."
+msgstr "Cliente que recibe el descuento por referido."
+
+#. module: contract_referral
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__paused_days
+msgid "Days the referral was paused. They extend the maximum duration."
+msgstr "Días que el referido estuvo pausado. Extienden la duración máxima."
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+msgid ""
+"Define a commission percentage or a discount percentage greater than 0."
+msgstr "Defina un porcentaje de comisión o de descuento mayor que 0."
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+msgid "Define a maximum of months or a maximum of invoices for the referral."
+msgstr "Defina un máximo de meses o un máximo de facturas para el referido."
+
+#. module: contract_referral
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
+msgid "Discount Rules"
+msgstr "Reglas de descuento"
+
+#. module: contract_referral
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__referred_discount_percent
+msgid "Discount applied to the referred customer's invoices."
+msgstr "Descuento aplicado a las facturas del cliente referido."
+
+#. module: contract_referral
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_search_view
+msgid "Discount lost"
+msgstr "Descuento perdido"
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+msgid "Discount percentage must be between 0 and 100."
+msgstr "El porcentaje de descuento debe estar entre 0 y 100."
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_account_move__display_name
+#: model:ir.model.fields,field_description:contract_referral.field_contract_contract__display_name
+#: model:ir.model.fields,field_description:contract_referral.field_contract_invoice_discount__display_name
+#: model:ir.model.fields,field_description:contract_referral.field_contract_line__display_name
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__display_name
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__display_name
+#: model:ir.model.fields,field_description:contract_referral.field_res_partner__display_name
+msgid "Display Name"
+msgstr "Nombre mostrado"
+
+#. module: contract_referral
+#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral_commission__state__draft
+msgid "Draft"
+msgstr "Borrador"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__end_date
+msgid "End Date"
+msgstr "Fecha de fin"
+
+#. module: contract_referral
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
+msgid "Finish"
+msgstr "Finalizar"
+
+#. module: contract_referral
+#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral__state__finished
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_search_view
+msgid "Finished"
+msgstr "Finalizado"
+
+#. module: contract_referral
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__start_date
+msgid "First date of the referral benefit."
+msgstr "Primera fecha del beneficio de referido."
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__message_follower_ids
+msgid "Followers"
+msgstr "Seguimiento"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__message_partner_ids
+msgid "Followers (Partners)"
+msgstr "Seguimiento (Socios)"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__has_message
+msgid "Has Message"
+msgstr "Tiene mensaje"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_account_move__id
+#: model:ir.model.fields,field_description:contract_referral.field_contract_contract__id
+#: model:ir.model.fields,field_description:contract_referral.field_contract_invoice_discount__id
+#: model:ir.model.fields,field_description:contract_referral.field_contract_line__id
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__id
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__id
+#: model:ir.model.fields,field_description:contract_referral.field_res_partner__id
+msgid "ID"
+msgstr "ID"
+
+#. module: contract_referral
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__message_needaction
+msgid "If checked, new messages require your attention."
+msgstr "Si está marcado los nuevos mensajes requieren su atención."
+
+#. module: contract_referral
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__message_has_error
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__message_has_sms_error
+msgid "If checked, some messages have a delivery error."
+msgstr "Si está marcado algunos mensajes tienen un error de entrega."
 
 #. module: contract_referral
 #: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__invoice_payment_state
@@ -223,60 +286,121 @@ msgid "Invoice Status"
 msgstr "Estado de la factura"
 
 #. module: contract_referral
-#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
-msgid "Referral"
-msgstr "Referido"
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__date
+msgid "Invoice/Bill Date"
+msgstr "Fecha de factura"
 
 #. module: contract_referral
-#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
-msgid "Benefits"
-msgstr "Beneficios"
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__is_adjustment
+msgid "Is Adjustment"
+msgstr "Es ajuste"
 
 #. module: contract_referral
-#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
-msgid "Discount Rules"
-msgstr "Reglas de descuento"
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__message_is_follower
+msgid "Is Follower"
+msgstr "Es seguidor"
 
 #. module: contract_referral
-#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
-#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_commission_list_view
-msgid "Commissions"
-msgstr "Comisiones"
+#: model:ir.model,name:contract_referral.model_account_move
+msgid "Journal Entry"
+msgstr "Asiento contable"
 
 #. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__write_uid
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__write_uid
+msgid "Last Updated by"
+msgstr "Última Actualización por"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__write_date
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__write_date
+msgid "Last Updated on"
+msgstr "Última Actualización en"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__max_invoices
+msgid "Max Invoices"
+msgstr "Máximo de facturas"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__max_months
+msgid "Max Months"
+msgstr "Máximo de meses"
+
+#. module: contract_referral
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__max_months
+msgid "Maximum duration in months. 0 = no month limit."
+msgstr "Duración máxima en meses. 0 = sin límite de meses."
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+msgid "Maximum invoices cannot be negative."
+msgstr "El máximo de facturas no puede ser negativo."
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+msgid "Maximum months cannot be negative."
+msgstr "El máximo de meses no puede ser negativo."
+
+#. module: contract_referral
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__max_invoices
+msgid "Maximum number of invoices for the benefit. 0 = unlimited."
+msgstr "Número máximo de facturas para el beneficio. 0 = ilimitado."
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__message_has_error
+msgid "Message Delivery error"
+msgstr "Mensaje de Error de entrega"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__message_ids
+msgid "Messages"
+msgstr "Mensajes"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__name
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__name
+msgid "Name"
+msgstr "Nombre"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__notes
 #: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
 msgid "Notes"
 msgstr "Notas"
 
 #. module: contract_referral
-#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
-msgid "Activate"
-msgstr "Activar"
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__message_needaction_counter
+msgid "Number of Actions"
+msgstr "Número de Acciones"
 
 #. module: contract_referral
-#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
-msgid "Cancel"
-msgstr "Cancelar"
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__message_has_error_counter
+msgid "Number of errors"
+msgstr "Número de errores"
 
 #. module: contract_referral
-#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
-msgid "Finish"
-msgstr "Finalizar"
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__message_needaction_counter
+msgid "Number of messages requiring action"
+msgstr "Número de mensajes que requieren una acción"
 
 #. module: contract_referral
-#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_search_view
-msgid "Discount lost"
-msgstr "Descuento perdido"
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__message_has_error_counter
+msgid "Number of messages with delivery error"
+msgstr "Número de mensajes con error de entrega"
 
 #. module: contract_referral
-#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_list_view
-msgid "Contract Referrals"
-msgstr "Referidos de contrato"
+#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral_commission__state__paid
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_commission_search_view
+msgid "Paid"
+msgstr "Pagado"
 
 #. module: contract_referral
-#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_commission_list_view
-msgid "Referral Commissions"
-msgstr "Comisiones por referido"
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__paused_days
+msgid "Paused Days"
+msgstr "Días pausados"
 
 #. module: contract_referral
 #: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_commission_search_view
@@ -284,63 +408,208 @@ msgid "Pending"
 msgstr "Pendiente"
 
 #. module: contract_referral
-#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_commission_search_view
-msgid "Paid"
-msgstr "Pagado"
+#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral_commission__state__pending
+msgid "Pending payment"
+msgstr "Pendiente de pago"
 
 #. module: contract_referral
 #: model:ir.model.fields,help:contract_referral.field_contract_referral__referrer_commission_percent
 msgid ""
-"Percentage of the referred invoice used to calculate the referrer commission."
+"Percentage of the referred invoice used to calculate the referrer "
+"commission."
 msgstr ""
 "Porcentaje de la factura del referido usado para calcular la comisión del "
 "referente."
 
 #. module: contract_referral
-#: model:ir.model.fields,help:contract_referral.field_contract_referral__referred_discount_percent
-msgid "Discount applied to the referred customer's invoices."
-msgstr "Descuento aplicado a las facturas del cliente referido."
-
-#. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__referral_id
 #: model:ir.model.fields,field_description:contract_referral.field_contract_invoice_discount__referral_id
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__referral_id
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
 msgid "Referral"
 msgstr "Referido"
 
 #. module: contract_referral
-msgid "Define a maximum of months or a maximum of invoices for the referral."
-msgstr "Defina un máximo de meses o un máximo de facturas para el referido."
+#: model:ir.model,name:contract_referral.model_contract_referral_commission
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_commission_form_view
+msgid "Referral Commission"
+msgstr "Comisión por referido"
 
 #. module: contract_referral
-msgid "Maximum months cannot be negative."
-msgstr "El máximo de meses no puede ser negativo."
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+#: model:ir.actions.act_window,name:contract_referral.action_contract_referral_commission
+#: model:ir.ui.menu,name:contract_referral.menu_contract_referral_commission
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_commission_graph_view
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_commission_list_view
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_commission_pivot_view
+msgid "Referral Commissions"
+msgstr "Comisiones por referido"
 
 #. module: contract_referral
-msgid "Maximum invoices cannot be negative."
-msgstr "El máximo de facturas no puede ser negativo."
+#: model:ir.model.fields,field_description:contract_referral.field_contract_contract__referral_count
+#: model:ir.model.fields,field_description:contract_referral.field_res_partner__referral_count
+#: model:ir.model.fields,field_description:contract_referral.field_res_users__referral_count
+msgid "Referral Count"
+msgstr "Cantidad de referidos"
 
 #. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+msgid "Referral discount: %(referrer)s"
+msgstr "Descuento por referido: %(referrer)s"
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+#: model:ir.actions.act_window,name:contract_referral.action_contract_referral
+#: model:ir.ui.menu,name:contract_referral.menu_contract_referral
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_contract_form_view_referral
+#: model_terms:ir.ui.view,arch_db:contract_referral.view_partner_form_referral
+msgid "Referrals"
+msgstr "Referidos"
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+msgid "Referrals are only allowed on customer contracts."
+msgstr "Los referidos solo están permitidos en contratos de cliente."
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__referred_contract_id
+msgid "Referred Contract"
+msgstr "Contrato del referido"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__referred_id
+msgid "Referred Customer"
+msgstr "Cliente referido"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__referred_discount_percent
+msgid "Referred Discount (%)"
+msgstr "Descuento del referido (%)"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__referred_discount_lost
+msgid "Referred Discount Lost"
+msgstr "Descuento de referido perdido"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__referred_discount_lost_date
+msgid "Referred Discount Lost Date"
+msgstr "Fecha de pérdida de descuento"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__discount_rule_ids
+msgid "Referred Discount Rules"
+msgstr "Reglas de descuento del referido"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__invoice_id
+msgid "Referred Invoice"
+msgstr "Factura del referido"
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+msgid "Referred contract must belong to the referred customer."
+msgstr "El contrato referido debe pertenecer al cliente referido."
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+msgid "Referred contract must belong to the same company as the referral."
+msgstr ""
+"El contrato referido debe pertenecer a la misma compañía que el referido."
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__referrer_id
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__partner_id
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_commission_search_view
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_search_view
+msgid "Referrer"
+msgstr "Referente"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__referrer_commission_percent
+msgid "Referrer Commission (%)"
+msgstr "Comisión del referente (%)"
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
 msgid "Referrer and referred customer must be different."
 msgstr "El referente y el cliente referido deben ser diferentes."
 
 #. module: contract_referral
+#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral_commission__state__reversed
+msgid "Reversed"
+msgstr "Reversado"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__message_has_sms_error
+msgid "SMS Delivery error"
+msgstr "Error de Entrega de SMS"
+
+#. module: contract_referral
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__referred_discount_lost
+msgid ""
+"Set permanently when the referred customer has an overdue invoice. The "
+"referral discount will not apply again."
+msgstr ""
+"Se marca permanentemente cuando el cliente referido tiene una factura "
+"vencida. El descuento por referido no volverá a aplicarse."
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__start_date
+msgid "Start Date"
+msgstr "Fecha de inicio"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__state
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_commission_search_view
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_search_view
+msgid "State"
+msgstr "Estado"
+
+#. module: contract_referral
+#: model:ir.model.fields,help:contract_referral.field_contract_referral_commission__state
+msgid ""
+"Status based on the payment of the referred invoice. It is not the payment "
+"status of the commission to the referrer."
+msgstr ""
+"Estado basado en el pago de la factura del referido. No es el estado de pago"
+" de la comisión al referente."
+
+#. module: contract_referral
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_form_view
+msgid ""
+"The referred customer lost the referral discount permanently due to an "
+"overdue invoice."
+msgstr ""
+"El cliente referido perdió permanentemente el descuento de referido por una "
+"factura vencida."
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
 msgid "There is already an active referral for this contract."
 msgstr "Ya existe un referido activo para este contrato."
 
 #. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__paused_days
-msgid "Paused days"
-msgstr "Días pausados"
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_commission_list_view
+msgid "Total Base"
+msgstr "Base total"
 
 #. module: contract_referral
-#: model:ir.model.fields,help:contract_referral.field_contract_referral__paused_days
-msgid "Days the referral was paused. They extend the maximum duration."
-msgstr "Días que el referido estuvo pausado. Extienden la duración máxima."
+#: model_terms:ir.ui.view,arch_db:contract_referral.contract_referral_commission_list_view
+msgid "Total Commission"
+msgstr "Comisión total"
 
 #. module: contract_referral
-#: model:ir.model.fields,field_description:contract_referral.field_contract_referral_commission__is_adjustment
-msgid "Is adjustment"
-msgstr "Es ajuste"
+#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral__commission_base__total
+msgid "Total amount"
+msgstr "Monto total"
 
 #. module: contract_referral
 #: model:ir.model.fields,help:contract_referral.field_contract_referral_commission__is_adjustment
@@ -350,3 +619,36 @@ msgid ""
 msgstr ""
 "Verdadero cuando este registro reversa una comisión por una devolución o "
 "nota de crédito."
+
+#. module: contract_referral
+#: model:ir.model.fields.selection,name:contract_referral.selection__contract_referral__commission_base__untaxed
+msgid "Untaxed amount"
+msgstr "Monto sin impuestos"
+
+#. module: contract_referral
+#: model:ir.model.fields,field_description:contract_referral.field_contract_referral__website_message_ids
+msgid "Website Messages"
+msgstr "Mensajes del sitio web"
+
+#. module: contract_referral
+#: model:ir.model.fields,help:contract_referral.field_contract_referral__website_message_ids
+msgid "Website communication history"
+msgstr "Historial de comunicación del sitio web"
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+msgid "referral_id"
+msgstr ""
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+msgid "referred_contract_id"
+msgstr ""
+
+#. module: contract_referral
+#. odoo-python
+#: code:addons/contract_referral/models/contract_referral.py:0
+msgid "referrer_id"
+msgstr ""

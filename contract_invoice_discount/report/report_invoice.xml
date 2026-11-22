@@ -17,13 +17,13 @@
                 position="inside"
             >
                 <div
-                    t-if="line.contract_discount_name"
+                    t-if="line.contract_discount_name and line.discount"
                     class="text-muted small"
                     name="contract_discount_note"
                 >
                     <t t-out="line.contract_discount_name" />
                     <t t-if="line.contract_discount_until">
-                        — <t t-out="line.contract_discount_until" />
+                        (until <span t-field="line.contract_discount_until" />)
                     </t>
                 </div>
             </xpath>

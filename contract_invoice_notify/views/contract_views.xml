@@ -5,31 +5,48 @@
         <field name="model">contract.contract</field>
         <field name="inherit_id" ref="contract.contract_contract_form_view" />
         <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button
+                    name="action_resend_last_invoice_notification"
+                    type="object"
+                    string="Resend Last Invoice Notification"
+                    class="btn-secondary"
+                    groups="account.group_account_invoice"
+                    invisible="contract_type != 'sale' or invoice_count == 0"
+                />
+            </xpath>
             <field name="invoice_mail_template_id" position="after">
                 <field
                     name="notification_channel_ids"
                     widget="many2many_tags"
+                    options="{'no_create': True}"
                     invisible="invoicing_mode != 'validate_send' and not overdue_reminder_enabled"
                 />
-            </field>
-            <field name="notification_channel_ids" position="after">
                 <field
                     name="notification_template_ids"
                     invisible="invoicing_mode != 'validate_send' and not overdue_reminder_enabled"
                 >
                     <list editable="bottom">
-                        <field name="channel_id" />
+                        <field name="channel_id" options="{'no_create': True}" />
                         <field name="purpose" />
-                        <field name="template_id" />
+                        <field
+                            name="template_id"
+                            domain="[('model', '=', 'account.move' if purpose == 'invoice_notification' else 'contract.contract')]"
+                        />
                     </list>
                 </field>
-                <group string="Overdue reminders (digest per contract)">
+            </field>
+            <xpath expr="//group[@name='recurring_type']" position="after">
+                <group
+                    name="overdue_reminders"
+                    string="Overdue reminders (digest per contract)"
+                >
                     <field name="overdue_reminder_enabled" />
                     <field name="overdue_grace_days" invisible="not overdue_reminder_enabled" />
                     <field name="overdue_resend_after_days" invisible="not overdue_reminder_enabled" />
                     <field name="overdue_max_reminders" invisible="not overdue_reminder_enabled" />
                 </group>
-            </field>
+            </xpath>
         </field>
     </record>
 </odoo>

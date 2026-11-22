@@ -14,9 +14,50 @@ class _DryRunRollback(Exception):
 class ContractLineFormula(models.Model):
     _name = "contract.line.qty.formula"
     _description = "Contract Line Formula"
+    _inherit = ["mail.thread"]
 
-    name = fields.Char(required=True, translate=True)
-    code = fields.Text(required=True, default="result = 0")
+    name = fields.Char(required=True, translate=True, tracking=True)
+    code = fields.Text(required=True, default="result = 0", tracking=True)
+    active = fields.Boolean(default=True, tracking=True)
+
+    def action_test_formula(self):
+        """Evaluate formula in dry-run mode and report result to the user."""
+        self.ensure_one()
+        today = fields.Date.context_today(self)
+        eval_context = {
+            "env": self.env,
+            "context": self.env.context,
+            "user": self.env.user,
+            "line": self.env["contract.line"],
+            "contract": self.env["contract.contract"],
+            "quantity": 0,
+            "period_first_date": today,
+            "period_last_date": today,
+            "invoice_date": today,
+        }
+        try:
+            with self.env.cr.savepoint(flush=False):
+                safe_eval((self.code or "").strip(), eval_context, mode="exec")
+                raise _DryRunRollback()
+        except _DryRunRollback:
+            pass
+        except Exception as e:
+            raise exceptions.ValidationError(
+                self.env._("Error evaluating code.\nDetails: %s", e)
+            ) from e
+        result = eval_context.get("result")
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": self.env._("Formula Test"),
+                "message": self.env._(
+                    "Formula evaluated successfully (result = %s).", result
+                ),
+                "type": "success",
+                "sticky": False,
+            },
+        }
 
     @api.model_create_multi
     def create(self, vals_list):

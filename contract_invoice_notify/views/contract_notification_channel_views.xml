@@ -40,10 +40,9 @@
     <menuitem
         id="menu_contract_notification_channel"
         name="Contract Notification Channels"
-        parent="base.menu_custom"
+        parent="contract.menu_config_contract"
         action="action_contract_notification_channel"
-        sequence="120"
-        groups="base.group_no_one"
+        sequence="30"
     />
 
 </odoo>

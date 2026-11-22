@@ -29,6 +29,28 @@
                     <field name="state" widget="statusbar" />
                 </header>
                 <sheet>
+                    <div
+                        class="alert alert-warning"
+                        role="alert"
+                        invisible="not referred_discount_lost"
+                    >
+                        The referred customer lost the referral discount permanently due to an overdue invoice.
+                    </div>
+                    <div class="oe_button_box" name="button_box">
+                        <button
+                            name="action_show_commissions"
+                            type="object"
+                            icon="fa-money"
+                            class="oe_stat_button"
+                            invisible="commission_count == 0"
+                        >
+                            <field
+                                string="Commissions"
+                                name="commission_count"
+                                widget="statinfo"
+                            />
+                        </button>
+                    </div>
                     <div class="oe_title">
                         <h1>
                             <field name="name" readonly="1" />
@@ -96,6 +118,7 @@
                         </page>
                     </notebook>
                 </sheet>
+                <chatter />
             </form>
         </field>
     </record>
@@ -104,7 +127,11 @@
         <field name="name">contract.referral.list</field>
         <field name="model">contract.referral</field>
         <field name="arch" type="xml">
-            <list string="Contract Referrals">
+            <list
+                string="Contract Referrals"
+                decoration-muted="state in ('cancelled', 'finished')"
+                decoration-info="state == 'draft'"
+            >
                 <field name="name" />
                 <field name="referrer_id" />
                 <field name="referred_id" />
@@ -113,9 +140,15 @@
                 <field name="end_date" />
                 <field name="referred_discount_percent" />
                 <field name="referrer_commission_percent" />
-                <field name="commission_count" />
+                <field name="commission_count" sum="Commissions" />
                 <field name="paused_days" optional="hide" />
-                <field name="state" widget="badge" />
+                <field
+                    name="state"
+                    widget="badge"
+                    decoration-info="state == 'draft'"
+                    decoration-success="state == 'active'"
+                    decoration-muted="state in ('cancelled', 'finished')"
+                />
             </list>
         </field>
     </record>
@@ -175,8 +208,54 @@
     <menuitem
         id="menu_contract_referral"
         name="Referrals"
-        parent="contract.menu_config_contract"
+        parent="account.menu_finance_receivables"
         action="action_contract_referral"
-        sequence="20"
+        sequence="101"
     />
+
+    <record id="contract_contract_form_view_referral" model="ir.ui.view">
+        <field name="name">contract.contract.form.referral</field>
+        <field name="model">contract.contract</field>
+        <field name="inherit_id" ref="contract.contract_contract_form_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button
+                    name="action_show_referrals"
+                    type="object"
+                    icon="fa-handshake-o"
+                    class="oe_stat_button"
+                    invisible="contract_type != 'sale' or referral_count == 0"
+                >
+                    <field
+                        string="Referrals"
+                        name="referral_count"
+                        widget="statinfo"
+                    />
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_partner_form_referral" model="ir.ui.view">
+        <field name="name">res.partner.form.referral</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button
+                    name="action_show_referrals"
+                    type="object"
+                    icon="fa-handshake-o"
+                    class="oe_stat_button"
+                    invisible="referral_count == 0"
+                >
+                    <field
+                        string="Referrals"
+                        name="referral_count"
+                        widget="statinfo"
+                    />
+                </button>
+            </xpath>
+        </field>
+    </record>
 </odoo>

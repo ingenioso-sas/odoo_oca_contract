@@ -7,6 +7,47 @@
         <field name="inherit_id" ref="contract.contract_line_form_view" />
         <field name="arch" type="xml">
             <header position="inside">
+                <button
+                    name="action_plan_successor"
+                    string="Plan Start"
+                    type="object"
+                    class="btn-secondary"
+                    groups="account.group_account_manager"
+                    invisible="not is_plan_successor_allowed"
+                />
+                <button
+                    name="action_stop_plan_successor"
+                    string="Suspend"
+                    type="object"
+                    class="btn-secondary"
+                    groups="account.group_account_manager"
+                    invisible="not is_stop_plan_successor_allowed"
+                />
+                <button
+                    name="action_stop"
+                    string="Stop"
+                    type="object"
+                    class="btn-secondary"
+                    groups="account.group_account_manager"
+                    invisible="not is_stop_allowed"
+                />
+                <button
+                    name="cancel"
+                    string="Cancel"
+                    type="object"
+                    class="btn-secondary"
+                    groups="account.group_account_manager"
+                    confirm="Are you sure you want to cancel this line"
+                    invisible="not is_cancel_allowed"
+                />
+                <button
+                    name="action_uncancel"
+                    string="Un-cancel"
+                    type="object"
+                    class="btn-secondary"
+                    groups="account.group_account_manager"
+                    invisible="not is_un_cancel_allowed"
+                />
                 <field name="state" widget="statusbar" />
             </header>
             <xpath expr="//page[@name='renewal']" position="inside">
@@ -14,15 +55,14 @@
                     <field
                         name="termination_notice_date"
                         readonly="True"
-                        invisible="not is_auto_renew"
+                        invisible="not date_end"
                     />
-                    <field name="manual_renew_needed" invisible="not is_auto_renew" />
+                    <field name="manual_renew_needed" invisible="is_auto_renew" />
                 </group>
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page
                     string="Predecessor &amp; Successor Lines"
-                    groups="base.group_no_one"
                     invisible="display_type"
                 >
                     <group>
@@ -48,6 +88,8 @@
                 <field name="is_un_cancel_allowed" column_invisible="True" />
                 <field name="is_auto_renew" column_invisible="True" />
                 <field name="is_canceled" column_invisible="True" />
+                <field name="predecessor_contract_line_id" optional="hide" />
+                <field name="successor_contract_line_id" optional="hide" />
                 <button
                     name="action_plan_successor"
                     title="Plan Start"
@@ -85,7 +127,7 @@
                     name="action_uncancel"
                     title="Un-cancel"
                     type="object"
-                    icon="fa-ban text-success"
+                    icon="fa-undo text-success"
                     groups="account.group_account_manager"
                     invisible="not is_un_cancel_allowed"
                 />

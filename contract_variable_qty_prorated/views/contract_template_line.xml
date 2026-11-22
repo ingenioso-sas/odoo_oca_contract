@@ -10,7 +10,34 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='quantity']" position="attributes">
                 <attribute name="invisible" />
-                <attribute name="required">True</attribute>
+                <attribute name="required">not display_type</attribute>
+            </xpath>
+        </field>
+    </record>
+    <record id="contract_contract_form_view_prorated" model="ir.ui.view">
+        <field name="model">contract.contract</field>
+        <field name="inherit_id" ref="contract_variable_quantity.contract_contract_form_view" />
+        <field name="arch" type="xml">
+            <xpath
+                expr="//field[@name='contract_line_fixed_ids']/list/field[@name='quantity']"
+                position="attributes"
+            >
+                <attribute name="invisible">qty_type != 'fixed' and not qty_formula_id</attribute>
+            </xpath>
+            <xpath
+                expr="//field[@name='contract_line_ids']/list/field[@name='quantity']"
+                position="attributes"
+            >
+                <attribute name="invisible">qty_type != 'fixed' and not qty_formula_id</attribute>
+            </xpath>
+        </field>
+    </record>
+    <record id="contract_line_tree_view_prorated" model="ir.ui.view">
+        <field name="model">contract.line</field>
+        <field name="inherit_id" ref="contract_variable_quantity.contract_line_tree_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='quantity']" position="attributes">
+                <attribute name="invisible">qty_type != 'fixed' and not qty_formula_id</attribute>
             </xpath>
         </field>
     </record>

@@ -13,6 +13,8 @@ class ContractContract(models.Model):
         default=False,
         readonly=True,
         copy=False,
+        index=True,
+        tracking=True,
         help="Technical flag used to block invoice generation while paused.",
     )
     pause_ids = fields.One2many(
@@ -97,6 +99,17 @@ class ContractContract(models.Model):
             "res_model": "contract.pause.wizard",
             "view_mode": "form",
             "target": "new",
+            "context": {"default_contract_id": self.id},
+        }
+
+    def action_show_pauses(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": self.env._("Contract Pauses"),
+            "res_model": "contract.pause",
+            "view_mode": "list,form",
+            "domain": [("contract_id", "=", self.id)],
             "context": {"default_contract_id": self.id},
         }
 

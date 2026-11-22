@@ -11,6 +11,7 @@ class ContractLine(models.Model):
         inverse_name="contract_line_id",
         string="Invoice Discounts",
         copy=False,
+        context={"active_test": False},
     )
     invoice_discount_count = fields.Integer(
         compute="_compute_invoice_discount_count",

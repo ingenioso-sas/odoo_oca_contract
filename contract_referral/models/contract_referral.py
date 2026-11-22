@@ -9,6 +9,7 @@ from odoo.exceptions import ValidationError
 class ContractReferral(models.Model):
     _name = "contract.referral"
     _description = "Contract Referral"
+    _inherit = ["mail.thread"]
     _order = "create_date desc, id desc"
     _check_company_auto = True
 
@@ -25,6 +26,7 @@ class ContractReferral(models.Model):
         required=True,
         index=True,
         check_company=True,
+        tracking=True,
         help="Customer that receives the commission.",
     )
     referred_id = fields.Many2one(
@@ -33,6 +35,7 @@ class ContractReferral(models.Model):
         required=True,
         index=True,
         check_company=True,
+        tracking=True,
         help="Customer that receives the referral discount.",
     )
     referred_contract_id = fields.Many2one(
@@ -42,6 +45,7 @@ class ContractReferral(models.Model):
         index=True,
         check_company=True,
         ondelete="cascade",
+        tracking=True,
     )
     start_date = fields.Date(
         default=fields.Date.context_today,
@@ -95,10 +99,12 @@ class ContractReferral(models.Model):
         ],
         default="active",
         required=True,
+        tracking=True,
     )
     referred_discount_lost = fields.Boolean(
         readonly=True,
         copy=False,
+        tracking=True,
         help="Set permanently when the referred customer has an overdue "
         "invoice. The referral discount will not apply again.",
     )
@@ -537,3 +543,78 @@ class ContractReferral(models.Model):
             "active"
         ).write({"active": False})
         self.write({"state": "finished"})
+
+    def action_show_commissions(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": self.env._("Referral Commissions"),
+            "res_model": "contract.referral.commission",
+            "view_mode": "list,form,pivot,graph",
+            "domain": [("referral_id", "=", self.id)],
+            "context": {"default_referral_id": self.id},
+        }
+
+
+class ContractContract(models.Model):
+    _inherit = "contract.contract"
+
+    referral_count = fields.Integer(compute="_compute_referral_count")
+
+    def _compute_referral_count(self):
+        real_ids = [rec_id for rec_id in self._ids if isinstance(rec_id, int)]
+        counts = {}
+        if real_ids:
+            grouped = self.env["contract.referral"]._read_group(
+                domain=[("referred_contract_id", "in", real_ids)],
+                groupby=["referred_contract_id"],
+                aggregates=["__count"],
+            )
+            counts = {contract.id: count for contract, count in grouped}
+        for contract in self:
+            contract.referral_count = counts.get(contract.id, 0)
+
+    def action_show_referrals(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": self.env._("Referrals"),
+            "res_model": "contract.referral",
+            "view_mode": "list,form",
+            "domain": [("referred_contract_id", "=", self.id)],
+            "context": {
+                "default_referred_contract_id": self.id,
+                "default_referred_id": self.partner_id.id,
+            },
+        }
+
+
+class ResPartner(models.Model):
+    _inherit = "res.partner"
+
+    referral_count = fields.Integer(compute="_compute_referral_count")
+
+    def _compute_referral_count(self):
+        for partner in self:
+            partner.referral_count = self.env["contract.referral"].search_count(
+                [
+                    "|",
+                    ("referrer_id", "child_of", partner.id),
+                    ("referred_id", "child_of", partner.id),
+                ]
+            )
+
+    def action_show_referrals(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": self.env._("Referrals"),
+            "res_model": "contract.referral",
+            "view_mode": "list,form",
+            "domain": [
+                "|",
+                ("referrer_id", "child_of", self.id),
+                ("referred_id", "child_of", self.id),
+            ],
+            "context": {"default_referrer_id": self.id},
+        }

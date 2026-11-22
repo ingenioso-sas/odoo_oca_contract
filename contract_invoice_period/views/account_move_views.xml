@@ -23,14 +23,13 @@
                 />
                 <field
                     name="contract_period_start"
-                    invisible="not contract_period_start"
+                    widget="daterange"
+                    options="{'end_date_field': 'contract_period_end'}"
+                    invisible="not contract_period_start and not contract_period_end"
                     readonly="1"
+                    string="Invoiced Period"
                 />
-                <field
-                    name="contract_period_end"
-                    invisible="not contract_period_end"
-                    readonly="1"
-                />
+                <field name="contract_period_end" invisible="1" />
             </xpath>
             <xpath
                 expr="//field[@name='invoice_line_ids']/list/field[@name='name']"
@@ -53,6 +52,7 @@
         <field name="inherit_id" ref="account.view_invoice_tree" />
         <field name="arch" type="xml">
             <xpath expr="//field[@name='invoice_origin']" position="after">
+                <field name="contract_id" optional="show" />
                 <field name="contract_billing_date" optional="hide" />
                 <field name="contract_period_start" optional="hide" />
                 <field name="contract_period_end" optional="hide" />
@@ -79,6 +79,11 @@
                 />
             </xpath>
             <xpath expr="//filter[@name='duedate']" position="after">
+                <filter
+                    name="contract_billing_date_filter"
+                    string="Contract Billing Date"
+                    date="contract_billing_date"
+                />
                 <filter
                     name="group_by_contract"
                     string="Contract"

@@ -6,7 +6,7 @@
         <field name="name">contract.referral.commission.form</field>
         <field name="model">contract.referral.commission</field>
         <field name="arch" type="xml">
-            <form string="Referral Commission">
+            <form string="Referral Commission" create="0">
                 <sheet>
                     <group>
                         <group>
@@ -33,17 +33,31 @@
         <field name="name">contract.referral.commission.list</field>
         <field name="model">contract.referral.commission</field>
         <field name="arch" type="xml">
-            <list string="Referral Commissions">
+            <list
+                string="Referral Commissions"
+                create="0"
+                decoration-muted="state in ('cancelled', 'reversed')"
+                decoration-success="state == 'paid'"
+                decoration-warning="state == 'pending'"
+            >
                 <field name="date" />
                 <field name="partner_id" />
                 <field name="referral_id" />
                 <field name="invoice_id" />
-                <field name="base_amount" />
+                <field name="base_amount" sum="Total Base" />
                 <field name="commission_percent" />
-                <field name="commission_amount" />
+                <field name="commission_amount" sum="Total Commission" />
                 <field name="currency_id" groups="base.group_multi_currency" />
                 <field name="is_adjustment" optional="hide" />
-                <field name="state" widget="badge" />
+                <field
+                    name="state"
+                    widget="badge"
+                    decoration-info="state == 'draft'"
+                    decoration-warning="state == 'pending'"
+                    decoration-success="state == 'paid'"
+                    decoration-danger="state == 'reversed'"
+                    decoration-muted="state == 'cancelled'"
+                />
             </list>
         </field>
     </record>
@@ -87,17 +101,44 @@
         </field>
     </record>
 
+    <record id="contract_referral_commission_pivot_view" model="ir.ui.view">
+        <field name="name">contract.referral.commission.pivot</field>
+        <field name="model">contract.referral.commission</field>
+        <field name="arch" type="xml">
+            <pivot string="Referral Commissions">
+                <field name="partner_id" type="row" />
+                <field name="state" type="col" />
+                <field name="base_amount" type="measure" />
+                <field name="commission_amount" type="measure" />
+            </pivot>
+        </field>
+    </record>
+
+    <record id="contract_referral_commission_graph_view" model="ir.ui.view">
+        <field name="name">contract.referral.commission.graph</field>
+        <field name="model">contract.referral.commission</field>
+        <field name="arch" type="xml">
+            <graph string="Referral Commissions" type="bar">
+                <field name="partner_id" />
+                <field name="commission_amount" type="measure" />
+            </graph>
+        </field>
+    </record>
+
     <record id="action_contract_referral_commission" model="ir.actions.act_window">
         <field name="name">Referral Commissions</field>
         <field name="res_model">contract.referral.commission</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">list,form,pivot,graph</field>
         <field name="search_view_id" ref="contract_referral_commission_search_view" />
     </record>
 
     <menuitem
         id="menu_contract_referral_commission"
         name="Referral Commissions"
-        parent="contract.menu_config_contract"
+        parent="account.menu_finance_receivables"
+        action="action_contract_referral_commission"
+        sequence="102"
+    />
         action="action_contract_referral_commission"
         sequence="21"
     />

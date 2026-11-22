@@ -99,11 +99,11 @@ No se usan reemplazos de texto.
 
 ## Recordatorio de vencidas
 
-- Un digest por contrato.
-- Se envía por todos los canales configurados.
+- Un digest por contrato (el cron prefiltra facturas vencidas pendientes antes de evaluar contratos).
+- Se envía por todos los canales configurados (si los canales asignados están archivados no vuelve silenciosamente a email).
 - Solo se marca la factura si al menos un canal tuvo éxito.
 - No consolida montos.
-- Respeta `opt_out_overdue_reminder`.
+- Respeta `opt_out_overdue_reminder` en `partner_id`, `commercial_partner_id` e `invoice_partner_id`.
 
 ## Migración
 

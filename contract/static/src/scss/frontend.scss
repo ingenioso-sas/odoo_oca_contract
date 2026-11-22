@@ -1,5 +1,5 @@
-/* https://github.com/odoo/odoo/blob/14.0/addons/website/static/src/snippets/s_timeline/000.scss */
-.s_timeline {
+/* Scoped timeline styles for the contract portal view. */
+.o_contract_portal_timeline.s_timeline {
     .s_timeline_line {
         position: relative;
         &:before {
@@ -49,7 +49,7 @@
             left: 0%;
             right: 0%;
         }
-        @include media-breakpoint-down(sm) {
+        @include media-breakpoint-down(md) {
             position: relative;
             margin: 20px 0px;
         }
@@ -58,13 +58,13 @@
             padding: 5px;
         }
         .fa {
-            margin: 0 $grid-gutter-width/2;
+            margin: 0 calc(#{$grid-gutter-width} / 2);
         }
         text-align: center;
     }
     .s_timeline_icon {
         flex: 0 0 auto;
-        margin: $grid-gutter-width/2;
+        margin: calc(#{$grid-gutter-width} / 2);
         z-index: 1;
     }
 }

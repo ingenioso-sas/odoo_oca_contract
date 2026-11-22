@@ -6,8 +6,17 @@
         <field name="name">contract.pause.form</field>
         <field name="model">contract.pause</field>
         <field name="arch" type="xml">
-            <form string="Contract Pause">
+            <form string="Contract Pause" create="0" edit="0" delete="0">
                 <header>
+                    <button
+                        name="action_cancel_scheduled"
+                        type="object"
+                        string="Cancel Scheduled Pause"
+                        class="btn-secondary"
+                        groups="account.group_account_manager"
+                        confirm="Cancel this scheduled pause?"
+                        invisible="state != 'scheduled'"
+                    />
                     <field name="state" widget="statusbar" />
                 </header>
                 <sheet>
@@ -48,7 +57,15 @@
         <field name="name">contract.pause.list</field>
         <field name="model">contract.pause</field>
         <field name="arch" type="xml">
-            <list string="Contract Pauses">
+            <list
+                string="Contract Pauses"
+                create="0"
+                edit="0"
+                delete="0"
+                decoration-muted="state in ('resumed', 'cancelled')"
+                decoration-info="state == 'scheduled'"
+                decoration-warning="state == 'active'"
+            >
                 <field name="name" />
                 <field name="contract_id" />
                 <field name="start_date" />
@@ -57,7 +74,14 @@
                 <field name="resume_date" />
                 <field name="pause_days" />
                 <field name="reason_id" />
-                <field name="state" widget="badge" />
+                <field
+                    name="state"
+                    widget="badge"
+                    decoration-info="state == 'scheduled'"
+                    decoration-warning="state == 'active'"
+                    decoration-success="state == 'resumed'"
+                    decoration-muted="state == 'cancelled'"
+                />
             </list>
         </field>
     </record>
@@ -105,8 +129,8 @@
     <menuitem
         id="menu_contract_pause"
         name="Contract Pauses"
-        parent="contract.menu_config_contract"
+        parent="account.menu_finance_receivables"
         action="action_contract_pause"
-        sequence="23"
+        sequence="100"
     />
 </odoo>

@@ -7,7 +7,7 @@ class ResPartner(models.Model):
     _inherit = "res.partner"
 
     opt_out_overdue_reminder = fields.Boolean(
-        string="No enviar recordatorios de vencimiento",
-        help="Si se marca, este contacto no recibirá los recordatorios "
-        "de facturas vencidas de contratos (por email ni por WhatsApp).",
+        string="Opt out of overdue reminders",
+        help="If checked, this contact will not receive overdue contract "
+        "invoice reminders (by email or WhatsApp).",
     )

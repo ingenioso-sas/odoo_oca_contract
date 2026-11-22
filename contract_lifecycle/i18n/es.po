@@ -1,6 +1,3 @@
-# Translation of Odoo Server.
-# This file contains the translation of the following modules:
-# 	* contract_lifecycle
 #
 msgid ""
 msgstr ""
@@ -17,24 +14,55 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_contract__is_paused
-msgid "Is paused"
-msgstr "Está pausado"
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.portal_contract_page_lifecycle
+msgid "<strong>Paused until</strong>"
+msgstr "<strong>Pausado hasta</strong>"
 
 #. module: contract_lifecycle
-#: model:ir.model.fields,help:contract_lifecycle.field_contract_contract__is_paused
-msgid "Technical flag used to block invoice generation while paused."
-msgstr "Bandera técnica para bloquear la facturación durante la pausa."
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.portal_contract_page_lifecycle
+msgid "<strong>Status</strong>"
+msgstr "<strong>Estado</strong>"
 
 #. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_contract__pause_ids
-msgid "Pauses"
-msgstr "Pausas"
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.portal_contract_page_lifecycle
+msgid "<strong>Terminated on</strong>"
+msgstr "<strong>Terminado el</strong>"
 
 #. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_contract__current_pause_id
-msgid "Current Pause"
-msgstr "Pausa actual"
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_pause.py:0
+msgid "A contract cannot have multiple active or scheduled pauses."
+msgstr "Un contrato no puede tener múltiples pausas activas o programadas."
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "A pause reason is required."
+msgstr "Se requiere un motivo de pausa."
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "A terminated contract cannot be paused."
+msgstr "No se puede pausar un contrato terminado."
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__action
+msgid "Action"
+msgstr "Acción"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_reason__active
+#: model:ir.model.fields.selection,name:contract_lifecycle.selection__contract_pause__state__active
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_search_view
+msgid "Active"
+msgstr "Activo"
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_pause.py:0
+msgid "An end date is required unless the pause is indefinite."
+msgstr "Se requiere una fecha de fin a menos que la pausa sea indefinida."
 
 #. module: contract_lifecycle
 #: model:ir.model.fields,field_description:contract_lifecycle.field_contract_contract__can_resume
@@ -42,19 +70,262 @@ msgid "Can Resume"
 msgstr "Puede reanudarse"
 
 #. module: contract_lifecycle
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_wizard_form_view
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_resume_wizard_form_view
+msgid "Cancel"
+msgstr "Cancelar"
+
+#. module: contract_lifecycle
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_form_view
+msgid "Cancel Scheduled Pause"
+msgstr "Cancelar pausa programada"
+
+#. module: contract_lifecycle
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_form_view
+msgid "Cancel this scheduled pause?"
+msgstr "¿Cancelar esta pausa programada?"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields.selection,name:contract_lifecycle.selection__contract_pause__state__cancelled
+msgid "Cancelled"
+msgstr "Cancelado"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields.selection,name:contract_lifecycle.selection__contract_contract__lifecycle_state__closed
+msgid "Closed"
+msgstr "Cerrado"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__comment
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_wizard__comment
+msgid "Comment"
+msgstr "Comentario"
+
+#. module: contract_lifecycle
+#: model:ir.model,name:contract_lifecycle.model_res_company
+msgid "Companies"
+msgstr "Compañías"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__company_id
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__company_id
+msgid "Company"
+msgstr "Compañía"
+
+#. module: contract_lifecycle
+#: model:ir.model,name:contract_lifecycle.model_contract_contract
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__contract_id
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_wizard__contract_id
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_resume_wizard__contract_id
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_search_view
+msgid "Contract"
+msgstr "Contrato"
+
+#. module: contract_lifecycle
+#: model:ir.model,name:contract_lifecycle.model_contract_line
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__contract_line_id
+msgid "Contract Line"
+msgstr "Línea de contrato"
+
+#. module: contract_lifecycle
+#: model:ir.model,name:contract_lifecycle.model_contract_pause
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_form_view
+msgid "Contract Pause"
+msgstr "Pausa de contrato"
+
+#. module: contract_lifecycle
+#: model:ir.model,name:contract_lifecycle.model_contract_pause_line
+msgid "Contract Pause Line"
+msgstr "Línea de pausa de contrato"
+
+#. module: contract_lifecycle
+#: model:ir.model,name:contract_lifecycle.model_contract_pause_reason
+msgid "Contract Pause Reason"
+msgstr "Motivo de pausa de contrato"
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+#: model:ir.actions.act_window,name:contract_lifecycle.action_contract_pause
+#: model:ir.ui.menu,name:contract_lifecycle.menu_contract_pause
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_list_view
+msgid "Contract Pauses"
+msgstr "Pausas de contrato"
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "Contract paused from %(start)s to %(end)s. Reason: %(reason)s"
+msgstr "Contrato pausado del %(start)s al %(end)s. Motivo: %(reason)s"
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "Contract paused from %(start)s with no end date. Reason: %(reason)s"
+msgstr ""
+"Contrato pausado desde el %(start)s sin fecha de fin. Motivo: %(reason)s"
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_pause.py:0
+msgid ""
+"Contract resumed automatically after the scheduled pause ended on %(date)s."
+msgstr ""
+"Contrato reanudado automáticamente tras finalizar la pausa programada el "
+"%(date)s."
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "Contract resumed on %(date)s."
+msgstr "Contrato reanudado el %(date)s."
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid ""
+"Contract termination is final and cannot be undone. Create a new contract if"
+" service must resume."
+msgstr ""
+"La terminación del contrato es definitiva y no puede revertirse. Cree un "
+"nuevo contrato si el servicio debe reanudarse."
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__create_uid
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__create_uid
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_reason__create_uid
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_wizard__create_uid
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_resume_wizard__create_uid
+msgid "Created by"
+msgstr "Creado por"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__create_date
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__create_date
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_reason__create_date
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_wizard__create_date
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_resume_wizard__create_date
+msgid "Created on"
+msgstr "Creado en"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_contract__current_pause_id
+msgid "Current Pause"
+msgstr "Pausa actual"
+
+#. module: contract_lifecycle
+#: model:contract.pause.reason,name:contract_lifecycle.contract_pause_reason_customer_request
+msgid "Customer request"
+msgstr "Solicitud del cliente"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields.selection,name:contract_lifecycle.selection__contract_pause_line__action__delayed
+msgid "Delayed"
+msgstr "Postergado"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_contract__display_name
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_line__display_name
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__display_name
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__display_name
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_reason__display_name
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_wizard__display_name
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_resume_wizard__display_name
+#: model:ir.model.fields,field_description:contract_lifecycle.field_res_company__display_name
+msgid "Display Name"
+msgstr "Nombre mostrado"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_res_company__enable_contract_line_refund_on_stop
+msgid "Enable Contract Line Refund On Stop"
+msgstr "Habilitar nota de crédito al detener línea de contrato"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__end_date
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_wizard__end_date
+msgid "End Date"
+msgstr "Fecha de fin"
+
+#. module: contract_lifecycle
+#: model:contract.terminate.reason,name:contract_lifecycle.contract_terminate_reason_end_of_service
+msgid "Fin del servicio"
+msgstr ""
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_contract__id
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_line__id
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__id
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__id
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_reason__id
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_wizard__id
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_resume_wizard__id
+#: model:ir.model.fields,field_description:contract_lifecycle.field_res_company__id
+msgid "ID"
+msgstr "ID"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,help:contract_lifecycle.field_contract_pause__is_indefinite
+#: model:ir.model.fields,help:contract_lifecycle.field_contract_pause_wizard__is_indefinite
+msgid "If checked, the contract remains paused until it is resumed manually."
+msgstr ""
+"Si se marca, el contrato permanece pausado hasta que se reanude manualmente."
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,help:contract_lifecycle.field_contract_pause_reason__requires_comment
+#: model:ir.model.fields,help:contract_lifecycle.field_contract_pause_wizard__requires_comment
+msgid "If checked, the pause comment is mandatory."
+msgstr "Si se marca, el comentario de la pausa es obligatorio."
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,help:contract_lifecycle.field_res_company__enable_contract_line_refund_on_stop
+msgid ""
+"If enabled, users can stop a contract line even after it has been invoiced. "
+"A refund will automatically be created for the invoiced period beyond the "
+"stop date."
+msgstr ""
+"Si se habilita, los usuarios pueden detener una línea aunque haya sido "
+"facturada. Se creará una nota de crédito automáticamente por el período no "
+"consumido."
+
+#. module: contract_lifecycle
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_search_view
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.portal_contract_page_lifecycle
+msgid "Indefinite"
+msgstr "Indefinido"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__is_indefinite
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_wizard__is_indefinite
+msgid "Indefinite pause"
+msgstr "Pausa indefinida"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_contract__is_paused
+msgid "Is Paused"
+msgstr "Está pausado"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__write_uid
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__write_uid
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_reason__write_uid
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_wizard__write_uid
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_resume_wizard__write_uid
+msgid "Last Updated by"
+msgstr "Última Actualización por"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__write_date
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__write_date
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_reason__write_date
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_wizard__write_date
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_resume_wizard__write_date
+msgid "Last Updated on"
+msgstr "Última Actualización en"
+
+#. module: contract_lifecycle
 #: model:ir.model.fields,field_description:contract_lifecycle.field_contract_contract__lifecycle_state
 msgid "Lifecycle Status"
 msgstr "Estado del ciclo de vida"
-
-#. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__state
-msgid "State"
-msgstr "Estado"
-
-#. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_contract__pause_count
-msgid "Pause count"
-msgstr "Cantidad de pausas"
 
 #. module: contract_lifecycle
 #: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__name
@@ -63,162 +334,118 @@ msgid "Name"
 msgstr "Nombre"
 
 #. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__contract_id
-msgid "Contract"
-msgstr "Contrato"
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_pause.py:0
+msgid "Only accounting managers can cancel scheduled pauses."
+msgstr "Solo los gerentes de contabilidad pueden cancelar pausas programadas."
 
 #. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__company_id
-msgid "Company"
-msgstr "Compañía"
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "Only accounting managers can pause contracts."
+msgstr "Solo los gerentes de contabilidad pueden pausar contratos."
 
 #. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__start_date
-msgid "Start date"
-msgstr "Fecha inicio"
-
-#. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__end_date
-msgid "End date"
-msgstr "Fecha fin"
-
-#. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__is_indefinite
-msgid "Indefinite pause"
-msgstr "Pausa indefinida"
-
-#. module: contract_lifecycle
-#: model:ir.model.fields,help:contract_lifecycle.field_contract_pause__is_indefinite
-msgid ""
-"If checked, the contract remains paused until it is resumed manually."
-msgstr ""
-"Si se marca, el contrato permanece pausado hasta que se reanude "
-"manualmente."
-
-#. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__reason_id
-msgid "Pause Reason"
-msgstr "Motivo de la pausa"
-
-#. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__comment
-msgid "Comment"
-msgstr "Comentario"
-
-#. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__resume_date
-msgid "Resume date"
-msgstr "Fecha de reanudación"
-
-#. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__pause_days
-msgid "Pause days"
-msgstr "Días de pausa"
-
-#. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__line_ids
-msgid "Paused Lines"
-msgstr "Líneas pausadas"
-
-#. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__contract_line_id
-msgid "Contract Line"
-msgstr "Línea de contrato"
-
-#. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__action
-msgid "Action"
-msgstr "Acción"
-
-#. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__original_date_start
-msgid "Original start date"
-msgstr "Fecha inicio original"
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "Only accounting managers can resume contracts."
+msgstr "Solo los gerentes de contabilidad pueden reanudar contratos."
 
 #. module: contract_lifecycle
 #: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__original_date_end
-msgid "Original end date"
+msgid "Original Date End"
 msgstr "Fecha fin original"
 
 #. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__original_date_start
+msgid "Original Date Start"
+msgstr "Fecha inicio original"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__original_is_auto_renew
+msgid "Original Is Auto Renew"
+msgstr "Renovación automática original"
+
+#. module: contract_lifecycle
 #: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__original_recurring_next_date
-msgid "Original next invoice date"
-msgstr "Próxima factura original"
+msgid "Original Recurring Next Date"
+msgstr "Próxima fecha recurrente original"
 
 #. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__successor_contract_line_id
-msgid "Successor Contract Line"
-msgstr "Línea sucesora"
+#: model:contract.pause.reason,name:contract_lifecycle.contract_pause_reason_other
+msgid "Other"
+msgstr "Otro"
 
 #. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_reason__sequence
-msgid "Sequence"
-msgstr "Secuencia"
+#: model:contract.terminate.reason,name:contract_lifecycle.contract_terminate_reason_other
+msgid "Otro"
+msgstr ""
 
 #. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_reason__active
-msgid "Active"
-msgstr "Activo"
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__pause_id
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_resume_wizard__pause_id
+msgid "Pause"
+msgstr "Pausar"
 
 #. module: contract_lifecycle
-#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_reason__requires_comment
-msgid "Requires comment"
-msgstr "Requiere comentario"
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_contract_form_view_lifecycle
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_wizard_form_view
+msgid "Pause Contract"
+msgstr "Pausar contrato"
 
 #. module: contract_lifecycle
-#: model:ir.model.fields,help:contract_lifecycle.field_contract_pause_reason__requires_comment
-msgid "If checked, the pause comment is mandatory."
-msgstr "Si se marca, el comentario de la pausa es obligatorio."
+#: model:ir.model,name:contract_lifecycle.model_contract_pause_wizard
+msgid "Pause Contract Wizard"
+msgstr "Asistente de pausa de contrato"
 
 #. module: contract_lifecycle
-#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_form_view
-msgid "Contract Pause"
-msgstr "Pausa de contrato"
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_contract__pause_count
+msgid "Pause Count"
+msgstr "Cantidad de pausas"
 
 #. module: contract_lifecycle
-#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_form_view
-msgid "Paused Lines"
-msgstr "Líneas pausadas"
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__pause_days
+msgid "Pause Days"
+msgstr "Días de pausa"
 
 #. module: contract_lifecycle
-#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_list_view
-msgid "Contract Pauses"
-msgstr "Pausas de contrato"
-
-#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__reason_id
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_wizard__reason_id
 #: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_reason_form_view
 msgid "Pause Reason"
 msgstr "Motivo de la pausa"
 
 #. module: contract_lifecycle
+#: model:ir.actions.act_window,name:contract_lifecycle.action_contract_pause_reason
+#: model:ir.ui.menu,name:contract_lifecycle.menu_contract_pause_reason
 #: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_reason_list_view
 msgid "Pause Reasons"
 msgstr "Motivos de pausa"
 
 #. module: contract_lifecycle
-#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_contract_form_view_lifecycle
-msgid "Pause Contract"
-msgstr "Pausar contrato"
+#: model:ir.model.fields.selection,name:contract_lifecycle.selection__contract_contract__lifecycle_state__paused
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_contract_search_view_lifecycle
+msgid "Paused"
+msgstr "Pausado"
 
 #. module: contract_lifecycle
-#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_contract_form_view_lifecycle
-msgid "Resume Contract"
-msgstr "Reanudar contrato"
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__line_ids
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_form_view
+msgid "Paused Lines"
+msgstr "Líneas pausadas"
 
 #. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_contract__pause_ids
 #: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_contract_form_view_lifecycle
 msgid "Pauses"
 msgstr "Pausas"
 
 #. module: contract_lifecycle
-#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_wizard_form_view
-msgid "Pause Contract"
-msgstr "Pausar contrato"
-
-#. module: contract_lifecycle
-#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_wizard_form_view
-msgid "Indefinite pause"
-msgstr "Pausa indefinida"
+#: model:contract.pause.reason,name:contract_lifecycle.contract_pause_reason_payment_hold
+msgid "Payment hold"
+msgstr "Retención por pago"
 
 #. module: contract_lifecycle
 #: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_wizard_form_view
@@ -226,39 +453,109 @@ msgid "Required for this reason"
 msgstr "Obligatorio para este motivo"
 
 #. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_reason__requires_comment
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_wizard__requires_comment
+msgid "Requires Comment"
+msgstr "Requiere comentario"
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_contract_form_view_lifecycle
 #: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_resume_wizard_form_view
 msgid "Resume Contract"
 msgstr "Reanudar contrato"
 
 #. module: contract_lifecycle
-#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_contract_search_view_lifecycle
-msgid "Paused"
-msgstr "Pausado"
+#: model:ir.model,name:contract_lifecycle.model_contract_resume_wizard
+msgid "Resume Contract Wizard"
+msgstr "Asistente de reanudación de contrato"
 
 #. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__resume_date
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_resume_wizard__resume_date
+msgid "Resume Date"
+msgstr "Fecha de reanudación"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields.selection,name:contract_lifecycle.selection__contract_pause__state__resumed
+msgid "Resumed"
+msgstr "Reanudado"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields.selection,name:contract_lifecycle.selection__contract_contract__lifecycle_state__running
+msgid "Running"
+msgstr "En ejecución"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields.selection,name:contract_lifecycle.selection__contract_pause__state__scheduled
+msgid "Scheduled"
+msgstr "Programado"
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_pause.py:0
+msgid "Scheduled pause (%s) cancelled."
+msgstr "Pausa programada (%s) cancelada."
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_reason__sequence
+msgid "Sequence"
+msgstr "Secuencia"
+
+#. module: contract_lifecycle
+#: model:contract.terminate.reason,name:contract_lifecycle.contract_terminate_reason_customer_request
+msgid "Solicitud del cliente"
+msgstr ""
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__start_date
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_wizard__start_date
+msgid "Start Date"
+msgstr "Fecha de inicio"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause__state
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_search_view
+msgid "State"
+msgstr "Estado"
+
+#. module: contract_lifecycle
+#: model_terms:ir.ui.view,arch_db:contract_lifecycle.portal_my_contracts_lifecycle
+msgid "Status"
+msgstr "Estado"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields.selection,name:contract_lifecycle.selection__contract_pause_line__action__stopped
+msgid "Stopped"
+msgstr "Detenido"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,field_description:contract_lifecycle.field_contract_pause_line__successor_contract_line_id
+msgid "Successor Contract Line"
+msgstr "Línea sucesora"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields,help:contract_lifecycle.field_contract_contract__is_paused
+msgid "Technical flag used to block invoice generation while paused."
+msgstr "Bandera técnica para bloquear la facturación durante la pausa."
+
+#. module: contract_lifecycle
+#: model:contract.pause.reason,name:contract_lifecycle.contract_pause_reason_suspension
+msgid "Temporary suspension"
+msgstr "Suspensión temporal"
+
+#. module: contract_lifecycle
+#: model:ir.model.fields.selection,name:contract_lifecycle.selection__contract_contract__lifecycle_state__terminated
 #: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_contract_search_view_lifecycle
 msgid "Terminated"
 msgstr "Terminado"
 
 #. module: contract_lifecycle
-#: model_terms:ir.ui.view,arch_db:contract_lifecycle.portal_contract_page_lifecycle
-msgid "Status"
-msgstr "Estado"
-
-#. module: contract_lifecycle
-#: model_terms:ir.ui.view,arch_db:contract_lifecycle.portal_contract_page_lifecycle
-msgid "Paused until"
-msgstr "Pausado hasta"
-
-#. module: contract_lifecycle
-#: model_terms:ir.ui.view,arch_db:contract_lifecycle.portal_contract_page_lifecycle
-msgid "Terminated on"
-msgstr "Terminado el"
-
-#. module: contract_lifecycle
-#: model_terms:ir.ui.view,arch_db:contract_lifecycle.portal_contract_page_lifecycle
-msgid "Indefinite"
-msgstr "Indefinido"
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "The contract is already paused."
+msgstr "El contrato ya está pausado."
 
 #. module: contract_lifecycle
 #: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_pause_wizard_form_view
@@ -266,6 +563,70 @@ msgid "The contract will stop invoicing during the pause. Continue?"
 msgstr "El contrato dejará de facturar durante la pausa. ¿Continuar?"
 
 #. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+#: code:addons/contract_lifecycle/models/contract_pause.py:0
+msgid "The pause end date cannot be before the start date."
+msgstr "La fecha de fin de pausa no puede ser anterior a la de inicio."
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "The pause end date is required."
+msgstr "La fecha de fin de pausa es obligatoria."
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "The pause start date is required."
+msgstr "La fecha de inicio de pausa es obligatoria."
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "The resume date cannot be before the pause start date."
+msgstr "La fecha de reanudación no puede ser anterior al inicio de la pausa."
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "The selected pause reason requires a comment."
+msgstr "El motivo de pausa seleccionado requiere un comentario."
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "There are no active contract lines eligible to pause."
+msgstr "No hay líneas de contrato activas elegibles para pausar."
+
+#. module: contract_lifecycle
 #: model_terms:ir.ui.view,arch_db:contract_lifecycle.contract_contract_form_view_lifecycle
-msgid "Terminated"
-msgstr "Terminado"
+msgid ""
+"This contract is currently paused. Recurring invoicing is suspended until "
+"resumption."
+msgstr ""
+"Este contrato se encuentra pausado actualmente. La facturación recurrente "
+"está suspendida hasta su reanudación."
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "This pause cannot be resumed manually."
+msgstr "Esta pausa no puede reanudarse manualmente."
+
+#. module: contract_lifecycle
+#: model:ir.model.fields.selection,name:contract_lifecycle.selection__contract_contract__lifecycle_state__upcoming
+msgid "Upcoming"
+msgstr "Próximo"
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "You are not allowed to terminate contracts."
+msgstr "No tiene permitido rescindir contratos."
+
+#. module: contract_lifecycle
+#. odoo-python
+#: code:addons/contract_lifecycle/models/contract_contract.py:0
+msgid "contract_id"
+msgstr ""

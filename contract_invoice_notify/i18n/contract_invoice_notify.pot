@@ -1,0 +1,480 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* contract_invoice_notify
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0-20260615\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-22 04:42+0000\n"
+"PO-Revision-Date: 2026-11-22 04:42+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: contract_invoice_notify
+#. odoo-python
+#: code:addons/contract_invoice_notify/models/contract_contract.py:0
+msgid " (%(count)s overdue: %(names)s, residual %(total)s)"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:mail.template,body_html:contract_invoice_notify.whatsapp_template_contract_invoice
+msgid ""
+"<div>\n"
+"                <p>Hola <t t-out=\"object.partner_id.display_name\"/>,</p>\n"
+"                <p>Tu factura <strong t-out=\"object.name\"/> por\n"
+"                <strong t-out=\"object.amount_total\"/>\n"
+"                <strong t-out=\"object.currency_id.name\"/> ya está disponible.</p>\n"
+"                <p>Puedes verla y pagarla aquí:\n"
+"                    <a t-att-href=\"object._get_payment_portal_url()\">Ver y pagar factura</a>\n"
+"                </p>\n"
+"                <t t-set=\"overdue\" t-value=\"object._get_contract_overdue_invoices()\"/>\n"
+"                <t t-if=\"overdue\">\n"
+"                    <p>Además tienes <strong t-out=\"len(overdue)\"/> factura(s)\n"
+"                    pendiente(s) (<t t-out=\"', '.join(overdue.mapped('name'))\"/>)\n"
+"                    por <strong t-out=\"sum(overdue.mapped('amount_residual'))\"/>\n"
+"                    <t t-out=\"object.currency_id.name\"/>.\n"
+"                    Puedes pagarlas todas desde tu portal.</p>\n"
+"                </t>\n"
+"                <t t-set=\"statement_url\" t-value=\"object._get_notification_statement_url()\"/>\n"
+"                <t t-if=\"statement_url\">\n"
+"                    <p>Consulta y paga todas tus facturas pendientes aquí: <a t-att-href=\"statement_url\">Ver todas mis facturas</a></p>\n"
+"                </t>\n"
+"                <p>Gracias por tu confianza.</p>\n"
+"            </div>\n"
+"        "
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:mail.template,body_html:contract_invoice_notify.email_template_contract_overdue_digest
+msgid ""
+"<div>\n"
+"                <p>Hola <t t-out=\"object.partner_id.name\"/>,</p>\n"
+"                <p>Contrato <strong t-out=\"object.name\"/>: tienes facturas vencidas\n"
+"                pendientes. No se fusionan montos, este es solo un resumen:</p>\n"
+"                <t t-set=\"invoices\" t-value=\"object._get_overdue_reminder_candidates()\"/>\n"
+"                <ul>\n"
+"                    <t t-foreach=\"invoices\" t-as=\"inv\">\n"
+"                        <li><t t-out=\"inv.name\"/> — vence <t t-out=\"inv.invoice_date_due\"/> — saldo <t t-out=\"inv.amount_residual\"/></li>\n"
+"                    </t>\n"
+"                </ul>\n"
+"                <p>\n"
+"                    <a t-att-href=\"object._get_overdue_pay_all_url(invoices)\" target=\"_blank\" style=\"background-color:#875A7B;padding:8px 16px;text-decoration:none;color:#fff;border-radius:5px;\">Pagar todo</a>\n"
+"                </p>\n"
+"                <t t-set=\"statement_url\" t-value=\"object._get_notification_statement_url()\"/>\n"
+"                <t t-if=\"statement_url\">\n"
+"                    <p>Consulta y paga todas tus facturas pendientes aquí:</p>\n"
+"                    <p>\n"
+"                        <a t-att-href=\"statement_url\" target=\"_blank\" style=\"background-color:#875A7B;padding:8px 16px;text-decoration:none;color:#fff;border-radius:5px;\">Ver todas mis facturas</a>\n"
+"                    </p>\n"
+"                </t>\n"
+"                <p>Si ya pagaste, ignora este mensaje.</p>\n"
+"            </div>\n"
+"        "
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:mail.template,body_html:contract_invoice_notify.email_template_contract_invoice_notify
+msgid ""
+"<div>\n"
+"                <p>Hola <t t-out=\"object.partner_id.name\"/>,</p>\n"
+"                <p>Tu factura <strong t-out=\"object.name\"/> por\n"
+"                <strong t-out=\"object.amount_total\"/> ya está disponible.</p>\n"
+"                <p>\n"
+"                    <a t-att-href=\"object._get_payment_portal_url()\" target=\"_blank\" style=\"background-color:#875A7B;padding:8px 16px;text-decoration:none;color:#fff;border-radius:5px;\">Ver y pagar factura</a>\n"
+"                </p>\n"
+"                <t t-set=\"overdue\" t-value=\"object._get_contract_overdue_invoices()\"/>\n"
+"                <t t-if=\"overdue\">\n"
+"                    <p>Tienes además <strong t-out=\"len(overdue)\"/> factura(s)\n"
+"                    pendiente(s): <t t-out=\"', '.join(overdue.mapped('name'))\"/>\n"
+"                    por <strong t-out=\"sum(overdue.mapped('amount_residual'))\"/>.\n"
+"                    Puedes pagarlas todas desde tu portal.</p>\n"
+"                </t>\n"
+"                <t t-set=\"statement_url\" t-value=\"object._get_notification_statement_url()\"/>\n"
+"                <t t-if=\"statement_url\">\n"
+"                    <p>Consulta y paga todas tus facturas pendientes aquí:</p>\n"
+"                    <p>\n"
+"                        <a t-att-href=\"statement_url\" target=\"_blank\" style=\"background-color:#875A7B;padding:8px 16px;text-decoration:none;color:#fff;border-radius:5px;\">Ver todas mis facturas</a>\n"
+"                    </p>\n"
+"                </t>\n"
+"                <p>Gracias por tu confianza.</p>\n"
+"            </div>\n"
+"        "
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_channel__active
+msgid "Active"
+msgstr ""
+
+#. module: contract_invoice_notify
+#. odoo-python
+#: code:addons/contract_invoice_notify/models/contract_contract.py:0
+msgid "Automatic validation failed: %s"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_template__channel_id
+msgid "Channel"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,help:contract_invoice_notify.field_contract_template__notification_channel_ids
+msgid "Channels copied to contracts created from this template."
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,help:contract_invoice_notify.field_contract_contract__notification_channel_ids
+msgid ""
+"Channels used for invoice notifications and overdue digests. Selecting email"
+" and WhatsApp sends both."
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_channel__code
+msgid "Code"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model,name:contract_invoice_notify.model_res_partner
+msgid "Contact"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model,name:contract_invoice_notify.model_contract_contract
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_template__contract_id
+msgid "Contract"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model,name:contract_invoice_notify.model_contract_notification_channel
+#: model_terms:ir.ui.view,arch_db:contract_invoice_notify.view_contract_notification_channel_form
+msgid "Contract Notification Channel"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.actions.act_window,name:contract_invoice_notify.action_contract_notification_channel
+#: model:ir.ui.menu,name:contract_invoice_notify.menu_contract_notification_channel
+#: model_terms:ir.ui.view,arch_db:contract_invoice_notify.view_contract_notification_channel_tree
+msgid "Contract Notification Channels"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model,name:contract_invoice_notify.model_contract_notification_driver
+msgid "Contract Notification Driver"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model,name:contract_invoice_notify.model_contract_notification_template
+msgid "Contract Notification Template Override"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model,name:contract_invoice_notify.model_contract_template
+msgid "Contract Template"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:mail.template,name:contract_invoice_notify.whatsapp_template_contract_invoice
+msgid "Contract invoice: WhatsApp notification"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:mail.template,name:contract_invoice_notify.email_template_contract_invoice_notify
+msgid "Contract invoice: payment link + overdue info"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:mail.template,name:contract_invoice_notify.email_template_contract_overdue_digest
+msgid "Contract overdue digest: pay-all link"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.actions.server,name:contract_invoice_notify.ir_cron_contract_overdue_reminder_ir_actions_server
+msgid "Contract: overdue digest reminders"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:mail.template,subject:contract_invoice_notify.email_template_contract_overdue_digest
+msgid "Contrato {{ object.name }}: facturas vencidas pendientes"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_channel__create_uid
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_template__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_channel__create_date
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_template__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,help:contract_invoice_notify.field_contract_contract__overdue_grace_days
+#: model:ir.model.fields,help:contract_invoice_notify.field_contract_template__overdue_grace_days
+msgid "Days after due date before an invoice counts as overdue."
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_account_move__display_name
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_contract__display_name
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_channel__display_name
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_driver__display_name
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_template__display_name
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_template__display_name
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_res_partner__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:contract.notification.channel,name:contract_invoice_notify.notification_channel_email
+msgid "Email"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:mail.template,subject:contract_invoice_notify.whatsapp_template_contract_invoice
+msgid "Factura {{ object.name }} disponible para pago"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_contract__overdue_grace_days
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_template__overdue_grace_days
+msgid "Grace days"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_account_move__id
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_contract__id
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_channel__id
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_driver__id
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_template__id
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_template__id
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_res_partner__id
+msgid "ID"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,help:contract_invoice_notify.field_res_partner__opt_out_overdue_reminder
+#: model:ir.model.fields,help:contract_invoice_notify.field_res_users__opt_out_overdue_reminder
+msgid ""
+"If checked, this contact will not receive overdue contract invoice reminders"
+" (by email or WhatsApp)."
+msgstr ""
+
+#. module: contract_invoice_notify
+#. odoo-python
+#: code:addons/contract_invoice_notify/models/contract_contract.py:0
+msgid ""
+"Invoice auto-validated and notified (%(mode)s) from contract "
+"%(contract)s%(extra)s"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields.selection,name:contract_invoice_notify.selection__contract_notification_template__purpose__invoice_notification
+msgid "Invoice notification"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,help:contract_invoice_notify.field_contract_notification_template__template_id
+msgid ""
+"Invoice notifications must use an account.move template. Overdue digests "
+"must use a contract.contract template."
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model,name:contract_invoice_notify.model_account_move
+msgid "Journal Entry"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_channel__write_uid
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_template__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_channel__write_date
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_template__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_account_bank_statement_line__last_overdue_reminder_date
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_account_move__last_overdue_reminder_date
+msgid "Last overdue reminder"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_template__template_id
+msgid "Mail Template"
+msgstr ""
+
+#. module: contract_invoice_notify
+#. odoo-python
+#: code:addons/contract_invoice_notify/models/contract_contract.py:0
+msgid ""
+"Manual invoice notification resent (%(mode)s) from contract %(contract)s."
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,help:contract_invoice_notify.field_contract_contract__overdue_max_reminders
+#: model:ir.model.fields,help:contract_invoice_notify.field_contract_template__overdue_max_reminders
+msgid "Max digest reminders per invoice. 0 = unlimited."
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_contract__overdue_max_reminders
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_template__overdue_max_reminders
+msgid "Max reminders"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,help:contract_invoice_notify.field_contract_contract__overdue_resend_after_days
+#: model:ir.model.fields,help:contract_invoice_notify.field_contract_template__overdue_resend_after_days
+msgid "Minimum days between two digest reminders including same invoice."
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_channel__name
+msgid "Name"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_contract__notification_channel_ids
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_template__notification_channel_ids
+msgid "Notification Channels"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_contract__notification_template_ids
+msgid "Notification Template Overrides"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_res_partner__opt_out_overdue_reminder
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_res_users__opt_out_overdue_reminder
+msgid "Opt out of overdue reminders"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,help:contract_invoice_notify.field_contract_contract__notification_template_ids
+msgid "Optional per-contract template overrides by channel and purpose."
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields.selection,name:contract_invoice_notify.selection__contract_notification_template__purpose__overdue_digest
+msgid "Overdue digest"
+msgstr ""
+
+#. module: contract_invoice_notify
+#. odoo-python
+#: code:addons/contract_invoice_notify/models/contract_contract.py:0
+msgid "Overdue digest not sent: no configured channel succeeded for %s."
+msgstr ""
+
+#. module: contract_invoice_notify
+#. odoo-python
+#: code:addons/contract_invoice_notify/models/contract_contract.py:0
+msgid "Overdue digest sent (%(mode)s): %(names)s"
+msgstr ""
+
+#. module: contract_invoice_notify
+#. odoo-python
+#: code:addons/contract_invoice_notify/models/contract_template.py:0
+msgid "Overdue reminder day/count settings cannot be negative."
+msgstr ""
+
+#. module: contract_invoice_notify
+#. odoo-python
+#: code:addons/contract_invoice_notify/models/contract_contract.py:0
+msgid "Overdue reminder sent from contract %s."
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_contract__overdue_reminder_enabled
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_template__overdue_reminder_enabled
+#: model_terms:ir.ui.view,arch_db:contract_invoice_notify.contract_template_form_view_notify
+msgid "Overdue reminders"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model_terms:ir.ui.view,arch_db:contract_invoice_notify.contract_contract_form_view
+msgid "Overdue reminders (digest per contract)"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_account_bank_statement_line__overdue_reminder_count
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_account_move__overdue_reminder_count
+msgid "Overdue reminders sent"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_template__purpose
+msgid "Purpose"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model_terms:ir.ui.view,arch_db:contract_invoice_notify.contract_contract_form_view
+msgid "Resend Last Invoice Notification"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_contract__overdue_resend_after_days
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_template__overdue_resend_after_days
+msgid "Resend every (days)"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,help:contract_invoice_notify.field_contract_contract__overdue_reminder_enabled
+msgid ""
+"Send periodic digest reminders for overdue invoices of this contract (one "
+"digest per contract, never merges amounts)."
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,help:contract_invoice_notify.field_contract_template__overdue_reminder_enabled
+msgid "Send periodic digest reminders for overdue invoices of this contract."
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.fields,field_description:contract_invoice_notify.field_contract_notification_channel__sequence
+msgid "Sequence"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.constraint,message:contract_invoice_notify.constraint_contract_notification_channel_code_uniq
+msgid "The notification channel code must be unique."
+msgstr ""
+
+#. module: contract_invoice_notify
+#. odoo-python
+#: code:addons/contract_invoice_notify/models/contract_notification_template.py:0
+msgid "The template for purpose '%(purpose)s' must use model '%(model)s'."
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:ir.model.constraint,message:contract_invoice_notify.constraint_contract_notification_template_contract_channel_purpose_uniq
+msgid "There is already a template for this contract, channel and purpose."
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:contract.notification.channel,name:contract_invoice_notify.notification_channel_whatsapp
+msgid "WhatsApp"
+msgstr ""
+
+#. module: contract_invoice_notify
+#. odoo-python
+#: code:addons/contract_invoice_notify/models/contract_contract.py:0
+msgid "no channel"
+msgstr ""
+
+#. module: contract_invoice_notify
+#: model:mail.template,subject:contract_invoice_notify.email_template_contract_invoice_notify
+msgid "{{ object.company_id.name }} Invoice {{ object.name }}"
+msgstr ""

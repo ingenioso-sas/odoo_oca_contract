@@ -13,8 +13,8 @@
         <field name="inherit_id" ref="contract.contract_template_line_form_view" />
         <field name="arch" type="xml">
             <xpath expr="//field[@name='discount']" position="after">
-                <field name="promo_name" invisible="not promo_discount" />
                 <field name="promo_discount" />
+                <field name="promo_name" invisible="not promo_discount" />
                 <field
                     name="promo_duration_months"
                     invisible="not promo_discount"

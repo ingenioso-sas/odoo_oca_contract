@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 PayOnline Ing
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo noupdate="1">
+    <record
+        id="contract_terminate_reason_end_of_service"
+        model="contract.terminate.reason"
+    >
+        <field name="name">End of service</field>
+    </record>
+    <record
+        id="contract_terminate_reason_customer_request"
+        model="contract.terminate.reason"
+    >
+        <field name="name">Customer request</field>
+    </record>
+    <record
+        id="contract_terminate_reason_other"
+        model="contract.terminate.reason"
+    >
+        <field name="name">Other</field>
+    </record>
+</odoo>

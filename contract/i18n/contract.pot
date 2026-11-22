@@ -4,8 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 19.0\n"
+"Project-Id-Version: Odoo Server 19.0-20260615\n"
 "Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-22 04:42+0000\n"
+"PO-Revision-Date: 2026-11-22 04:42+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -106,7 +108,7 @@ msgstr ""
 
 #. module: contract
 #: model_terms:ir.ui.view,arch_db:contract.report_contract_document
-msgid "<strong class=\"mr16\">Subtotal</strong>"
+msgid "<strong class=\"me-3\">Subtotal</strong>"
 msgstr ""
 
 #. module: contract
@@ -360,6 +362,12 @@ msgid "Auto-price?"
 msgstr ""
 
 #. module: contract
+#. odoo-python
+#: code:addons/contract/models/contract.py:0
+msgid "Automatic validation failed: %s"
+msgstr ""
+
+#. module: contract
 #: model_terms:ir.ui.view,arch_db:contract.contract_manually_create_invoice_form_view
 msgid "Cancel"
 msgstr ""
@@ -408,6 +416,7 @@ msgstr ""
 #. module: contract
 #: model:ir.model.fields,field_description:contract.field_contract_contract__company_id
 #: model:ir.model.fields,field_description:contract.field_contract_line__company_id
+#: model:ir.model.fields,field_description:contract.field_contract_modification__company_id
 #: model:ir.model.fields,field_description:contract.field_contract_tag__company_id
 #: model:ir.model.fields,field_description:contract.field_contract_template__company_id
 #: model:ir.model.fields,field_description:contract.field_contract_template_line__company_id
@@ -549,6 +558,7 @@ msgstr ""
 
 #. module: contract
 #: model:ir.model.fields,field_description:contract.field_contract_contract__contract_line_ids
+#: model_terms:ir.ui.view,arch_db:contract.portal_contract_page
 msgid "Contract lines"
 msgstr ""
 
@@ -826,6 +836,12 @@ msgid "Distribution Analytic Account"
 msgstr ""
 
 #. module: contract
+#: model:ir.model.fields.selection,name:contract.selection__contract_contract__invoicing_mode__draft
+#: model:ir.model.fields.selection,name:contract.selection__contract_template__invoicing_mode__draft
+msgid "Draft invoice"
+msgstr ""
+
+#. module: contract
 #: model:mail.template,name:contract.email_contract_template
 msgid "Email Contract Template"
 msgstr ""
@@ -926,6 +942,7 @@ msgstr ""
 
 #. module: contract
 #: model:ir.model.fields,help:contract.field_contract_contract__message_has_error
+#: model:ir.model.fields,help:contract.field_contract_contract__message_has_sms_error
 msgid "If checked, some messages have a delivery error."
 msgstr ""
 
@@ -960,6 +977,12 @@ msgid "Invoice Date"
 msgstr ""
 
 #. module: contract
+#: model:ir.model.fields,field_description:contract.field_contract_contract__invoice_mail_template_id
+#: model:ir.model.fields,field_description:contract.field_contract_template__invoice_mail_template_id
+msgid "Invoice Email Template"
+msgstr ""
+
+#. module: contract
 #: model:ir.model.fields,field_description:contract.field_contract_contract__recurring_interval
 #: model:ir.model.fields,field_description:contract.field_contract_line__recurring_interval
 #: model:ir.model.fields,field_description:contract.field_contract_recurring_mixin__recurring_interval
@@ -984,6 +1007,12 @@ msgid "Invoice Generation Failed"
 msgstr ""
 
 #. module: contract
+#. odoo-python
+#: code:addons/contract/models/contract.py:0
+msgid "Invoice auto-validated and sent from contract %s"
+msgstr ""
+
+#. module: contract
 #: model:mail.message.subtype,name:contract.mail_message_subtype_invoice_created
 msgid "Invoice created"
 msgstr ""
@@ -999,6 +1028,7 @@ msgstr ""
 
 #. module: contract
 #. odoo-python
+#: code:addons/contract/models/contract.py:0
 #: code:addons/contract/wizards/contract_manually_create_invoice.py:0
 #: model_terms:ir.ui.view,arch_db:contract.contract_contract_form_view
 msgid "Invoices"
@@ -1007,6 +1037,13 @@ msgstr ""
 #. module: contract
 #: model_terms:ir.ui.view,arch_db:contract.contract_contract_form_view
 msgid "Invoicing"
+msgstr ""
+
+#. module: contract
+#: model:ir.model.fields,field_description:contract.field_contract_contract__invoicing_mode
+#: model:ir.model.fields,field_description:contract.field_contract_template__invoicing_mode
+#: model_terms:ir.ui.view,arch_db:contract.contract_contract_search_view
+msgid "Invoicing Mode"
 msgstr ""
 
 #. module: contract
@@ -1046,6 +1083,7 @@ msgstr ""
 #. module: contract
 #: model:ir.model.fields,field_description:contract.field_contract_contract__journal_id
 #: model:ir.model.fields,field_description:contract.field_contract_template__journal_id
+#: model_terms:ir.ui.view,arch_db:contract.contract_contract_search_view
 #: model_terms:ir.ui.view,arch_db:contract.contract_template_search_view
 msgid "Journal"
 msgstr ""
@@ -1183,8 +1221,18 @@ msgid "Monthly Recurring"
 msgstr ""
 
 #. module: contract
+#: model:ir.model.fields,field_description:contract.field_contract_contract__recurring_monthly_total
+msgid "Monthly Recurring Total"
+msgstr ""
+
+#. module: contract
 #: model:ir.model.fields,field_description:contract.field_contract_contract__my_activity_date_deadline
 msgid "My Activity Deadline"
+msgstr ""
+
+#. module: contract
+#: model_terms:ir.ui.view,arch_db:contract.contract_contract_search_view
+msgid "My Contracts"
 msgstr ""
 
 #. module: contract
@@ -1458,6 +1506,12 @@ msgstr ""
 
 #. module: contract
 #. odoo-python
+#: code:addons/contract/models/contract_recurring_mixin.py:0
+msgid "Recurring interval must be greater than zero."
+msgstr ""
+
+#. module: contract
+#. odoo-python
 #: code:addons/contract/controllers/main.py:0
 #: model:ir.model.fields,field_description:contract.field_contract_contract__code
 #: model_terms:ir.ui.view,arch_db:contract.portal_my_contracts
@@ -1466,12 +1520,18 @@ msgstr ""
 
 #. module: contract
 #: model:ir.model.fields,field_description:contract.field_contract_contract__user_id
+#: model_terms:ir.ui.view,arch_db:contract.contract_contract_search_view
 msgid "Responsible"
 msgstr ""
 
 #. module: contract
 #: model:ir.model.fields,field_description:contract.field_contract_contract__activity_user_id
 msgid "Responsible User"
+msgstr ""
+
+#. module: contract
+#: model:ir.model.fields,field_description:contract.field_contract_contract__message_has_sms_error
+msgid "SMS Delivery error"
 msgstr ""
 
 #. module: contract
@@ -1577,6 +1637,13 @@ msgid "Sub Total"
 msgstr ""
 
 #. module: contract
+#: model:ir.model.fields,help:contract.field_contract_contract__recurring_monthly_total
+msgid ""
+"Sum of lines monthly recurring amounts (MRR), based on the native "
+"monthly_recurring field of contract lines."
+msgstr ""
+
+#. module: contract
 #: model:ir.model.fields.selection,name:contract.selection__contract_contract__contract_type__purchase
 #: model:ir.model.fields.selection,name:contract.selection__contract_manually_create_invoice__contract_type__purchase
 #: model:ir.model.fields.selection,name:contract.selection__contract_template__contract_type__purchase
@@ -1612,10 +1679,20 @@ msgid "Technical field for UX purposes."
 msgstr ""
 
 #. module: contract
+#: model_terms:ir.ui.view,arch_db:contract.portal_my_contracts
+msgid "There are currently no contracts for your account."
+msgstr ""
+
+#. module: contract
 #: model:ir.model.fields,help:contract.field_contract_contract__date
 msgid ""
 "This is the date the contract is taken into account         (e.g.: signature"
 " date)"
+msgstr ""
+
+#. module: contract
+#: model_terms:ir.ui.view,arch_db:contract.contract_contract_tree_view
+msgid "Total MRR"
 msgstr ""
 
 #. module: contract
@@ -1642,8 +1719,26 @@ msgid "Unit of Measure"
 msgstr ""
 
 #. module: contract
+#: model:ir.model.fields,help:contract.field_contract_contract__invoice_mail_template_id
+#: model:ir.model.fields,help:contract.field_contract_template__invoice_mail_template_id
+msgid "Used when invoicing mode is 'Validate and send by email'."
+msgstr ""
+
+#. module: contract
 #: model_terms:ir.ui.view,arch_db:contract.report_contract_document
 msgid "VAT:"
+msgstr ""
+
+#. module: contract
+#: model:ir.model.fields.selection,name:contract.selection__contract_contract__invoicing_mode__validate_send
+#: model:ir.model.fields.selection,name:contract.selection__contract_template__invoicing_mode__validate_send
+msgid "Validate and send by email"
+msgstr ""
+
+#. module: contract
+#: model:ir.model.fields.selection,name:contract.selection__contract_contract__invoicing_mode__validate
+#: model:ir.model.fields.selection,name:contract.selection__contract_template__invoicing_mode__validate
+msgid "Validate automatically"
 msgstr ""
 
 #. module: contract
@@ -1668,6 +1763,16 @@ msgstr ""
 #: model:ir.model.fields.selection,name:contract.selection__contract_template__recurring_rule_type__weekly
 #: model:ir.model.fields.selection,name:contract.selection__contract_template_line__recurring_rule_type__weekly
 msgid "Week(s)"
+msgstr ""
+
+#. module: contract
+#: model:ir.model.fields,help:contract.field_contract_contract__invoicing_mode
+#: model:ir.model.fields,help:contract.field_contract_template__invoicing_mode
+msgid ""
+"What to do with invoices generated from this contract.\n"
+"- Draft: keep in draft (historical behaviour).\n"
+"- Validate: post the invoice automatically.\n"
+"- Validate and send: post it and send it using the mail template."
 msgstr ""
 
 #. module: contract
@@ -1754,6 +1859,7 @@ msgstr ""
 
 #. module: contract
 #. odoo-python
+#: code:addons/contract/models/contract.py:0
 #: code:addons/contract/wizards/contract_manually_create_invoice.py:0
 msgid "id"
 msgstr ""

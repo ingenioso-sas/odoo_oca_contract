@@ -8,7 +8,9 @@ from odoo.exceptions import UserError
 class ContractContract(models.Model):
     _inherit = "contract.contract"
 
-    is_terminated = fields.Boolean(string="Terminated", readonly=True, copy=False)
+    is_terminated = fields.Boolean(
+        string="Terminated", readonly=True, copy=False, index=True, tracking=True
+    )
     terminate_reason_id = fields.Many2one(
         comodel_name="contract.terminate.reason",
         string="Termination Reason",

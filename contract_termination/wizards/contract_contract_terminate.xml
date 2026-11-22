@@ -29,7 +29,7 @@
                         confirm="Are you sure you want to terminate this contract?"
                         type="object"
                     />
-                    <button string="Cancel" class="btn-default" special="cancel" />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
                 </footer>
             </form>
         </field>

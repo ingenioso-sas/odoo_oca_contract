@@ -1,9 +1,4 @@
-# Translation of Odoo Server.
-# This file contains the translation of the following modules:
-# * contract_variable_quantity
 #
-# Translators:
-# OCA Transbot <transbot@odoo-community.org>, 2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 11.0\n"
@@ -24,15 +19,13 @@ msgstr ""
 msgid ""
 "<code>\n"
 "                                    result =\n"
-"                                    env['product.product']."
-"search_count([('sale_ok',\n"
+"                                    env['product.product'].search_count([('sale_ok',\n"
 "                                    '=', True)])\n"
 "                                </code>"
 msgstr ""
 "<code>\n"
 "                                    result  =\n"
-"                                    env['product.product']."
-"search_count([('sale_ok',\n"
+"                                    env['product.product'].search_count([('sale_ok',\n"
 "                                    '=', True)])\n"
 "                                </code>"
 
@@ -61,12 +54,8 @@ msgstr ""
 
 #. module: contract_variable_quantity
 #: model_terms:ir.ui.view,arch_db:contract_variable_quantity.view_contract_line_qty_formula_form
-msgid ""
-"<i>invoice</i>: Invoice (header) being\n"
-"                                    created."
-msgstr ""
-"<i>invoice</i>: Factura (cabecera) está siendo\n"
-"                                    creada."
+msgid "<i>invoice_date</i>: Invoice date for the period."
+msgstr "<i>invoice_date</i>: Fecha de factura del período."
 
 #. module: contract_variable_quantity
 #: model_terms:ir.ui.view,arch_db:contract_variable_quantity.view_contract_line_qty_formula_form
@@ -79,13 +68,53 @@ msgstr ""
 
 #. module: contract_variable_quantity
 #: model_terms:ir.ui.view,arch_db:contract_variable_quantity.view_contract_line_qty_formula_form
+msgid "<i>period_first_date</i>: Start date of the billing period."
+msgstr "<i>period_first_date</i>: Fecha de inicio del período de facturación."
+
+#. module: contract_variable_quantity
+#: model_terms:ir.ui.view,arch_db:contract_variable_quantity.view_contract_line_qty_formula_form
+msgid "<i>period_last_date</i>: End date of the billing period."
+msgstr "<i>period_last_date</i>: Fecha de fin del período de facturación."
+
+#. module: contract_variable_quantity
+#: model_terms:ir.ui.view,arch_db:contract_variable_quantity.view_contract_line_qty_formula_form
+msgid "<i>quantity</i>: Base quantity configured on the line."
+msgstr "<i>quantity</i>: Cantidad base configurada en la línea."
+
+#. module: contract_variable_quantity
+#: model_terms:ir.ui.view,arch_db:contract_variable_quantity.view_contract_line_qty_formula_form
 msgid "<i>user</i>: Current user."
 msgstr "<i>user</i>: Usuario actual."
 
 #. module: contract_variable_quantity
-#: model:ir.model,name:contract_variable_quantity.model_contract_abstract_contract_line
-msgid "Abstract Recurring Contract Line"
-msgstr "Extracto de la línea de contrato recurrente"
+#. odoo-python
+#: code:addons/contract_variable_quantity/models/contract_template_line.py:0
+msgid ""
+"A quantity formula is required when quantity type is set to Variable "
+"quantity."
+msgstr ""
+"Se requiere una fórmula de cantidad cuando el tipo de cantidad es Variable."
+
+#. module: contract_variable_quantity
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__message_needaction
+msgid "Action Needed"
+msgstr "Acción necesaria"
+
+#. module: contract_variable_quantity
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__active
+msgid "Active"
+msgstr "Activo"
+
+#. module: contract_variable_quantity
+#: model_terms:ir.ui.view,arch_db:contract_variable_quantity.view_contract_line_qty_formula_form
+#: model_terms:ir.ui.view,arch_db:contract_variable_quantity.view_contract_line_qty_formula_search
+msgid "Archived"
+msgstr "Archivado"
+
+#. module: contract_variable_quantity
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__message_attachment_count
+msgid "Attachment Count"
+msgstr "Nº de archivos adjuntos"
 
 #. module: contract_variable_quantity
 #: model_terms:ir.actions.act_window,help:contract_variable_quantity.action_contract_quantity_formula
@@ -99,11 +128,6 @@ msgid "Code"
 msgstr "Código"
 
 #. module: contract_variable_quantity
-#: model:ir.model,name:contract_variable_quantity.model_contract_contract
-msgid "Contract"
-msgstr "Contrato"
-
-#. module: contract_variable_quantity
 #: model:ir.model,name:contract_variable_quantity.model_contract_line
 msgid "Contract Line"
 msgstr "Línea contrato"
@@ -112,6 +136,16 @@ msgstr "Línea contrato"
 #: model:ir.model,name:contract_variable_quantity.model_contract_line_qty_formula
 msgid "Contract Line Formula"
 msgstr "Fórmula de la línea de contrato"
+
+#. module: contract_variable_quantity
+#: model:ir.model,name:contract_variable_quantity.model_contract_template
+msgid "Contract Template"
+msgstr "Plantilla de contrato"
+
+#. module: contract_variable_quantity
+#: model:ir.model,name:contract_variable_quantity.model_contract_template_line
+msgid "Contract Template Line"
+msgstr "Línea de plantilla de contrato"
 
 #. module: contract_variable_quantity
 #: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__create_uid
@@ -124,14 +158,16 @@ msgid "Created on"
 msgstr "Creado en"
 
 #. module: contract_variable_quantity
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line__display_name
 #: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__display_name
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_template__display_name
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_template_line__display_name
 msgid "Display Name"
 msgstr "Nombre mostrado"
 
 #. module: contract_variable_quantity
 #. odoo-python
 #: code:addons/contract_variable_quantity/models/contract_line_formula.py:0
-#, python-format
 msgid ""
 "Error evaluating code.\n"
 "Details: %s"
@@ -145,11 +181,40 @@ msgid "Example of Python code"
 msgstr "Ejemplo del código Python"
 
 #. module: contract_variable_quantity
-#: model:ir.model.fields.selection,name:contract_variable_quantity.selection__contract_abstract_contract_line__qty_type__fixed
 #: model:ir.model.fields.selection,name:contract_variable_quantity.selection__contract_line__qty_type__fixed
 #: model:ir.model.fields.selection,name:contract_variable_quantity.selection__contract_template_line__qty_type__fixed
 msgid "Fixed quantity"
 msgstr "Cantidad fija"
+
+#. module: contract_variable_quantity
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__message_follower_ids
+msgid "Followers"
+msgstr "Seguimiento"
+
+#. module: contract_variable_quantity
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__message_partner_ids
+msgid "Followers (Partners)"
+msgstr "Seguimiento (Socios)"
+
+#. module: contract_variable_quantity
+#. odoo-python
+#: code:addons/contract_variable_quantity/models/contract_line_formula.py:0
+msgid "Formula 'result' must be a numeric value (int or float)."
+msgstr ""
+"El resultado 'result' de la fórmula debe ser un valor numérico (entero o "
+"decimal)."
+
+#. module: contract_variable_quantity
+#. odoo-python
+#: code:addons/contract_variable_quantity/models/contract_line_formula.py:0
+msgid "Formula Test"
+msgstr "Prueba de fórmula"
+
+#. module: contract_variable_quantity
+#. odoo-python
+#: code:addons/contract_variable_quantity/models/contract_line_formula.py:0
+msgid "Formula evaluated successfully (result = %s)."
+msgstr "Fórmula evaluada correctamente (result = %s)."
 
 #. module: contract_variable_quantity
 #: model:ir.actions.act_window,name:contract_variable_quantity.action_contract_quantity_formula
@@ -158,21 +223,46 @@ msgid "Formulas (quantity)"
 msgstr "Fórmulas (cantidad)"
 
 #. module: contract_variable_quantity
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__has_message
+msgid "Has Message"
+msgstr "Tiene mensaje"
+
+#. module: contract_variable_quantity
 #: model_terms:ir.ui.view,arch_db:contract_variable_quantity.view_contract_line_qty_formula_form
 msgid "Help with Python expressions."
 msgstr "Ayuda con las expresiones Python."
 
 #. module: contract_variable_quantity
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line__id
 #: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__id
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_template__id
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_template_line__id
 msgid "ID"
 msgstr "ID (identificación)"
 
 #. module: contract_variable_quantity
 #: model:ir.model.fields,help:contract_variable_quantity.field_contract_contract__skip_zero_qty
+#: model:ir.model.fields,help:contract_variable_quantity.field_contract_template__skip_zero_qty
 msgid "If checked, contract lines with 0 qty don't create invoice line"
 msgstr ""
 "Si está marcado, las lineas de contrato con cantidad 0 no crearán líneas de "
 "factura"
+
+#. module: contract_variable_quantity
+#: model:ir.model.fields,help:contract_variable_quantity.field_contract_line_qty_formula__message_needaction
+msgid "If checked, new messages require your attention."
+msgstr "Si está marcado los nuevos mensajes requieren su atención."
+
+#. module: contract_variable_quantity
+#: model:ir.model.fields,help:contract_variable_quantity.field_contract_line_qty_formula__message_has_error
+#: model:ir.model.fields,help:contract_variable_quantity.field_contract_line_qty_formula__message_has_sms_error
+msgid "If checked, some messages have a delivery error."
+msgstr "Si está marcado algunos mensajes tienen un error de entrega."
+
+#. module: contract_variable_quantity
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__message_is_follower
+msgid "Is Follower"
+msgstr "Es seguidor"
 
 #. module: contract_variable_quantity
 #: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__write_uid
@@ -185,6 +275,16 @@ msgid "Last Updated on"
 msgstr "Última actualización en"
 
 #. module: contract_variable_quantity
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__message_has_error
+msgid "Message Delivery error"
+msgstr "Mensaje de Error de entrega"
+
+#. module: contract_variable_quantity
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__message_ids
+msgid "Messages"
+msgstr "Mensajes"
+
+#. module: contract_variable_quantity
 #: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__name
 #: model_terms:ir.ui.view,arch_db:contract_variable_quantity.view_contract_line_qty_formula_form
 msgid "Name"
@@ -193,40 +293,93 @@ msgstr "Nombre"
 #. module: contract_variable_quantity
 #. odoo-python
 #: code:addons/contract_variable_quantity/models/contract_line_formula.py:0
-#, python-format
 msgid "No valid result returned."
 msgstr "No se devuelve un valor válido."
 
 #. module: contract_variable_quantity
-#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_abstract_contract_line__qty_formula_id
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__message_needaction_counter
+msgid "Number of Actions"
+msgstr "Número de Acciones"
+
+#. module: contract_variable_quantity
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__message_has_error_counter
+msgid "Number of errors"
+msgstr "Número de errores"
+
+#. module: contract_variable_quantity
+#: model:ir.model.fields,help:contract_variable_quantity.field_contract_line_qty_formula__message_needaction_counter
+msgid "Number of messages requiring action"
+msgstr "Número de mensajes que requieren una acción"
+
+#. module: contract_variable_quantity
+#: model:ir.model.fields,help:contract_variable_quantity.field_contract_line_qty_formula__message_has_error_counter
+msgid "Number of messages with delivery error"
+msgstr "Número de mensajes con error de entrega"
+
+#. module: contract_variable_quantity
+#. odoo-python
+#: code:addons/contract_variable_quantity/models/contract_line_formula.py:0
+msgid "Only system administrators can create quantity formulas."
+msgstr ""
+"Solo los administradores del sistema pueden crear fórmulas de cantidad."
+
+#. module: contract_variable_quantity
+#. odoo-python
+#: code:addons/contract_variable_quantity/models/contract_line_formula.py:0
+msgid "Only system administrators can delete quantity formulas."
+msgstr ""
+"Solo los administradores del sistema pueden eliminar fórmulas de cantidad."
+
+#. module: contract_variable_quantity
+#. odoo-python
+#: code:addons/contract_variable_quantity/models/contract_line_formula.py:0
+msgid "Only system administrators can modify quantity formulas."
+msgstr ""
+"Solo los administradores del sistema pueden modificar fórmulas de cantidad."
+
+#. module: contract_variable_quantity
 #: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line__qty_formula_id
 #: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_template_line__qty_formula_id
 msgid "Qty. formula"
 msgstr "Fórmula cantidad"
 
 #. module: contract_variable_quantity
-#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_abstract_contract_line__qty_type
 #: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line__qty_type
 #: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_template_line__qty_type
 msgid "Qty. type"
 msgstr "Tipo cantidad"
 
 #. module: contract_variable_quantity
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__message_has_sms_error
+msgid "SMS Delivery error"
+msgstr "Error de Entrega de SMS"
+
+#. module: contract_variable_quantity
 #: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_contract__skip_zero_qty
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_template__skip_zero_qty
 msgid "Skip Zero Qty Lines"
 msgstr "Saltar líneas con cantidad 0"
 
 #. module: contract_variable_quantity
-#: model_terms:ir.ui.view,arch_db:contract_variable_quantity.portal_contract_page
-msgid "Variable"
-msgstr "Variable"
+#: model_terms:ir.ui.view,arch_db:contract_variable_quantity.view_contract_line_qty_formula_form
+msgid "Test Formula"
+msgstr "Probar fórmula"
 
 #. module: contract_variable_quantity
-#: model:ir.model.fields.selection,name:contract_variable_quantity.selection__contract_abstract_contract_line__qty_type__variable
 #: model:ir.model.fields.selection,name:contract_variable_quantity.selection__contract_line__qty_type__variable
 #: model:ir.model.fields.selection,name:contract_variable_quantity.selection__contract_template_line__qty_type__variable
 msgid "Variable quantity"
 msgstr "Cantidad variable"
+
+#. module: contract_variable_quantity
+#: model:ir.model.fields,field_description:contract_variable_quantity.field_contract_line_qty_formula__website_message_ids
+msgid "Website Messages"
+msgstr "Mensajes del sitio web"
+
+#. module: contract_variable_quantity
+#: model:ir.model.fields,help:contract_variable_quantity.field_contract_line_qty_formula__website_message_ids
+msgid "Website communication history"
+msgstr "Historial de comunicación del sitio web"
 
 #. module: contract_variable_quantity
 #: model_terms:ir.ui.view,arch_db:contract_variable_quantity.view_contract_line_qty_formula_form
@@ -241,16 +394,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:contract_variable_quantity.view_contract_line_qty_formula_form
 msgid ""
 "You have to insert valid Python code block that\n"
-"                                stores at some moment a float/integer value "
-"of\n"
+"                                stores at some moment a float/integer value of\n"
 "                                the quantity to invoice in the variable\n"
 "                                'result'."
 msgstr ""
 "Debe insertar un bloque de código Python válido que\n"
-"                                almacena en algún momento un valor "
-"flotante / entero de\n"
+"                                almacena en algún momento un valor flotante / entero de\n"
 "                                la cantidad a facturar en la variable\n"
 "                                'result'."
-
-#~ msgid "Last Modified on"
-#~ msgstr "Última modificación en"

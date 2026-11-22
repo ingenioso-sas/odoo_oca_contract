@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 
 class ContractPause(models.Model):
@@ -105,6 +105,20 @@ class ContractPause(models.Model):
                             "A contract cannot have multiple active or scheduled pauses."
                         )
                     )
+
+    def action_cancel_scheduled(self):
+        if not self.env.user.has_group("account.group_account_manager"):
+            raise UserError(
+                self.env._("Only accounting managers can cancel scheduled pauses.")
+            )
+        for pause in self:
+            if pause.state != "scheduled":
+                continue
+            pause.sudo().write({"state": "cancelled"})
+            pause.contract_id.message_post(
+                body=self.env._("Scheduled pause (%s) cancelled.", pause.name)
+            )
+        return True
 
     @api.model
     def _activate_scheduled_pauses(self, date_ref=None, contract_ids=None):

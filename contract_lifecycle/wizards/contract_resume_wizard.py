@@ -26,4 +26,4 @@ class ContractResumeWizard(models.TransientModel):
     def action_resume(self):
         self.ensure_one()
         self.contract_id._resume_contract(self.pause_id, self.resume_date)
-        return self.contract_id.get_formview_action()
+        return {"type": "ir.actions.act_window_close"}

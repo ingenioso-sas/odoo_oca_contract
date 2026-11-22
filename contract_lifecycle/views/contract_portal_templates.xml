@@ -3,17 +3,45 @@
      License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
 <odoo>
     <template
+        id="portal_my_contracts_lifecycle"
+        inherit_id="contract.portal_my_contracts"
+        name="Contract portal list lifecycle"
+    >
+        <xpath expr="//thead/tr/th[1]" position="after">
+            <th scope="col">Status</th>
+        </xpath>
+        <xpath expr="//tbody//td[1]" position="after">
+            <td>
+                <span
+                    t-field="contract.lifecycle_state"
+                    t-attf-class="badge rounded-pill #{'text-bg-success' if contract.lifecycle_state == 'running' else 'text-bg-warning' if contract.lifecycle_state == 'paused' else 'text-bg-danger' if contract.lifecycle_state == 'terminated' else 'text-bg-info' if contract.lifecycle_state == 'upcoming' else 'text-bg-secondary'}"
+                />
+            </td>
+        </xpath>
+    </template>
+    <template
         id="portal_contract_page_lifecycle"
         inherit_id="contract.portal_contract_page"
         name="Contract portal lifecycle"
     >
+        <xpath
+            expr="//div[@id='product_information']//div[contains(@t-if, 'contract.recurring_next_date')]"
+            position="attributes"
+        >
+            <attribute
+                name="t-if"
+            >contract.recurring_next_date and not contract.is_paused and not contract.is_terminated</attribute>
+        </xpath>
         <xpath expr="//div[@t-if='contract.date_end']" position="after">
             <div t-if="contract.lifecycle_state" class="row mb-2 mb-sm-1">
                 <div class="col-12 col-sm-4">
                     <strong>Status</strong>
                 </div>
                 <div class="col-12 col-sm-8">
-                    <span t-out="contract.lifecycle_state" />
+                    <span
+                        t-field="contract.lifecycle_state"
+                        t-attf-class="badge rounded-pill #{'text-bg-success' if contract.lifecycle_state == 'running' else 'text-bg-warning' if contract.lifecycle_state == 'paused' else 'text-bg-danger' if contract.lifecycle_state == 'terminated' else 'text-bg-info' if contract.lifecycle_state == 'upcoming' else 'text-bg-secondary'}"
+                    />
                 </div>
             </div>
             <div

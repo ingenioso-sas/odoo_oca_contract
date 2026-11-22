@@ -51,7 +51,7 @@
                     name="action_uncancel"
                     title="Un-cancel"
                     type="object"
-                    icon="fa-ban text-success"
+                    icon="fa-undo text-success"
                     groups="account.group_account_manager"
                     invisible="not is_un_cancel_allowed"
                 />

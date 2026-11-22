@@ -31,7 +31,7 @@ class ContractContract(models.Model):
     ]
 
     # === Basic Information ===
-    active = fields.Boolean(default=True)
+    active = fields.Boolean(default=True, tracking=True)
     code = fields.Char(string="Reference")
     name = fields.Char()
     date = fields.Date(
@@ -45,6 +45,7 @@ class ContractContract(models.Model):
         string="Responsible",
         index=True,
         default=lambda self: self.env.user,
+        tracking=True,
     )
     group_id = fields.Many2one(
         string="Group",
@@ -63,6 +64,7 @@ class ContractContract(models.Model):
         comodel_name="res.partner",
         inverse="_inverse_partner_id",
         required=True,
+        tracking=True,
     )
     invoice_partner_id = fields.Many2one(
         string="Invoicing contact",
@@ -90,11 +92,14 @@ class ContractContract(models.Model):
         comodel_name="res.currency",
         readonly=True,
     )
+    pricelist_id = fields.Many2one(tracking=True)
+    invoicing_mode = fields.Selection(tracking=True)
     payment_term_id = fields.Many2one(
         comodel_name="account.payment.term",
         string="Payment Terms",
         index=True,
         check_company=True,
+        tracking=True,
     )
     fiscal_position_id = fields.Many2one(
         comodel_name="account.fiscal.position",
@@ -487,6 +492,7 @@ class ContractContract(models.Model):
         """
         self.ensure_one()
         invoices = self._recurring_create_invoice(date_ref=date_ref)
+        self._clear_invoice_generation_error()
         for invoice in invoices:
             body = Markup(
                 self.env._("Contract manually invoiced: %(invoice_link)s")

@@ -8,7 +8,8 @@ class ContractTerminateReason(models.Model):
     _name = "contract.terminate.reason"
     _description = "Contract Termination Reason"
 
-    name = fields.Char(required=True)
+    name = fields.Char(required=True, translate=True)
     terminate_comment_required = fields.Boolean(
         string="Require a termination comment", default=True
     )
+    active = fields.Boolean(default=True)

@@ -41,4 +41,4 @@ class ContractPauseWizard(models.TransientModel):
             self.reason_id,
             self.comment,
         )
-        return self.contract_id.get_formview_action()
+        return {"type": "ir.actions.act_window_close"}

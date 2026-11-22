@@ -4,14 +4,26 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 19.0\n"
+"Project-Id-Version: Odoo Server 19.0-20260615\n"
 "Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-22 04:42+0000\n"
+"PO-Revision-Date: 2026-11-22 04:42+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
+
+#. module: contract_termination
+#: model:ir.model.fields,field_description:contract_termination.field_contract_terminate_reason__active
+msgid "Active"
+msgstr ""
+
+#. module: contract_termination
+#: model_terms:ir.ui.view,arch_db:contract_termination.contract_terminate_reason_form_view
+msgid "Archived"
+msgstr ""
 
 #. module: contract_termination
 #: model_terms:ir.ui.view,arch_db:contract_termination.contract_contract_form_view
@@ -139,6 +151,7 @@ msgstr ""
 
 #. module: contract_termination
 #: model:ir.model.fields,field_description:contract_termination.field_contract_contract__is_terminated
+#: model:ir.model.fields,field_description:contract_termination.field_contract_contract_terminate__is_already_terminated
 msgid "Terminated"
 msgstr ""
 
@@ -168,6 +181,12 @@ msgstr ""
 #. module: contract_termination
 #: model_terms:ir.ui.view,arch_db:contract_termination.contract_contract_form_view
 msgid "Update Termination Details"
+msgstr ""
+
+#. module: contract_termination
+#. odoo-python
+#: code:addons/contract_termination/models/contract_contract.py:0
+msgid "You are not allowed to cancel contract termination."
 msgstr ""
 
 #. module: contract_termination

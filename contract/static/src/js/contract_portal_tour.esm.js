@@ -11,7 +11,7 @@ registry.category("web_tour.tours").add("contract_portal_tour", {
         },
         {
             content: "Go to Contract item",
-            trigger: "table.o_portal_my_doc_table tr:first",
+            trigger: "table.o_portal_my_doc_table tbody tr:first-child a.tr_contract_link",
             run: "click",
         },
     ],

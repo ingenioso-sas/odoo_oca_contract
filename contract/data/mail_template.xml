@@ -91,7 +91,7 @@
                 </div>
                 <br />
                 <a
-                    t-att-href="'%s/my/contracts/%s?access_token=%s' % (object.get_base_url(), object.id, object.access_token)"
+                    t-att-href="object.get_base_url().rstrip('/') + object.get_portal_url()"
                     target="_blank"
                     style="background-color:#875A7B;padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;"
                 >View contract</a>

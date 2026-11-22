@@ -8,7 +8,7 @@ from odoo.addons.base.tests.common import BaseCommon
 
 
 @tagged("post_install", "-at_install")
-class TestProductTemplate(BaseCommon):
+class TestComputeProrata(BaseCommon):
     """
     These tests verify that prorated invoice amounts are correctly computed
     based on recurrence type, interval, invoicing type (pre-paid/post-paid),

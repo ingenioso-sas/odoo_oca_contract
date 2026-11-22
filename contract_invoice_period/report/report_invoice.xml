@@ -26,7 +26,10 @@
                     t-if="o.contract_period_start or o.contract_period_end"
                     name="contract_period"
                 >
-                    <strong>Invoiced Period</strong>
+                    <strong t-if="o.move_type in ('out_refund', 'in_refund')">
+                        Credited Period
+                    </strong>
+                    <strong t-else="">Invoiced Period</strong>
                     <div>
                         <span
                             t-if="o.contract_period_start"
@@ -40,6 +43,29 @@
                             t-field="o.contract_period_end"
                         >2026-01-31</span>
                     </div>
+                </div>
+            </xpath>
+            <xpath
+                expr="//td[@name='account_invoice_line_name']"
+                position="inside"
+            >
+                <div
+                    t-if="len({(l.contract_period_start, l.contract_period_end) for l in o.invoice_line_ids if l.contract_period_start or l.contract_period_end}) &gt; 1 and (line.contract_period_start or line.contract_period_end)"
+                    class="text-muted small"
+                    name="line_contract_period"
+                >
+                    Period:
+                    <span
+                        t-if="line.contract_period_start"
+                        t-field="line.contract_period_start"
+                    />
+                    <span
+                        t-if="line.contract_period_start and line.contract_period_end"
+                    > - </span>
+                    <span
+                        t-if="line.contract_period_end"
+                        t-field="line.contract_period_end"
+                    />
                 </div>
             </xpath>
         </field>

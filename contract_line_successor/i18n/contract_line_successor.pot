@@ -4,8 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 19.0\n"
+"Project-Id-Version: Odoo Server 19.0-20260615\n"
 "Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-22 04:42+0000\n"
+"PO-Revision-Date: 2026-11-22 04:42+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -17,6 +19,18 @@ msgstr ""
 #. odoo-python
 #: code:addons/contract_line_successor/models/contract_line.py:0
 msgid "A canceled contract line can't be set to auto-renew"
+msgstr ""
+
+#. module: contract_line_successor
+#. odoo-python
+#: code:addons/contract_line_successor/models/contract_line.py:0
+msgid "A contract line cannot be its own predecessor."
+msgstr ""
+
+#. module: contract_line_successor
+#. odoo-python
+#: code:addons/contract_line_successor/models/contract_line.py:0
+msgid "A contract line cannot be its own successor."
 msgstr ""
 
 #. module: contract_line_successor
@@ -34,11 +48,24 @@ msgstr ""
 #. module: contract_line_successor
 #. odoo-python
 #: code:addons/contract_line_successor/models/contract_line.py:0
+msgid "A successor contract line must belong to the same company."
+msgstr ""
+
+#. module: contract_line_successor
+#. odoo-python
+#: code:addons/contract_line_successor/models/contract_line.py:0
+msgid "A successor contract line must belong to the same contract."
+msgstr ""
+
+#. module: contract_line_successor
+#. odoo-python
+#: code:addons/contract_line_successor/models/contract_line.py:0
 msgid "An auto-renew line must have a end date"
 msgstr ""
 
 #. module: contract_line_successor
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_contract_form_view
+#: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_form_view
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_tree_view
 msgid "Are you sure you want to cancel this line"
 msgstr ""
@@ -52,7 +79,7 @@ msgstr ""
 #. module: contract_line_successor
 #. odoo-python
 #: code:addons/contract_line_successor/models/contract_line.py:0
-msgid "Auto renew interval should be different then 0"
+msgid "Auto renew interval should be greater than 0."
 msgstr ""
 
 #. module: contract_line_successor
@@ -61,7 +88,14 @@ msgid "Auto-renew"
 msgstr ""
 
 #. module: contract_line_successor
+#. odoo-python
+#: code:addons/contract_line_successor/models/contract_template_line.py:0
+msgid "Auto-renew interval must be greater than zero."
+msgstr ""
+
+#. module: contract_line_successor
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_contract_form_view
+#: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_form_view
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_tree_view
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_wizard_plan_successor_form_view
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_wizard_stop_form_view
@@ -85,6 +119,12 @@ msgstr ""
 #: model:ir.model.fields.selection,name:contract_line_successor.selection__contract_line__state__canceled
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_search_view
 msgid "Canceled"
+msgstr ""
+
+#. module: contract_line_successor
+#. odoo-python
+#: code:addons/contract_line_successor/models/contract_line.py:0
+msgid "Cannot renew line %s: auto-renew and an end date are required."
 msgstr ""
 
 #. module: contract_line_successor
@@ -330,8 +370,15 @@ msgstr ""
 
 #. module: contract_line_successor
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_contract_form_view
+#: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_form_view
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_tree_view
 msgid "Plan Start"
+msgstr ""
+
+#. module: contract_line_successor
+#. odoo-python
+#: code:addons/contract_line_successor/models/contract_line.py:0
+msgid "Plan contract line successor"
 msgstr ""
 
 #. module: contract_line_successor
@@ -353,6 +400,12 @@ msgstr ""
 #. module: contract_line_successor
 #: model:ir.model.fields,field_description:contract_line_successor.field_contract_line__predecessor_contract_line_id
 msgid "Predecessor Contract Line"
+msgstr ""
+
+#. module: contract_line_successor
+#. odoo-python
+#: code:addons/contract_line_successor/models/contract_line.py:0
+msgid "Predecessor line already has an active successor."
 msgstr ""
 
 #. module: contract_line_successor
@@ -407,6 +460,7 @@ msgstr ""
 
 #. module: contract_line_successor
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_contract_form_view
+#: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_form_view
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_tree_view
 msgid "Stop"
 msgstr ""
@@ -450,6 +504,17 @@ msgid "Successor Contract Line"
 msgstr ""
 
 #. module: contract_line_successor
+#: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_form_view
+msgid "Suspend"
+msgstr ""
+
+#. module: contract_line_successor
+#. odoo-python
+#: code:addons/contract_line_successor/models/contract_line.py:0
+msgid "Suspend contract line"
+msgstr ""
+
+#. module: contract_line_successor
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_wizard_stop_plan_successor_form_view
 msgid "Suspension End Date"
 msgstr ""
@@ -457,6 +522,18 @@ msgstr ""
 #. module: contract_line_successor
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_wizard_stop_plan_successor_form_view
 msgid "Suspension Start Date"
+msgstr ""
+
+#. module: contract_line_successor
+#. odoo-python
+#: code:addons/contract_line_successor/models/contract_line.py:0
+msgid "Suspension start date cannot be after end date."
+msgstr ""
+
+#. module: contract_line_successor
+#. odoo-python
+#: code:addons/contract_line_successor/models/contract_line.py:0
+msgid "Terminate contract line"
 msgstr ""
 
 #. module: contract_line_successor
@@ -477,6 +554,13 @@ msgid "Termination Notice type"
 msgstr ""
 
 #. module: contract_line_successor
+#. odoo-python
+#: code:addons/contract_line_successor/models/contract_line.py:0
+#: code:addons/contract_line_successor/models/contract_template_line.py:0
+msgid "Termination notice interval cannot be negative."
+msgstr ""
+
+#. module: contract_line_successor
 #: model:ir.model.fields,help:contract_line_successor.field_contract_line__manual_renew_needed
 #: model:ir.model.fields,help:contract_line_successor.field_contract_line_wizard__manual_renew_needed
 msgid ""
@@ -490,12 +574,19 @@ msgid "To renew"
 msgstr ""
 
 #. module: contract_line_successor
+#. odoo-python
+#: code:addons/contract_line_successor/models/contract_line.py:0
+msgid "Un-Cancel Contract Line"
+msgstr ""
+
+#. module: contract_line_successor
 #: model:ir.model.fields,field_description:contract_line_successor.field_contract_line__is_un_cancel_allowed
 msgid "Un-Cancel allowed?"
 msgstr ""
 
 #. module: contract_line_successor
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_contract_form_view
+#: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_form_view
 #: model_terms:ir.ui.view,arch_db:contract_line_successor.contract_line_tree_view
 msgid "Un-cancel"
 msgstr ""

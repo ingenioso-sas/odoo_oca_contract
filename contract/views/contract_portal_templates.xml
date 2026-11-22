@@ -53,10 +53,10 @@
             <t t-if="contracts" t-call="portal.portal_table">
                 <thead>
                     <tr class="active">
-                        <th>Contract #</th>
-                        <th class='d-none d-md-table-cell'>Date</th>
-                        <th class='d-none d-md-table-cell'>Date end</th>
-                        <th class='text-end'>Reference</th>
+                        <th scope="col">Contract #</th>
+                        <th scope="col" class="d-none d-md-table-cell">Date</th>
+                        <th scope="col" class="d-none d-md-table-cell">Date end</th>
+                        <th scope="col" class="text-end">Reference</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -68,7 +68,7 @@
                                     t-attf-class="tr_contract_link"
                                     t-att-title="contract.name"
                                 >
-                                    <t t-esc="contract.name" />
+                                    <t t-out="contract.name" />
                                 </a>
                             </td>
                             <td class="d-none d-md-table-cell">
@@ -77,13 +77,16 @@
                             <td class="d-none d-md-table-cell">
                                 <span t-field="contract.date_end" />
                             </td>
-                            <td class='text-end'>
+                            <td class="text-end">
                                 <span t-field="contract.code" />
                             </td>
                         </tr>
                     </t>
                 </tbody>
             </t>
+            <p t-else="" class="alert alert-info">
+                There are currently no contracts for your account.
+            </p>
         </t>
     </template>
     <template id="portal_contract_page" name="My Contract">
@@ -129,8 +132,6 @@
                             <em t-field="contract.name" />
                         </h2>
                     </div>
-                </div>
-            </div>
             <div id="general_information">
                 <div class="row mt4">
                     <div
@@ -141,7 +142,7 @@
                             <strong>Customer:</strong>
                         </h6>
                         <div class="row">
-                            <div class="col flex-grow-0 pr-3">
+                            <div class="col flex-grow-0 pe-3">
                                 <img
                                     t-if="contract.partner_id.image_128"
                                     class="rounded-circle mt-1 o_portal_contact_img"
@@ -155,7 +156,7 @@
                                     alt="Contact"
                                 />
                             </div>
-                            <div class="col pl-sm-0">
+                            <div class="col ps-sm-0">
                                 <address
                                     t-field="contract.partner_id"
                                     t-options='{"widget": "contact", "fields": ["name", "email", "phone"]}'
@@ -168,7 +169,7 @@
                             <strong>Responsible:</strong>
                         </h6>
                         <div class="row">
-                            <div class="col flex-grow-0 pr-3">
+                            <div class="col flex-grow-0 pe-3">
                                 <img
                                     t-if="contract.user_id.image_128"
                                     class="rounded-circle mt-1 o_portal_contact_img"
@@ -182,7 +183,7 @@
                                     alt="Contact"
                                 />
                             </div>
-                            <div class="col pl-sm-0">
+                            <div class="col ps-sm-0">
                                 <address
                                     t-field="contract.user_id"
                                     t-options='{"widget": "contact", "fields": ["name", "email", "phone"]}'
@@ -236,29 +237,38 @@
                         </div>
                     </div>
                 </div>
-                <div id="item_details">
+                <div
+                    id="item_details"
+                    class="table-responsive"
+                    tabindex="0"
+                    role="region"
+                    aria-label="Contract lines"
+                >
                     <table class="table table-sm" id="sales_order_table">
                         <thead class="bg-100">
                             <tr>
-                                <th name="th_name" class="text-left">Description</th>
-                                <th name="th_quantity" class="text-right">Quantity</th>
-                                <th name="th_price_unit" class="text-right">Price unit
+                                <th scope="col" name="th_name" class="text-start">Description</th>
+                                <th scope="col" name="th_quantity" class="text-end">Quantity</th>
+                                <th scope="col" name="th_price_unit" class="text-end">Price unit
                                 </th>
-                                <th name="th_discount" class="text-right">Discount (%)
+                                <th scope="col" name="th_discount" class="text-end">Discount (%)
                                 </th>
                                 <th
+                                    scope="col"
                                     name="th_price_subtotal"
-                                    class="text-right"
+                                    class="text-end"
                                 >Sub Total
                                 </th>
                                 <th
+                                    scope="col"
                                     name="th_recurring_interval"
-                                    class="text-right"
+                                    class="text-end"
                                 >Recurrence
                                 </th>
                                 <th
+                                    scope="col"
                                     name="th_recurring_next_date"
-                                    class="text-right"
+                                    class="text-end"
                                 >Date of next invoice
                                 </th>
                             </tr>
@@ -266,25 +276,25 @@
                         <tbody class="contract_tbody">
                             <t t-foreach="contract.contract_line_ids" t-as="line">
                                 <tr
-                                    t-att-class="'bg-200 font-weight-bold o_line_section' if line.display_type == 'line_section' else 'font-italic o_line_note' if line.display_type == 'line_note' else 'text-muted' if line.is_canceled else ''"
+                                    t-att-class="'bg-200 fw-bold o_line_section' if line.display_type == 'line_section' else 'fst-italic o_line_note' if line.display_type == 'line_note' else 'text-muted' if line.is_canceled else ''"
                                 >
                                     <t t-if="not line.display_type">
                                         <td name="td_name">
                                             <span t-field="line.name" />
                                         </td>
-                                        <td name="td_quantity" class="text-right">
+                                        <td name="td_quantity" class="text-end">
                                             <span t-field="line.quantity" />
                                         </td>
-                                        <td name="td_price_unit" class="text-right">
+                                        <td name="td_price_unit" class="text-end">
                                             <span
                                                 t-field="line.price_unit"
                                                 t-options='{"widget": "monetary", "display_currency": contract.currency_id}'
                                             />
                                         </td>
-                                        <td name="td_discount" class="text-right">
+                                        <td name="td_discount" class="text-end">
                                             <span t-field="line.discount" />
                                         </td>
-                                        <td name="td_price_subtotal" class="text-right">
+                                        <td name="td_price_subtotal" class="text-end">
                                             <span
                                                 t-field="line.price_subtotal"
                                                 t-options='{"widget": "monetary", "display_currency": contract.currency_id}'
@@ -292,14 +302,14 @@
                                         </td>
                                         <td
                                             name="td_recurring_interval"
-                                            class="text-right"
+                                            class="text-end"
                                         >
                                             <span t-field="line.recurring_interval" />
                                             <span t-field="line.recurring_rule_type" />
                                         </td>
                                         <td
                                             name="td_recurring_next_date"
-                                            class="text-right"
+                                            class="text-end"
                                         >
                                             <span
                                                 t-field="line.recurring_next_date"
@@ -325,9 +335,11 @@
                     </table>
                 </div>
             </div>
+                </div>
+            </div>
             <section
                 t-if="contract.modification_ids"
-                class="s_timeline pt24 pb48 o_colored_level"
+                class="o_contract_portal_timeline s_timeline pt24 pb48 o_colored_level"
             >
                 <div class="container s_timeline_line">
                     <t t-set="last_modification_date" t-value="False" />

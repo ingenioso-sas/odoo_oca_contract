@@ -18,7 +18,7 @@
                         type="object"
                         invisible="not create_invoice_visibility or generation_type != 'invoice'"
                         string="Create invoices"
-                        groups="base.group_no_one"
+                        groups="account.group_account_invoice"
                     />
 
                     <button type="object" string="Preview" name="action_preview" />
@@ -476,9 +476,22 @@
                 <field name="invoice_generation_error" column_invisible="True" />
                 <field name="name" string="Name" />
                 <field name="code" optional="show" />
-                <field name="journal_id" groups="account.group_account_user" />
                 <field name="partner_id" />
-                <field name="recurring_monthly_total" optional="hide" />
+                <field
+                    name="user_id"
+                    widget="many2one_avatar_user"
+                    optional="show"
+                />
+                <field name="date_start" optional="show" />
+                <field name="date_end" optional="show" />
+                <field name="recurring_next_date" optional="show" />
+                <field name="journal_id" groups="account.group_account_user" />
+                <field name="invoicing_mode" optional="hide" />
+                <field
+                    name="recurring_monthly_total"
+                    optional="hide"
+                    sum="Total MRR"
+                />
                 <field name="payment_term_id" optional="hide" />
                 <field
                     name="tag_ids"
@@ -506,11 +519,16 @@
                 <field name="journal_id" />
                 <field name="pricelist_id" />
                 <separator />
+                <filter
+                    name="my_contracts"
+                    string="My Contracts"
+                    domain="[('user_id', '=', uid)]"
+                />
                 <separator />
                 <filter
                     name="not_finished"
                     string="In progress"
-                    domain="['|', ('date_end', '&gt;=', context_today().strftime('%Y-%m-%d')), '&amp;', ('date_end', '=', False), ('recurring_next_date', '!=', False)]"
+                    domain="['|', '|', ('date_end', '&gt;=', context_today().strftime('%Y-%m-%d')), ('date_end', '=', False), ('recurring_next_date', '!=', False)]"
                 />
                 <filter
                     name="finished"
@@ -519,6 +537,7 @@
                 />
                 <field name="partner_id" />
                 <field name="commercial_partner_id" />
+                <field name="user_id" />
                 <separator />
                 <filter
                     name="invoice_generation_error"
@@ -531,6 +550,21 @@
                     name="inactive"
                 />
                 <group>
+                    <filter
+                        string="Responsible"
+                        name="group_by_user"
+                        context="{'group_by': 'user_id'}"
+                    />
+                    <filter
+                        string="Journal"
+                        name="group_by_journal"
+                        context="{'group_by': 'journal_id'}"
+                    />
+                    <filter
+                        string="Invoicing Mode"
+                        name="group_by_invoicing_mode"
+                        context="{'group_by': 'invoicing_mode'}"
+                    />
                     <filter
                         string="Associated Partner"
                         name="group_by_partner"

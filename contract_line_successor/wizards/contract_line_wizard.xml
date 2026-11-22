@@ -22,7 +22,7 @@
                         class="btn-primary"
                         type="object"
                     />
-                    <button string="Cancel" class="btn-default" special="cancel" />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
                 </footer>
             </form>
         </field>
@@ -47,7 +47,7 @@
                         class="btn-primary"
                         type="object"
                     />
-                    <button string="Cancel" class="btn-default" special="cancel" />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
                 </footer>
             </form>
         </field>
@@ -80,7 +80,7 @@
                         class="btn-primary"
                         type="object"
                     />
-                    <button string="Cancel" class="btn-default" special="cancel" />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
                 </footer>
             </form>
         </field>
@@ -88,7 +88,7 @@
     <record model="ir.ui.view" id="contract_line_wizard_uncancel_form_view">
         <field
             name="name"
-        >contract.line.stop_plan_successor.wizard.form (in contract)</field>
+        >contract.line.uncancel.wizard.form (in contract)</field>
         <field name="model">contract.line.wizard</field>
         <field name="arch" type="xml">
             <form>
@@ -103,7 +103,7 @@
                         class="btn-primary"
                         type="object"
                     />
-                    <button string="Cancel" class="btn-default" special="cancel" />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
                 </footer>
             </form>
         </field>

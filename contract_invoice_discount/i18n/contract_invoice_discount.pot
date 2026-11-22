@@ -1,0 +1,448 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* contract_invoice_discount
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0-20260615\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-22 04:42+0000\n"
+"PO-Revision-Date: 2026-11-22 04:42+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.report_invoice_document_invoice_discount
+msgid "(until"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__active
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__state__active
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_search_view
+msgid "Active"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_line__invoice_discount_count
+msgid "Active Invoice Discounts"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_list_view
+msgid "Applied"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_account_move_line__contract_discount_percent
+msgid "Applied Contract Discount (%)"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__applied_invoice_count
+msgid "Applied Invoices"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_form_view
+msgid "Archived"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_list_view
+msgid "Average Discount"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__company_id
+msgid "Company"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model,name:contract_invoice_discount.model_contract_contract
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__contract_id
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_search_view
+msgid "Contract"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_account_move_line__contract_discount_name
+msgid "Contract Discount"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_account_move_line__contract_discount_id
+msgid "Contract Discount Rule"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_account_move_line__contract_discount_source
+msgid "Contract Discount Source"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_account_move_line__contract_discount_until
+msgid "Contract Discount Until"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model,name:contract_invoice_discount.model_contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_form_view
+msgid "Contract Invoice Discount"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_list_view
+msgid "Contract Invoice Discounts"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model,name:contract_invoice_discount.model_contract_line
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__contract_line_id
+msgid "Contract Line"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model,name:contract_invoice_discount.model_contract_template_line
+msgid "Contract Template Line"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__start_mode__contract_start
+msgid "Contract start"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__date_end
+msgid "Date End"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__date_start
+msgid "Date Start"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_line__promo_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_template_line__promo_discount
+msgid ""
+"Default promotional discount copied to new contracts created from this "
+"template line."
+msgstr ""
+
+#. module: contract_invoice_discount
+#. odoo-python
+#: code:addons/contract_invoice_discount/models/contract_template_line.py:0
+msgid "Define a promotion duration or a maximum number of invoices."
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_invoice_discount__start_mode
+msgid ""
+"Defines how the start date is calculated. Fixed date uses the date entered. "
+"Contract start uses the start date of the contract line. Next invoice uses "
+"the first day of the next invoice period."
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__discount
+msgid "Discount (%)"
+msgstr ""
+
+#. module: contract_invoice_discount
+#. odoo-python
+#: code:addons/contract_invoice_discount/models/contract_invoice_discount.py:0
+msgid "Discount end date cannot be before start date."
+msgstr ""
+
+#. module: contract_invoice_discount
+#. odoo-python
+#: code:addons/contract_invoice_discount/models/contract_invoice_discount.py:0
+msgid "Discount must be between 0 and 100."
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_contract_form_view_invoice_discount
+msgid "Discounts"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_account_move_line__display_name
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_contract__display_name
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__display_name
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_line__display_name
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_template_line__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__pause_policy__calendar
+msgid "Do not extend"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__state__exhausted
+msgid "Exhausted"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__state__expired
+msgid "Expired"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__pause_policy__service
+msgid "Extend during pause"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_invoice_discount__pause_policy
+msgid ""
+"Extend during pause keeps the benefit for the same amount of service time. "
+"Do not extend keeps the original calendar dates."
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__start_mode__fixed_date
+msgid "Fixed date"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_account_move_line__id
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_contract__id
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__id
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_line__id
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_template_line__id
+msgid "ID"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__state__inactive
+msgid "Inactive"
+msgstr ""
+
+#. module: contract_invoice_discount
+#. odoo-python
+#: code:addons/contract_invoice_discount/models/contract_contract.py:0
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_contract__invoice_discount_count
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_line__invoice_discount_ids
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_line_form_view_invoice_discount
+msgid "Invoice Discounts"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model,name:contract_invoice_discount.model_account_move_line
+msgid "Journal Item"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_invoice_discount__date_end
+msgid ""
+"Leave empty for no date limit. If set, the discount is prorated when the "
+"invoice period overlaps only partially."
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__account_move_line__contract_discount_source__manual
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__source__manual
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_search_view
+msgid "Manual"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__max_invoices
+msgid "Max Invoices"
+msgstr ""
+
+#. module: contract_invoice_discount
+#. odoo-python
+#: code:addons/contract_invoice_discount/models/contract_invoice_discount.py:0
+msgid "Maximum invoices cannot be negative."
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_line__promo_max_invoices
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_template_line__promo_max_invoices
+msgid "Maximum number of invoices with the promotion. 0 = unlimited."
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_invoice_discount__max_invoices
+msgid "Maximum number of invoices with this discount. 0 = unlimited."
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__name
+msgid "Name"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_line__promo_name
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_template_line__promo_name
+msgid "Name shown on the invoice when the promotional discount applies."
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__start_mode__next_invoice
+msgid "Next invoice"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_line__promo_duration_months
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_template_line__promo_duration_months
+msgid ""
+"Number of months the promotion lasts from the contract line start. 0 = no "
+"date limit."
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__pause_policy
+msgid "Pause Policy"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_invoice_discount__discount
+msgid ""
+"Percentage applied to the invoice line. Only the highest applicable discount"
+" is used."
+msgstr ""
+
+#. module: contract_invoice_discount
+#. odoo-python
+#: code:addons/contract_invoice_discount/models/contract_contract.py:0
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__account_move_line__contract_discount_source__promotion
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__source__promotion
+msgid "Promotion"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_line__promo_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_template_line__promo_discount
+msgid "Promotion Discount (%)"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_line__promo_duration_months
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_template_line__promo_duration_months
+msgid "Promotion Duration (months)"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_line__promo_max_invoices
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_template_line__promo_max_invoices
+msgid "Promotion Max Invoices"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_line__promo_name
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_template_line__promo_name
+msgid "Promotion Name"
+msgstr ""
+
+#. module: contract_invoice_discount
+#. odoo-python
+#: code:addons/contract_invoice_discount/models/contract_template_line.py:0
+msgid "Promotion discount must be between 0 and 100."
+msgstr ""
+
+#. module: contract_invoice_discount
+#. odoo-python
+#: code:addons/contract_invoice_discount/models/contract_template_line.py:0
+msgid "Promotion duration cannot be negative."
+msgstr ""
+
+#. module: contract_invoice_discount
+#. odoo-python
+#: code:addons/contract_invoice_discount/models/contract_template_line.py:0
+msgid "Promotion max invoices cannot be negative."
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_search_view
+msgid "Promotions"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_form_view
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_line_form_view_invoice_discount
+msgid "Recalculate start date"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__account_move_line__contract_discount_source__referral
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__source__referral
+msgid "Referral"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_search_view
+msgid "Referrals"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__remaining_invoices
+msgid "Remaining Invoices"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields.selection,name:contract_invoice_discount.selection__contract_invoice_discount__state__scheduled
+msgid "Scheduled"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__sequence
+msgid "Sequence"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__source
+#: model_terms:ir.ui.view,arch_db:contract_invoice_discount.contract_invoice_discount_search_view
+msgid "Source"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__start_mode
+msgid "Start Mode"
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,help:contract_invoice_discount.field_contract_invoice_discount__date_start
+msgid ""
+"Start date of the discount. It is calculated automatically when the start "
+"mode is not fixed date."
+msgstr ""
+
+#. module: contract_invoice_discount
+#: model:ir.model.fields,field_description:contract_invoice_discount.field_contract_invoice_discount__state
+msgid "State"
+msgstr ""
+
+#. module: contract_invoice_discount
+#. odoo-python
+#: code:addons/contract_invoice_discount/models/contract_contract.py:0
+msgid "contract_id"
+msgstr ""

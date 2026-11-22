@@ -4,16 +4,19 @@
         <field name="model">contract.template.line</field>
         <field name="inherit_id" ref="contract.contract_template_line_form_view" />
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='quantity']" position="before">
+            <xpath expr="//label[@for='quantity']" position="before">
                 <field name="qty_type" />
                 <field
                     name="qty_formula_id"
-                    required="qty_type == 'variable'"
+                    required="qty_type == 'variable' and not display_type"
                     invisible="qty_type != 'variable'"
                 />
             </xpath>
+            <xpath expr="//label[@for='quantity']" position="attributes">
+                <attribute name="invisible">qty_type != 'fixed'</attribute>
+            </xpath>
             <xpath expr="//field[@name='quantity']" position="attributes">
-                <attribute name="required">qty_type == 'fixed'</attribute>
+                <attribute name="required">qty_type == 'fixed' and not display_type</attribute>
                 <attribute name="invisible">qty_type != 'fixed'</attribute>
             </xpath>
         </field>
