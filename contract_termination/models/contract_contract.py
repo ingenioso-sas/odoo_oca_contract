@@ -44,7 +44,13 @@ class ContractContract(models.Model):
 
     def action_cancel_contract_termination(self):
         self.ensure_one()
-        self.write(
+        if not self.env.user.has_group("contract_termination.can_terminate_contract"):
+            raise UserError(
+                self.env._("You are not allowed to cancel contract termination.")
+            )
+        self.check_access("read")
+        self._check_company()
+        self.sudo().write(
             {
                 "is_terminated": False,
                 "terminate_reason_id": False,
@@ -63,13 +69,16 @@ class ContractContract(models.Model):
         self.ensure_one()
         if not self.env.user.has_group("contract_termination.can_terminate_contract"):
             raise UserError(self.env._("You are not allowed to terminate contracts."))
-        for line in self.contract_line_ids.filtered("is_stop_allowed"):
+        self.check_access("read")
+        self._check_company()
+        contract_sudo = self.sudo()
+        for line in contract_sudo.contract_line_ids.filtered("is_stop_allowed"):
             line.stop(
                 max(terminate_date, line.last_date_invoiced)
                 if terminate_lines_with_last_date_invoiced and line.last_date_invoiced
                 else terminate_date
             )
-        self.write(
+        contract_sudo.write(
             {
                 "is_terminated": True,
                 "terminate_reason_id": terminate_reason_id.id,

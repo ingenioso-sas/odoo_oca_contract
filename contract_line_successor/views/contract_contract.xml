@@ -19,6 +19,7 @@
                     title="Plan Start"
                     type="object"
                     icon="fa-calendar text-success"
+                    groups="account.group_account_manager"
                     invisible="not is_plan_successor_allowed"
                 />
                 <button
@@ -26,6 +27,7 @@
                     title="Stop Plan Successor"
                     type="object"
                     icon="fa-pause text-muted"
+                    groups="account.group_account_manager"
                     invisible="not is_stop_plan_successor_allowed"
                 />
                 <button
@@ -33,6 +35,7 @@
                     title="Stop"
                     type="object"
                     icon="fa-stop text-danger"
+                    groups="account.group_account_manager"
                     invisible="not is_stop_allowed"
                 />
                 <button
@@ -40,6 +43,7 @@
                     title="Cancel"
                     type="object"
                     icon="fa-ban text-danger"
+                    groups="account.group_account_manager"
                     confirm="Are you sure you want to cancel this line"
                     invisible="not is_cancel_allowed"
                 />
@@ -48,6 +52,7 @@
                     title="Un-cancel"
                     type="object"
                     icon="fa-ban text-success"
+                    groups="account.group_account_manager"
                     invisible="not is_un_cancel_allowed"
                 />
                 <button
@@ -58,15 +63,6 @@
                     groups="base.group_no_one"
                     invisible="not is_auto_renew"
                 />
-            </xpath>
-            <xpath
-                expr="//field[@name='contract_line_ids']//list"
-                position="attributes"
-            >
-                <attribute name="decoration-muted">is_canceled</attribute>
-                <attribute
-                    name="decoration-info"
-                >create_invoice_visibility and not is_canceled</attribute>
             </xpath>
         </field>
     </record>

@@ -21,7 +21,12 @@ class AccountMove(models.Model):
     def _is_overdue_reminder_due(self, grace_days, resend_after_days, max_reminders):
         """Check grace + resend interval + max attempts for one invoice."""
         self.ensure_one()
-        if self.state != "posted" or self.payment_state in ("paid", "in_payment"):
+        if (
+            self.state != "posted"
+            or self.move_type != "out_invoice"
+            or self.payment_state in ("paid", "in_payment", "reversed", "invoicing_legacy")
+            or self.amount_residual <= 0
+        ):
             return False
         if not self.invoice_date_due:
             return False
@@ -37,24 +42,31 @@ class AccountMove(models.Model):
 
     def _mark_overdue_reminder_sent(self):
         today = fields.Date.context_today(self)
-        self.write(
-            {
-                "last_overdue_reminder_date": today,
-                "overdue_reminder_count": self.overdue_reminder_count + 1,
-            }
-        )
+        for move in self:
+            move.write(
+                {
+                    "last_overdue_reminder_date": today,
+                    "overdue_reminder_count": move.overdue_reminder_count + 1,
+                }
+            )
 
     def _get_contract_overdue_invoices(self):
-        """Pending posted invoices of same commercial partner, excl. self.
+        """Pending posted invoices of same commercial partner and company, excl. self.
 
         Used only for INFORMATION in the last invoice (no consolidation).
         """
         self.ensure_one()
         partner = self.partner_id.commercial_partner_id or self.partner_id
         domain = [
+            ("company_id", "=", self.company_id.id),
             ("move_type", "=", "out_invoice"),
             ("state", "=", "posted"),
-            ("payment_state", "not in", ("paid", "in_payment")),
+            (
+                "payment_state",
+                "not in",
+                ("paid", "in_payment", "reversed", "invoicing_legacy"),
+            ),
+            ("amount_residual", ">", 0),
             ("commercial_partner_id", "=", partner.id),
             ("id", "!=", self.id),
         ]
@@ -63,9 +75,12 @@ class AccountMove(models.Model):
     def _get_overdue_summary(self):
         self.ensure_one()
         overdue = self._get_contract_overdue_invoices()
+        same_currency_overdue = overdue.filtered(
+            lambda m: m.currency_id == self.currency_id
+        )
         return {
             "count": len(overdue),
-            "total_residual": sum(overdue.mapped("amount_residual")),
+            "total_residual": sum(same_currency_overdue.mapped("amount_residual")),
             "currency": self.currency_id,
             "names": ", ".join(overdue.mapped("name")),
         }

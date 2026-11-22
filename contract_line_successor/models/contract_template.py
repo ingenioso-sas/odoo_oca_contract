@@ -9,9 +9,10 @@ class ContractTemplate(models.Model):
 
     is_auto_renew = fields.Boolean(compute="_compute_is_auto_renew")
 
-    @api.depends("contract_line_ids.is_auto_renew")
+    @api.depends("contract_line_ids.is_auto_renew", "contract_line_ids.display_type")
     def _compute_is_auto_renew(self):
         for record in self:
-            record.is_auto_renew = all(
-                line.is_auto_renew for line in record.contract_line_ids
+            lines = record.contract_line_ids.filtered(lambda l: not l.display_type)
+            record.is_auto_renew = bool(lines) and all(
+                line.is_auto_renew for line in lines
             )

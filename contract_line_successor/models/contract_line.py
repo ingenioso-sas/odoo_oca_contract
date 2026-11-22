@@ -1,6 +1,7 @@
 # Copyright 2025 ACSONE SA/NV
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
+import logging
 from datetime import timedelta
 
 from dateutil.relativedelta import relativedelta
@@ -10,6 +11,8 @@ from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 
 from .contract_line_constraints import get_allowed
+
+_logger = logging.getLogger(__name__)
 
 
 class ContractLine(models.Model):
@@ -452,12 +455,13 @@ class ContractLine(models.Model):
                                 """Contract line for <strong>%(product)s</strong>
                             stopped: <br/>
                             - <strong>End</strong>: %(old_end)s -- %(new_end)s
-                            """,
-                                product=rec.name,
-                                old_end=old_date_end,
-                                new_end=rec.date_end,
+                            """
                             )
-                        )
+                        ) % {
+                            "product": rec.name,
+                            "old_end": old_date_end,
+                            "new_end": rec.date_end,
+                        }
                         rec.contract_id.message_post(body=msg)
                 else:
                     rec.write(
@@ -531,12 +535,13 @@ class ContractLine(models.Model):
                     - <strong>Start</strong>: %(new_date_start)s
                     <br/>
                     - <strong>End</strong>: %(new_date_end)s
-                    """,
-                        product=rec.name,
-                        new_date_start=new_line.date_start,
-                        new_date_end=new_line.date_end,
+                    """
                     )
-                )
+                ) % {
+                    "product": rec.name,
+                    "new_date_start": new_line.date_start,
+                    "new_date_end": new_line.date_end,
+                }
                 rec.contract_id.message_post(body=msg)
         return contract_line
 
@@ -637,12 +642,13 @@ class ContractLine(models.Model):
                 - <strong>Suspension Start</strong>: %(new_date_start)s
                 <br/>
                 - <strong>Suspension End</strong>: %(new_date_end)s
-                """,
-                    product=rec.name,
-                    new_date_start=date_start,
-                    new_date_end=date_end,
+                """
                 )
-            )
+            ) % {
+                "product": rec.name,
+                "new_date_start": date_start,
+                "new_date_end": date_end,
+            }
             rec.contract_id.message_post(body=msg)
         return contract_line
 
@@ -651,14 +657,10 @@ class ContractLine(models.Model):
             raise ValidationError(self.env._("Cancel not allowed for this line"))
         for contract in self.mapped("contract_id"):
             lines = self.filtered(lambda line, c=contract: line.contract_id == c)
-            msg = Markup(
-                self.env._(
-                    "Contract line canceled: %s",
-                    "<br/>- ".join(
-                        [f"<strong>{name}</strong>" for name in lines.mapped("name")]
-                    ),
-                )
+            names_markup = Markup("<br/>- ").join(
+                Markup("<strong>%s</strong>") % name for name in lines.mapped("name")
             )
+            msg = Markup(self.env._("Contract line canceled: %s")) % names_markup
             contract.message_post(body=msg)
         self.mapped("predecessor_contract_line_id").write(
             {"successor_contract_line_id": False}
@@ -670,14 +672,10 @@ class ContractLine(models.Model):
             raise ValidationError(self.env._("Un-cancel not allowed for this line"))
         for contract in self.mapped("contract_id"):
             lines = self.filtered(lambda line, c=contract: line.contract_id == c)
-            msg = Markup(
-                self.env._(
-                    "Contract line Un-canceled: %s",
-                    "<br/>- ".join(
-                        [f"<strong>{name}</strong>" for name in lines.mapped("name")]
-                    ),
-                )
+            names_markup = Markup("<br/>- ").join(
+                Markup("<strong>%s</strong>") % name for name in lines.mapped("name")
             )
+            msg = Markup(self.env._("Contract line Un-canceled: %s")) % names_markup
             contract.message_post(body=msg)
         for rec in self:
             if rec.predecessor_contract_line_id:
@@ -794,6 +792,13 @@ class ContractLine(models.Model):
     def renew(self):
         res = self.env["contract.line"]
         for rec in self:
+            if not rec.is_auto_renew or not rec.date_end:
+                raise ValidationError(
+                    self.env._(
+                        "Cannot renew line %s: auto-renew and an end date are required.",
+                        rec.display_name,
+                    )
+                )
             company = rec.contract_id.company_id
             date_end = rec._get_renewal_new_date_end()
             date_start = rec.date_end + relativedelta(days=1)
@@ -809,18 +814,20 @@ class ContractLine(models.Model):
                 - <strong>Start</strong>: %(new_date_start)s
                 <br/>
                 - <strong>End</strong>: %(new_date_end)s
-                """,
-                    product=rec.name,
-                    new_date_start=date_start,
-                    new_date_end=date_end,
+                """
                 )
-            )
+            ) % {
+                "product": rec.name,
+                "new_date_start": date_start,
+                "new_date_end": date_end,
+            }
             rec.contract_id.message_post(body=msg)
         return res
 
     @api.model
     def _contract_line_to_renew_domain(self):
         return [
+            ("display_type", "=", False),
             ("is_auto_renew", "=", True),
             ("is_canceled", "=", False),
             ("termination_notice_date", "<=", fields.Date.context_today(self)),
@@ -830,12 +837,30 @@ class ContractLine(models.Model):
     def cron_renew_contract_line(self):
         domain = self._contract_line_to_renew_domain()
         to_renew = self.search(domain)
-        to_renew.renew()
+        for company in to_renew.mapped("company_id"):
+            company_lines = to_renew.filtered(
+                lambda line, comp=company: line.company_id == comp
+            ).with_company(company)
+            for line in company_lines:
+                try:
+                    with self.env.cr.savepoint():
+                        line.renew()
+                except Exception as exc:  # noqa: BLE001 - keep cron robust
+                    _logger.warning(
+                        "Auto-renewal failed for contract line %s (id=%s): %s",
+                        line.display_name,
+                        line.id,
+                        exc,
+                    )
 
-    @api.constrains("is_auto_renew", "auto_renew_interval")
+    @api.constrains("is_auto_renew", "auto_renew_interval", "termination_notice_interval")
     def _check_auto_renew_interval(self):
         for rec in self:
-            if rec.is_auto_renew and not rec.auto_renew_interval:
+            if rec.is_auto_renew and rec.auto_renew_interval <= 0:
                 raise ValidationError(
-                    self.env._("Auto renew interval should be different then 0")
+                    self.env._("Auto renew interval should be greater than 0.")
+                )
+            if rec.termination_notice_interval < 0:
+                raise ValidationError(
+                    self.env._("Termination notice interval cannot be negative.")
                 )

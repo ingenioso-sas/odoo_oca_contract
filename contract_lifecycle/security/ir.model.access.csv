@@ -5,3 +5,5 @@
 "contract_pause_line_invoice","Contract pause lines - Invoicing","model_contract_pause_line","account.group_account_invoice",1,0,0,0
 "contract_pause_reason_manager","Contract pause reasons - Manager","model_contract_pause_reason","account.group_account_manager",1,1,1,1
 "contract_pause_reason_invoice","Contract pause reasons - Invoicing","model_contract_pause_reason","account.group_account_invoice",1,0,0,0
+"contract_pause_wizard_manager","Contract pause wizard - Manager","model_contract_pause_wizard","account.group_account_manager",1,1,1,1
+"contract_resume_wizard_manager","Contract resume wizard - Manager","model_contract_resume_wizard","account.group_account_manager",1,1,1,1

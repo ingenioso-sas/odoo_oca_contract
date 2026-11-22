@@ -49,8 +49,13 @@
                                 <li><i>contract</i>: Contract whose line
                                     belongs to.
                                 </li>
-                                <li><i>invoice</i>: Invoice (header) being
-                                    created.
+                                <li><i>quantity</i>: Base quantity configured on the line.
+                                </li>
+                                <li><i>period_first_date</i>: Start date of the billing period.
+                                </li>
+                                <li><i>period_last_date</i>: End date of the billing period.
+                                </li>
+                                <li><i>invoice_date</i>: Invoice date for the period.
                                 </li>
                             </ul>
                             <div>

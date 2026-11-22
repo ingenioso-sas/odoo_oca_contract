@@ -28,8 +28,14 @@ class ContractLine(models.Model):
 
     def _create_refund_on_stop(self, to_refund_start_date, to_refund_end_date):
         self.ensure_one()
-        self.env["account.move"].create(
-            self._prepare_refund_on_stop_vals(to_refund_start_date, to_refund_end_date)
+        return (
+            self.env["account.move"]
+            .with_company(self.company_id)
+            .create(
+                self._prepare_refund_on_stop_vals(
+                    to_refund_start_date, to_refund_end_date
+                )
+            )
         )
 
     def _prepare_refund_on_stop_vals(self, to_refund_start_date, to_refund_end_date):

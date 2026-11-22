@@ -5,7 +5,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from odoo import exceptions
-from odoo.tests import tagged
+from odoo.tests import new_test_user, tagged
 
 from odoo.addons.base.tests.common import BaseCommon
 
@@ -100,3 +100,39 @@ class TestContractVariableQuantity(BaseCommon):
             ),
             "The section line must be kept on the invoice",
         )
+
+    def test_formula_security_batch_and_validation(self):
+        manager = new_test_user(
+            self.env,
+            login="varqty_mgr",
+            groups="base.group_user,account.group_account_manager",
+        )
+        with self.assertRaises(exceptions.AccessError):
+            self.env["contract.line.qty.formula"].with_user(manager).create(
+                {"name": "Forbidden", "code": "result = 1"}
+            )
+        with self.assertRaises(exceptions.AccessError):
+            self.formula.with_user(manager).write({"code": "result = 2"})
+        # Batch create + date arithmetic must work cleanly
+        formulas = self.env["contract.line.qty.formula"].create(
+            [
+                {
+                    "name": "Batch 1",
+                    "code": "result = (period_last_date - period_first_date).days + 1",
+                },
+                {"name": "Batch 2", "code": "result = 5"},
+            ]
+        )
+        self.assertEqual(len(formulas), 2)
+        # Non-numeric result must be rejected
+        with self.assertRaises(exceptions.ValidationError):
+            self.formula.code = "result = True"
+        with self.assertRaises(exceptions.ValidationError):
+            self.formula.code = "result = 'bad'"
+        # Side effects during validation must roll back
+        before_count = self.env["res.partner"].search_count([("name", "=", "SideEffectPartner")])
+        self.formula.code = (
+            "env['res.partner'].create({'name': 'SideEffectPartner'})\nresult = 3"
+        )
+        after_count = self.env["res.partner"].search_count([("name", "=", "SideEffectPartner")])
+        self.assertEqual(before_count, after_count)

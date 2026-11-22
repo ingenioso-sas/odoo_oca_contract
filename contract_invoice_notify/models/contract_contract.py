@@ -184,7 +184,8 @@ class ContractContract(models.Model):
             if not draft_moves:
                 continue
             try:
-                draft_moves.action_post()
+                with self.env.cr.savepoint():
+                    draft_moves.action_post()
             except Exception as exc:  # noqa: BLE001
                 _logger.warning(
                     "Could not auto-validate invoices %s for contract %s: %s",
@@ -193,43 +194,57 @@ class ContractContract(models.Model):
                     exc,
                 )
                 contract.message_post(
-                    body=Markup(_("Automatic validation failed: %s") % exc)
+                    body=Markup(self.env._("Automatic validation failed: %s")) % exc
                 )
                 continue
-            if contract.invoicing_mode != "validate_send":
+            if (
+                contract.invoicing_mode != "validate_send"
+                or contract.contract_type != "sale"
+            ):
                 continue
             channels = contract._get_notification_channels()
-            for move in draft_moves.filtered(lambda m: m.state == "posted"):
+            for move in draft_moves.filtered(
+                lambda m: m.state == "posted" and m.move_type == "out_invoice"
+            ):
                 results = {}
                 for channel in channels:
-                    results[channel.code] = contract._send_notification(
-                        move, "invoice_notification", channel.code
-                    )
+                    try:
+                        with self.env.cr.savepoint():
+                            results[channel.code] = contract._send_notification(
+                                move, "invoice_notification", channel.code
+                            )
+                    except Exception as exc:  # noqa: BLE001
+                        _logger.warning(
+                            "Could not notify invoice %s via %s: %s",
+                            move.name,
+                            channel.code,
+                            exc,
+                        )
+                        results[channel.code] = False
                 summary = move._get_overdue_summary()
                 extra = ""
                 if summary["count"]:
-                    extra = _(
-                        " (%(count)s overdue: %(names)s, residual %(total)s)"
-                    ) % {
-                        "count": summary["count"],
-                        "names": summary["names"],
-                        "total": summary["total_residual"],
-                    }
+                    extra = self.env._(
+                        " (%(count)s overdue: %(names)s, residual %(total)s)",
+                        count=summary["count"],
+                        names=summary["names"],
+                        total=summary["total_residual"],
+                    )
                 notified = ", ".join(
                     code for code, sent in results.items() if sent
-                ) or _("no channel")
+                ) or self.env._("no channel")
                 move.message_post(
                     body=Markup(
-                        _(
+                        self.env._(
                             "Invoice auto-validated and notified "
                             "(%(mode)s) from contract %(contract)s%(extra)s"
                         )
-                        % {
-                            "mode": notified,
-                            "contract": contract._get_html_link(),
-                            "extra": extra,
-                        }
                     )
+                    % {
+                        "mode": notified,
+                        "contract": contract._get_html_link(),
+                        "extra": extra,
+                    }
                 )
 
     # === OVERDUE DIGEST === #
@@ -244,7 +259,9 @@ class ContractContract(models.Model):
         pending = self._get_related_invoices().filtered(
             lambda m: m.move_type == "out_invoice"
             and m.state == "posted"
-            and m.payment_state not in ("paid", "in_payment")
+            and m.payment_state
+            not in ("paid", "in_payment", "reversed", "invoicing_legacy")
+            and m.amount_residual > 0
         )
         return pending.filtered(
             lambda m: m._is_overdue_reminder_due(
@@ -288,51 +305,53 @@ class ContractContract(models.Model):
             invoices._mark_overdue_reminder_sent()
             self.message_post(
                 body=Markup(
-                    _("Overdue digest sent (%(mode)s): %(names)s")
-                    % {
-                        "mode": ", ".join(successes),
-                        "names": ", ".join(invoices.mapped("name")),
-                    }
+                    self.env._("Overdue digest sent (%(mode)s): %(names)s")
                 )
+                % {
+                    "mode": ", ".join(successes),
+                    "names": ", ".join(invoices.mapped("name")),
+                }
             )
             for move in invoices:
                 move.message_post(
                     body=Markup(
-                        _("Overdue reminder sent from contract %s.")
-                        % self._get_html_link()
+                        self.env._("Overdue reminder sent from contract %s.")
                     )
+                    % self._get_html_link()
                 )
             return True
 
         self.message_post(
             body=Markup(
-                _(
+                self.env._(
                     "Overdue digest not sent: no configured channel succeeded "
                     "for %s."
                 )
-                % ", ".join(invoices.mapped("name"))
             )
+            % ", ".join(invoices.mapped("name"))
         )
         return False
 
     @api.model
     def cron_overdue_reminders(self):
         """Daily cron: one digest per contract with eligible overdue invoices."""
-        contracts = self.search([("overdue_reminder_enabled", "=", True)])
+        contracts = self.search(
+            [
+                ("overdue_reminder_enabled", "=", True),
+                ("contract_type", "=", "sale"),
+            ]
+        )
         count = 0
+        in_test_mode = self.env.registry.in_test_mode()
         for contract in contracts:
+            contract = contract.with_company(contract.company_id)
             try:
-                candidates = contract._get_overdue_reminder_candidates()
-            except Exception as exc:  # noqa: BLE001
-                _logger.warning(
-                    "Overdue scan failed for %s: %s", contract.display_name, exc
-                )
-                continue
-            if not candidates:
-                continue
-            try:
-                if contract._send_overdue_digest(candidates):
-                    count += 1
+                with self.env.cr.savepoint():
+                    candidates = contract._get_overdue_reminder_candidates()
+                    if candidates and contract._send_overdue_digest(candidates):
+                        count += 1
+                if not in_test_mode:
+                    self.env.cr.commit()
             except Exception as exc:  # noqa: BLE001 - keep cron robust
                 _logger.warning(
                     "Overdue digest failed for %s: %s", contract.display_name, exc

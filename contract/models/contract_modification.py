@@ -18,6 +18,12 @@ class ContractModification(models.Model):
         ondelete="cascade",
         index=True,
     )
+    company_id = fields.Many2one(
+        comodel_name="res.company",
+        related="contract_id.company_id",
+        store=True,
+        index=True,
+    )
     sent = fields.Boolean()
 
     @api.model_create_multi

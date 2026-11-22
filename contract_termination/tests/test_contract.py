@@ -2,7 +2,8 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
+from odoo.tests import new_test_user
 
 from odoo.addons.contract_line_successor.tests.test_contract import (
     TestContractSuccessor,
@@ -74,3 +75,24 @@ class TestContractTermination(TestContractSuccessor):
         self.acct_line.stop(to_date("2019-05-31"))
         self.assertEqual(self.acct_line.date_end, to_date("2019-05-31"))
         self.assertEqual(self.acct_line.recurring_next_date, to_date("2019-06-01"))
+
+    def test_terminate_user_with_group_can_terminate_without_manager(self):
+        term_user = new_test_user(
+            self.env,
+            login="term_only_user",
+            groups="base.group_user,contract_termination.can_terminate_contract",
+        )
+        contract_as_user = self.contract.with_user(term_user)
+        contract_as_user._terminate_contract(
+            self.terminate_reason,
+            "Terminated by specialized user",
+            to_date("2018-03-01"),
+        )
+        self.assertTrue(self.contract.is_terminated)
+        invoicing_user = new_test_user(
+            self.env,
+            login="invoice_only_user",
+            groups="base.group_user,account.group_account_invoice",
+        )
+        with self.assertRaises(UserError):
+            self.contract.with_user(invoicing_user).action_cancel_contract_termination()

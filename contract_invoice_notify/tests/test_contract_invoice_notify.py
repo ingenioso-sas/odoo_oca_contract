@@ -205,3 +205,74 @@ class TestContractInvoiceNotify(TestContractBase):
             invoice, "invoice_notification", "whatsapp"
         )
         self.assertEqual(selected, default_template)
+
+    def test_overdue_digest_multiple_invoices_and_reversed_exclusion(self):
+        email = self._channel("email")
+        self.contract.write(
+            {
+                "invoicing_mode": "validate",
+                "notification_channel_ids": [Command.set([email.id])],
+                "overdue_reminder_enabled": True,
+                "overdue_grace_days": 0,
+                "overdue_resend_after_days": 7,
+                "overdue_max_reminders": 3,
+            }
+        )
+        self._prepare_line()
+        inv1 = self.contract.recurring_create_invoice()[0]
+        inv2 = self.contract.recurring_create_invoice()[0]
+        inv_rev = self.contract.recurring_create_invoice()[0]
+        overdue_date = fields.Date.today() - timedelta(days=10)
+        (inv1 | inv2 | inv_rev).write({"invoice_date_due": overdue_date})
+        reversal = (
+            self.env["account.move.reversal"]
+            .with_context(active_model="account.move", active_ids=inv_rev.ids)
+            .create({"reason": "Test reversal", "journal_id": inv_rev.journal_id.id})
+        )
+        res = reversal.reverse_moves()
+        credit_note = self.env["account.move"].browse(res["res_id"])
+        if credit_note.state == "draft":
+            credit_note.action_post()
+        lines_to_reconcile = (inv_rev.line_ids + credit_note.line_ids).filtered(
+            lambda l: l.account_id.account_type == "asset_receivable"
+            and not l.reconciled
+        )
+        if lines_to_reconcile:
+            lines_to_reconcile.reconcile()
+        candidates = self.contract._get_overdue_reminder_candidates()
+        self.assertEqual(set(candidates.ids), {inv1.id, inv2.id})
+        with patch(
+            "odoo.addons.mail.models.mail_template.MailTemplate.send_mail",
+            return_value=1,
+        ):
+            self.assertTrue(self.contract._send_overdue_digest())
+        self.assertEqual(inv1.overdue_reminder_count, 1)
+        self.assertEqual(inv2.overdue_reminder_count, 1)
+
+    def test_purchase_contract_not_notified_and_no_email_returns_false(self):
+        email = self._channel("email")
+        self.contract.write(
+            {
+                "invoicing_mode": "validate_send",
+                "notification_channel_ids": [Command.set([email.id])],
+                "contract_type": "purchase",
+                "journal_id": self.env["account.journal"]
+                .search([("type", "=", "purchase"), ("company_id", "=", self.env.company.id)], limit=1)
+                .id,
+            }
+        )
+        self._prepare_line()
+        with patch(
+            "odoo.addons.mail.models.mail_template.MailTemplate.send_mail",
+            return_value=1,
+        ) as mock_send:
+            invoices = self.contract.recurring_create_invoice()
+        self.assertEqual(set(invoices.mapped("state")), {"posted"})
+        mock_send.assert_not_called()
+
+        self.contract.partner_id.write({"email": False})
+        self.assertFalse(
+            self.env["contract.notification.driver"].send(
+                self.contract, invoices[0], "invoice_notification", "email"
+            )
+        )

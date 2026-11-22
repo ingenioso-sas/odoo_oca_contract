@@ -12,6 +12,7 @@
     "depends": ["contract", "mail"],
     "data": [
         "security/ir.model.access.csv",
+        "security/contract_invoice_notify_security.xml",
         "data/contract_notification_channel_data.xml",
         "data/mail_template.xml",
         "data/ir_cron.xml",

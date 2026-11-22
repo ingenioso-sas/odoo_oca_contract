@@ -681,9 +681,11 @@ class ContractContract(models.Model):
             for move in invoices & item._get_related_invoices():
                 translation = self.env._("by contract")
                 move.message_post(
-                    body=Markup(
-                        f"{move._creation_message()} {translation} "
-                        f"{item._get_html_link(title=item.display_name)}."
+                    body=Markup("%s %s %s.")
+                    % (
+                        move._creation_message(),
+                        translation,
+                        item._get_html_link(title=item.display_name),
                     )
                 )
 
@@ -711,7 +713,8 @@ class ContractContract(models.Model):
             if not draft_moves:
                 continue
             try:
-                draft_moves.action_post()
+                with self.env.cr.savepoint():
+                    draft_moves.action_post()
             except Exception as exc:  # noqa: BLE001 - keep cron robust
                 _logger.warning(
                     "Could not auto-validate invoices %s for contract %s: %s",
@@ -720,9 +723,7 @@ class ContractContract(models.Model):
                     exc,
                 )
                 contract.message_post(
-                    body=Markup(
-                        self.env._("Automatic validation failed: %s") % exc,
-                    )
+                    body=Markup(self.env._("Automatic validation failed: %s")) % exc
                 )
                 continue
             if contract.invoicing_mode == "validate_send":

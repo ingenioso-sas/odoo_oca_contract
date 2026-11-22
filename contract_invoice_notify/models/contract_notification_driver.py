@@ -40,11 +40,29 @@ class ContractNotificationDriver(models.AbstractModel):
         )
         if not template:
             return False
+        recipient = (
+            getattr(record, "partner_id", False)
+            or contract.invoice_partner_id
+            or contract.partner_id
+        )
+        if not (recipient and recipient.email) and not (
+            template.email_to and template.email_to.strip()
+        ):
+            _logger.info(
+                "Skipping email notification for %s: no destination email.",
+                record,
+            )
+            return False
+        safe_context = {
+            k: v
+            for k, v in (context or {}).items()
+            if k in ("contract", "record", "purpose", "channel_code", "invoices", "statement_url")
+        }
         try:
-            template.send_mail(
+            mail_id = template.with_context(**safe_context).send_mail(
                 record.id, force_send=False, raise_exception=False
             )
-            return True
+            return bool(mail_id)
         except Exception as exc:  # noqa: BLE001 - keep cron robust
             _logger.warning(
                 "Could not send contract notification %s: %s", record, exc

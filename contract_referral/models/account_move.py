@@ -13,8 +13,9 @@ class AccountMove(models.Model):
     def _post(self, soft=True):
         result = super()._post(soft=soft)
         try:
-            self._create_referral_commissions()
-            self._create_referral_commission_adjustments()
+            with self.env.cr.savepoint():
+                self.sudo()._create_referral_commissions()
+                self.sudo()._create_referral_commission_adjustments()
         except Exception:  # noqa: BLE001 - never block invoice posting
             _logger.exception("Could not create referral commissions")
         return result

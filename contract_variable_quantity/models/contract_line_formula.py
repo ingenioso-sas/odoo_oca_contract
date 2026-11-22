@@ -7,6 +7,10 @@ from odoo import api, exceptions, fields, models
 from odoo.tools.safe_eval import safe_eval
 
 
+class _DryRunRollback(Exception):
+    """Sentinel used to roll back any side effects of formula validation."""
+
+
 class ContractLineFormula(models.Model):
     _name = "contract.line.qty.formula"
     _description = "Contract Line Formula"
@@ -14,25 +18,59 @@ class ContractLineFormula(models.Model):
     name = fields.Char(required=True, translate=True)
     code = fields.Text(required=True, default="result = 0")
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not self.env.is_system():
+            raise exceptions.AccessError(
+                self.env._("Only system administrators can create quantity formulas.")
+            )
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if not self.env.is_system():
+            raise exceptions.AccessError(
+                self.env._("Only system administrators can modify quantity formulas.")
+            )
+        return super().write(vals)
+
+    def unlink(self):
+        if not self.env.is_system():
+            raise exceptions.AccessError(
+                self.env._("Only system administrators can delete quantity formulas.")
+            )
+        return super().unlink()
+
     @api.constrains("code")
     def _check_code(self):
-        eval_context = {
-            "env": self.env,
-            "context": self.env.context,
-            "user": self.env.user,
-            "line": self.env["contract.line"],
-            "contract": self.env["contract.contract"],
-            "invoice": self.env["account.move"],
-            "quantity": 0,
-            "period_first_date": False,
-            "period_last_date": False,
-            "invoice_date": False,
-        }
-        try:
-            safe_eval(self.code.strip(), eval_context, mode="exec")
-        except Exception as e:
-            raise exceptions.ValidationError(
-                self.env._("Error evaluating code.\nDetails: %s", e)
-            ) from e
-        if "result" not in eval_context:
-            raise exceptions.ValidationError(self.env._("No valid result returned."))
+        today = fields.Date.context_today(self)
+        for rec in self:
+            eval_context = {
+                "env": rec.env,
+                "context": rec.env.context,
+                "user": rec.env.user,
+                "line": rec.env["contract.line"],
+                "contract": rec.env["contract.contract"],
+                "quantity": 0,
+                "period_first_date": today,
+                "period_last_date": today,
+                "invoice_date": today,
+            }
+            try:
+                with rec.env.cr.savepoint(flush=False):
+                    safe_eval((rec.code or "").strip(), eval_context, mode="exec")
+                    raise _DryRunRollback()
+            except _DryRunRollback:
+                pass
+            except Exception as e:
+                raise exceptions.ValidationError(
+                    self.env._("Error evaluating code.\nDetails: %s", e)
+                ) from e
+            if "result" not in eval_context:
+                raise exceptions.ValidationError(
+                    self.env._("No valid result returned.")
+                )
+            result = eval_context["result"]
+            if isinstance(result, bool) or not isinstance(result, (int, float)):
+                raise exceptions.ValidationError(
+                    self.env._("Formula 'result' must be a numeric value (int or float).")
+                )

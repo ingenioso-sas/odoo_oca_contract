@@ -376,14 +376,20 @@ class ContractContract(models.Model):
         rules.write({"active": False})
 
     def _terminate_contract(self, *args, **kwargs):
+        self.ensure_one()
+        if not self.env.user.has_group("contract_termination.can_terminate_contract"):
+            raise UserError(self.env._("You are not allowed to terminate contracts."))
+        self.check_access("read")
+        self._check_company()
         terminate_date = kwargs.get("terminate_date")
         if not terminate_date and len(args) > 2:
             terminate_date = args[2]
-        self._close_active_pauses_for_termination(terminate_date)
+        self.sudo()._close_active_pauses_for_termination(terminate_date)
         result = super()._terminate_contract(*args, **kwargs)
-        self._finish_referrals()
-        self._deactivate_discounts()
-        self.is_paused = False
+        contract_sudo = self.sudo()
+        contract_sudo._finish_referrals()
+        contract_sudo._deactivate_discounts()
+        contract_sudo.is_paused = False
         return result
 
     def action_cancel_contract_termination(self):
