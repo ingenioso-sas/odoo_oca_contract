@@ -349,3 +349,34 @@ class TestContractLifecycle(TestContractBase):
         self.assertTrue(next_inv)
         # Contract recurring_next_date must advance past the resumed invoice
         self.assertGreater(self.contract.recurring_next_date, resume_date)
+
+    def test_paused_blocks_line_actions_and_retroactive_termination(self):
+        line = self._product_line()
+        self.contract.recurring_create_invoice()
+        pause = self.contract._pause_contract(
+            self.today, False, True, self.pause_reason, "indefinite"
+        )
+        line.invalidate_recordset()
+        self.assertFalse(line.is_stop_allowed)
+        self.assertFalse(line.is_cancel_allowed)
+        self.contract._resume_contract(pause, self.today + timedelta(days=5))
+        # Schedule a future pause and then terminate before the pause
+        self.contract._pause_contract(
+            self.today + timedelta(days=20),
+            self.today + timedelta(days=25),
+            False,
+            self.pause_reason,
+            "future pause",
+        )
+        self.contract._terminate_contract(
+            self.terminate_reason,
+            "early stop",
+            self.today + timedelta(days=10),
+        )
+        self.assertTrue(self.contract.is_terminated)
+        resumed = self.contract.contract_line_ids.filtered(
+            lambda l: l.predecessor_contract_line_id
+            and l.date_start > self.today + timedelta(days=10)
+        )
+        self.assertTrue(resumed)
+        self.assertTrue(all(resumed.mapped("is_canceled")))

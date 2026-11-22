@@ -10,6 +10,7 @@
 from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class ContractRecurringMixin(models.AbstractModel):
@@ -66,6 +67,14 @@ class ContractRecurringMixin(models.AbstractModel):
             "date (in post-paid mode) or start date (in pre-paid mode)."
         ),
     )
+
+    @api.constrains("recurring_interval")
+    def _check_recurring_interval(self):
+        for rec in self:
+            if rec.recurring_interval <= 0:
+                raise ValidationError(
+                    self.env._("Recurring interval must be greater than zero.")
+                )
     # === Invoicing Configuration Fields ===
     # Define when and how invoices should be issued within the recurrence.
 

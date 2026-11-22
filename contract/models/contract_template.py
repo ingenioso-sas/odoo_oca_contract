@@ -7,7 +7,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import ValidationError
 
 
 class ContractTemplate(models.Model):
@@ -108,7 +108,7 @@ class ContractTemplate(models.Model):
                 rec.journal_id.currency_id
                 and rec.journal_id.currency_id != rec.pricelist_id.currency_id
             ):
-                raise UserError(
+                raise ValidationError(
                     self.env._(
                         "Currency should be same for the Journal and "
                         "the Pricelist in a Contract"
@@ -121,6 +121,7 @@ class ContractTemplate(models.Model):
             return ["sale"]
         elif self.contract_type == "purchase":
             return ["purchase"]
+        return []
 
     @api.model
     def _default_generation_type(self):

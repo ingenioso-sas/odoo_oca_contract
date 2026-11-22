@@ -33,6 +33,14 @@ class ContractContract(models.Model):
     def action_terminate_contract(self):
         self.ensure_one()
         context = {"default_contract_id": self.id}
+        if self.is_terminated:
+            context.update(
+                {
+                    "default_terminate_date": self.terminate_date,
+                    "default_terminate_reason_id": self.terminate_reason_id.id,
+                    "default_terminate_comment": self.terminate_comment,
+                }
+            )
         return {
             "type": "ir.actions.act_window",
             "name": self.env._("Terminate Contract"),
@@ -72,6 +80,14 @@ class ContractContract(models.Model):
         self.check_access("read")
         self._check_company()
         contract_sudo = self.sudo()
+        if contract_sudo.is_terminated:
+            contract_sudo.write(
+                {
+                    "terminate_reason_id": terminate_reason_id.id,
+                    "terminate_comment": terminate_comment,
+                }
+            )
+            return True
         for line in contract_sudo.contract_line_ids.filtered("is_stop_allowed"):
             line.stop(
                 max(terminate_date, line.last_date_invoiced)

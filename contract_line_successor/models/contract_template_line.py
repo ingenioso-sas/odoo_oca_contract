@@ -1,7 +1,8 @@
 # Copyright 2025 ACSONE SA/NV
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-from odoo import fields, models
+from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class ContractTemplateLine(models.Model):
@@ -33,3 +34,15 @@ class ContractTemplateLine(models.Model):
         default="monthly",
         string="Termination Notice type",
     )
+
+    @api.constrains("auto_renew_interval", "termination_notice_interval")
+    def _check_renewal_intervals(self):
+        for rec in self:
+            if rec.auto_renew_interval <= 0:
+                raise ValidationError(
+                    self.env._("Auto-renew interval must be greater than zero.")
+                )
+            if rec.termination_notice_interval < 0:
+                raise ValidationError(
+                    self.env._("Termination notice interval cannot be negative.")
+                )

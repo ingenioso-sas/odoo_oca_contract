@@ -36,7 +36,7 @@ class ContractLine(models.Model):
                 str(self.qty_formula_id.code).strip(),
                 eval_context,
                 mode="exec",
-            )  # nocopy for returning result
+            )
             quantity = eval_context.get("result", 0)
         return quantity
 

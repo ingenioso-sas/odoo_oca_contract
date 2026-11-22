@@ -1,10 +1,34 @@
 # Copyright 2026 PayOnline Ing
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-from odoo import models
+from odoo import api, models
 
 
 class ContractLine(models.Model):
     _inherit = "contract.line"
+
+    @api.depends("contract_id.is_paused")
+    def _compute_allowed(self):
+        paused_lines = self.filtered("contract_id.is_paused")
+        if paused_lines:
+            paused_lines.update(
+                {
+                    "is_plan_successor_allowed": False,
+                    "is_stop_plan_successor_allowed": False,
+                    "is_stop_allowed": False,
+                    "is_cancel_allowed": False,
+                    "is_un_cancel_allowed": False,
+                }
+            )
+        remaining = self - paused_lines
+        if remaining:
+            super(ContractLine, remaining)._compute_allowed()
+        return True
+
+    @api.model
+    def _contract_line_to_renew_domain(self):
+        return [
+            ("contract_id.is_paused", "=", False),
+        ] + super()._contract_line_to_renew_domain()
 
     def _can_be_invoiced(self, date_ref):
         if not super()._can_be_invoiced(date_ref):

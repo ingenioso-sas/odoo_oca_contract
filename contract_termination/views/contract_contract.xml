@@ -54,9 +54,6 @@
             <xpath expr="//button[@name='action_contract_send']" position="attributes">
                 <attribute name="invisible">is_terminated</attribute>
             </xpath>
-            <xpath expr="//button[@name='action_contract_send']" position="attributes">
-                <attribute name="invisible">is_terminated</attribute>
-            </xpath>
             <xpath expr="//field[@name='name']" position="attributes">
                 <attribute name="readonly">is_terminated</attribute>
             </xpath>

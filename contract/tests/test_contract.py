@@ -1904,3 +1904,27 @@ class TestContract(TestContractBase):
         self.assertEqual(self.acct_line.last_date_invoiced, to_date("2018-01-31"))
         self.assertFalse(self.acct_line.recurring_next_date)
         self.assertFalse(self.contract.recurring_next_date)
+
+    def test_partner_hierarchy_count_and_partner_change_sync(self):
+        parent = self.env["res.partner"].create({"name": "GrandParent"})
+        child = self.env["res.partner"].create(
+            {"name": "Child", "parent_id": parent.id}
+        )
+        grandchild = self.env["res.partner"].create(
+            {"name": "GrandChild", "parent_id": child.id}
+        )
+        self.contract.write({"partner_id": grandchild.id})
+        parent._compute_contract_count()
+        child._compute_contract_count()
+        self.assertEqual(parent.sale_contract_count, 1)
+        self.assertEqual(child.sale_contract_count, 1)
+        self.assertEqual(self.contract.invoice_partner_id, grandchild)
+        new_partner = self.env["res.partner"].create({"name": "Other Customer"})
+        self.contract.write({"partner_id": new_partner.id})
+        self.assertEqual(self.contract.invoice_partner_id, new_partner)
+
+    def test_canceled_line_zeroes_mrr_and_interval_constraint(self):
+        self.acct_line.write({"is_canceled": True, "date_end": False})
+        self.assertEqual(self.acct_line.monthly_recurring, 0.0)
+        with self.assertRaises(ValidationError):
+            self.contract.write({"recurring_interval": 0})

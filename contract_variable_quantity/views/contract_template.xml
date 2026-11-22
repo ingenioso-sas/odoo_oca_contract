@@ -5,6 +5,9 @@
         <field name="model">contract.template</field>
         <field name="inherit_id" ref="contract.contract_template_form_view" />
         <field name="arch" type="xml">
+            <xpath expr="//field[@name='line_recurrence']" position="after">
+                <field name="skip_zero_qty" />
+            </xpath>
             <xpath
                 expr="//field[@name='contract_line_ids']//field[@name='quantity']"
                 position="before"

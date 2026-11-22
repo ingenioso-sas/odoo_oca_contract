@@ -1,6 +1,7 @@
 # Copyright 2026
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class ContractTemplate(models.Model):
@@ -32,6 +33,22 @@ class ContractTemplate(models.Model):
         string="Max reminders",
         help="Max digest reminders per invoice. 0 = unlimited.",
     )
+
+    @api.constrains(
+        "overdue_grace_days",
+        "overdue_resend_after_days",
+        "overdue_max_reminders",
+    )
+    def _check_overdue_settings(self):
+        for rec in self:
+            if (
+                rec.overdue_grace_days < 0
+                or rec.overdue_resend_after_days < 0
+                or rec.overdue_max_reminders < 0
+            ):
+                raise ValidationError(
+                    self.env._("Overdue reminder day/count settings cannot be negative.")
+                )
 
     @api.model
     def _default_notification_channel_ids(self):

@@ -9,8 +9,9 @@ class ContractLine(models.Model):
 
     @api.depends("contract_id.is_terminated")
     def _compute_allowed(self):
-        for rec in self:
-            rec.update(
+        terminated_lines = self.filtered("contract_id.is_terminated")
+        if terminated_lines:
+            terminated_lines.update(
                 {
                     "is_plan_successor_allowed": False,
                     "is_stop_plan_successor_allowed": False,
@@ -19,10 +20,9 @@ class ContractLine(models.Model):
                     "is_un_cancel_allowed": False,
                 }
             )
-            if rec.contract_id.is_terminated:
-                continue
-            else:
-                super(ContractLine, rec)._compute_allowed()
+        remaining = self - terminated_lines
+        if remaining:
+            super(ContractLine, remaining)._compute_allowed()
         return True
 
     @api.model

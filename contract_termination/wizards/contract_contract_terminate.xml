@@ -8,14 +8,18 @@
             <form string="Contract Contract Terminate">
                 <group>
                     <field name="contract_id" invisible="True" />
+                    <field name="is_already_terminated" invisible="True" />
                     <field name="terminate_comment_required" invisible="True" />
-                    <field name="terminate_date" />
+                    <field name="terminate_date" readonly="is_already_terminated" />
                     <field name="terminate_reason_id" widget="selection" />
                     <field
                         name="terminate_comment"
                         required="terminate_comment_required"
                     />
-                    <field name="terminate_with_last_date_invoiced" />
+                    <field
+                        name="terminate_with_last_date_invoiced"
+                        readonly="is_already_terminated"
+                    />
                 </group>
                 <footer>
                     <button

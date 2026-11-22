@@ -864,3 +864,56 @@ class TestContractSuccessor(TestContract):
         self.assertTrue(contract_template.is_auto_renew)
         contract_template.contract_line_ids[1].write({"is_auto_renew": False})
         self.assertFalse(contract_template.is_auto_renew)
+
+    def test_mrr_excludes_predecessor_and_search_state_consistency(self):
+        self.contract.contract_line_ids.filtered(
+            lambda l: l != self.acct_line
+        ).unlink()
+        self.acct_line.write(
+            {
+                "date_start": to_date("2018-01-01"),
+                "date_end": to_date("2018-12-31"),
+                "price_unit": 100.0,
+                "automatic_price": False,
+                "recurring_rule_type": "monthly",
+                "recurring_interval": 1,
+                "is_auto_renew": False,
+            }
+        )
+        base_mrr = self.contract.recurring_monthly_total
+        self.assertEqual(base_mrr, self.acct_line.monthly_recurring)
+        successor = self.acct_line.plan_successor(
+            date_start=to_date("2019-01-01"),
+            date_end=to_date("2019-12-31"),
+            is_auto_renew=False,
+        )
+        self.assertEqual(self.acct_line.successor_contract_line_id, successor)
+        # MRR must not double-count predecessor + successor
+        self.assertEqual(self.contract.recurring_monthly_total, base_mrr)
+        # Search state must match open lines without date_end & exclude sections
+        section = self.env["contract.line"].create(
+            {
+                "contract_id": self.contract.id,
+                "name": "Section",
+                "display_type": "line_section",
+            }
+        )
+        open_line = self.env["contract.line"].create(
+            {
+                "contract_id": self.contract.id,
+                "name": "Open line",
+                "product_id": self.acct_line.product_id.id,
+                "date_start": self.today - timedelta(days=5),
+                "date_end": False,
+                "is_auto_renew": False,
+            }
+        )
+        found = self.env["contract.line"].search(
+            [("id", "in", [section.id, open_line.id]), ("state", "=", "in-progress")]
+        )
+        self.assertEqual(found, open_line)
+        self.assertFalse(
+            self.env["contract.line"].search(
+                [("id", "=", section.id), ("state", "=", "upcoming")]
+            )
+        )

@@ -276,3 +276,43 @@ class TestContractInvoiceNotify(TestContractBase):
                 self.contract, invoices[0], "invoice_notification", "email"
             )
         )
+
+    def test_archived_channel_no_fallback_and_commercial_opt_out(self):
+        email = self._channel("email")
+        email.active = False
+        self.contract.write({"notification_channel_ids": [Command.set([email.id])]})
+        # Wait until after test check to restore active
+        self.assertFalse(self.contract._get_notification_channels())
+        email.active = True
+
+        # Opt-out on invoice_partner_id blocks digest
+        child = self.env["res.partner"].create(
+            {
+                "name": "Billing Contact",
+                "parent_id": self.contract.partner_id.id,
+                "type": "invoice",
+                "email": "billing@example.com",
+                "opt_out_overdue_reminder": True,
+            }
+        )
+        self.contract.write(
+            {
+                "invoice_partner_id": child.id,
+                "overdue_reminder_enabled": True,
+                "overdue_grace_days": 0,
+            }
+        )
+        self._prepare_line()
+        inv = self.contract.recurring_create_invoice()[0]
+        inv.action_post()
+        inv.write({"invoice_date_due": fields.Date.today() - timedelta(days=5)})
+        with patch(
+            "odoo.addons.mail.models.mail_template.MailTemplate.send_mail",
+            return_value=1,
+        ) as mock_send:
+            self.assertFalse(self.contract._send_overdue_digest())
+            mock_send.assert_not_called()
+
+        # Negative overdue settings rejected
+        with self.assertRaises(ValidationError):
+            self.contract.write({"overdue_grace_days": -1})

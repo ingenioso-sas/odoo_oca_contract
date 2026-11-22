@@ -14,6 +14,7 @@ class ContractContractTerminate(models.TransientModel):
         required=True,
         ondelete="cascade",
     )
+    is_already_terminated = fields.Boolean(related="contract_id.is_terminated")
     terminate_reason_id = fields.Many2one(
         comodel_name="contract.terminate.reason",
         string="Termination Reason",

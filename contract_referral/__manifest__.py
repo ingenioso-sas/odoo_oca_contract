@@ -13,6 +13,7 @@
     "data": [
         "security/ir.model.access.csv",
         "security/contract_referral_security.xml",
+        "data/ir_cron.xml",
         "views/contract_referral_views.xml",
         "views/contract_referral_commission_views.xml",
         "views/contract_line_views.xml",

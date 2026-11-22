@@ -93,9 +93,7 @@ class ContractLine(models.Model):
         return line_vals
 
     def _get_refund_on_stop_line_name(self, to_refund_start_date, to_refund_end_date):
-        lang = self.env["res.lang"].search(
-            [("code", "=", self.contract_id.partner_id.lang)]
-        )
+        lang = self.env["res.lang"]._lang_get(self.contract_id.partner_id.lang)
         date_format = lang.date_format or "%m/%d/%Y"
         return self.env._(
             "Refund for period %(to_refund_start_date)s %(to_refund_end_date)s",

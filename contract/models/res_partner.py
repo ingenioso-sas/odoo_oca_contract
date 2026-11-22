@@ -27,26 +27,37 @@ class ResPartner(models.Model):
         return [("partner_id", "child_of", self.ids)]
 
     def _compute_contract_count(self):
-        contract_model = self.env["contract.contract"]
-        fetch_data = contract_model.formatted_read_group(
-            domain=[("partner_id", "in", self.ids)],
+        if not self.ids:
+            for partner in self:
+                partner.sale_contract_count = 0
+                partner.purchase_contract_count = 0
+            return
+        all_partners = self.env["res.partner"].search_fetch(
+            [("id", "child_of", self.ids)], ["parent_id"]
+        )
+        parent_map = {p.id: p.parent_id.id for p in all_partners}
+        fetch_data = self.env["contract.contract"].formatted_read_group(
+            domain=[("partner_id", "in", all_partners.ids)],
             groupby=["partner_id", "contract_type"],
             aggregates=["__count"],
         )
+        counts = {pid: {"sale": 0, "purchase": 0} for pid in self.ids}
+        for row in fetch_data:
+            ctype = row["contract_type"]
+            if ctype not in ("sale", "purchase"):
+                continue
+            curr = row["partner_id"][0]
+            count = row["__count"]
+            visited = set()
+            while curr and curr not in visited:
+                visited.add(curr)
+                if curr in counts:
+                    counts[curr][ctype] += count
+                curr = parent_map.get(curr)
         for partner in self:
-            partner_child_ids = partner.child_ids.ids + partner.ids
-            partner.sale_contract_count = sum(
-                d["__count"]
-                for d in fetch_data
-                if d["partner_id"][0] in partner_child_ids
-                and d["contract_type"] == "sale"
-            )
-            partner.purchase_contract_count = sum(
-                d["__count"]
-                for d in fetch_data
-                if d["partner_id"][0] in partner_child_ids
-                and d["contract_type"] == "purchase"
-            )
+            partner_counts = counts.get(partner.id, {})
+            partner.sale_contract_count = partner_counts.get("sale", 0)
+            partner.purchase_contract_count = partner_counts.get("purchase", 0)
 
     def act_show_contract(self):
         """This opens contract view
@@ -56,7 +67,15 @@ class ResPartner(models.Model):
         contract_type = self.env.context.get("contract_type")
 
         res = self._get_act_window_contract_xml(contract_type)
-        action_context = {k: v for k, v in self.env.context.items() if k != "group_by"}
+        base_context = (
+            literal_eval(res["context"].strip())
+            if isinstance(res.get("context"), str)
+            else dict(res.get("context") or {})
+        )
+        action_context = {
+            **base_context,
+            **{k: v for k, v in self.env.context.items() if k != "group_by"},
+        }
         action_context["default_partner_id"] = self.id
         action_context["default_pricelist_id"] = self.property_product_pricelist.id
         res["context"] = action_context

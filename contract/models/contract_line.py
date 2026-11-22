@@ -58,7 +58,10 @@ class ContractLine(models.Model):
     @api.depends("name", "date_start")
     def _compute_display_name(self):
         for rec in self:
-            rec.display_name = f"{rec.date_start} - {rec.name}"
+            if rec.date_start:
+                rec.display_name = f"{rec.date_start} - {rec.name}"
+            else:
+                rec.display_name = rec.name or ""
 
     @api.model
     def _compute_first_recurring_next_date(
@@ -189,6 +192,7 @@ class ContractLine(models.Model):
     @api.depends(
         "display_type",
         "is_recurring_note",
+        "is_canceled",
         "recurring_next_date",
         "date_start",
         "date_end",
@@ -199,7 +203,8 @@ class ContractLine(models.Model):
         today = fields.Date.context_today(self)
         for rec in self:
             if (
-                (not rec.display_type or rec.is_recurring_note)
+                not rec.is_canceled
+                and (not rec.display_type or rec.is_recurring_note)
                 and rec.date_start
                 and today >= rec.date_start
             ):
@@ -269,8 +274,8 @@ class ContractLine(models.Model):
 
     def _insert_markers(self, first_date_invoiced, last_date_invoiced):
         self.ensure_one()
-        lang_obj = self.env["res.lang"]
-        lang = lang_obj.search([("code", "=", self.contract_id.partner_id.lang)])
+        lang_code = self.contract_id.partner_id.lang or self.env.lang
+        lang = self.env["res.lang"]._lang_get(lang_code)
         date_format = lang.date_format or "%m/%d/%Y"
         name = self.name
         # A line without a period (e.g. no next date) leaves its markers empty
@@ -284,9 +289,9 @@ class ContractLine(models.Model):
         )
         month_name = ""
         if first_date_invoiced:
-            month_name = self.with_context(lang=lang.code)._translate_marker_month_name(
-                first_date_invoiced.strftime("%m")
-            )
+            month_name = self.with_context(
+                lang=lang.code or self.env.lang
+            )._translate_marker_month_name(first_date_invoiced.strftime("%m"))
         name = name.replace("#INVOICEMONTHNAME#", month_name)
         return name
 
@@ -319,14 +324,19 @@ class ContractLine(models.Model):
 
     @api.model
     def get_view(self, view_id=None, view_type="form", **options):
-        default_contract_type = self.env.context.get("default_contract_type")
-        if view_type == "list" and default_contract_type == "purchase":
-            view_id = self.env.ref("contract.contract_line_supplier_tree_view").id
-        if view_type == "form":
-            if default_contract_type == "purchase":
-                view_id = self.env.ref("contract.contract_line_supplier_form_view").id
-            elif default_contract_type == "sale":
-                view_id = self.env.ref("contract.contract_line_customer_form_view").id
+        if not view_id:
+            default_contract_type = self.env.context.get("default_contract_type")
+            if view_type == "list" and default_contract_type == "purchase":
+                view_id = self.env.ref("contract.contract_line_supplier_tree_view").id
+            if view_type == "form":
+                if default_contract_type == "purchase":
+                    view_id = self.env.ref(
+                        "contract.contract_line_supplier_form_view"
+                    ).id
+                elif default_contract_type == "sale":
+                    view_id = self.env.ref(
+                        "contract.contract_line_customer_form_view"
+                    ).id
         return super().get_view(view_id, view_type, **options)
 
     monthly_recurring = fields.Monetary(
@@ -338,13 +348,14 @@ class ContractLine(models.Model):
 
     @api.depends(
         "display_type",
+        "is_canceled",
         "price_subtotal",
         "recurring_rule_type",
         "recurring_interval",
     )
     def _compute_monthly_recurring(self):
         for line in self:
-            if line.display_type:
+            if line.display_type or line.is_canceled:
                 line.monthly_recurring = 0.0
                 continue
             months = _MONTHS_PER_RULE.get(line.recurring_rule_type, 1.0) * (

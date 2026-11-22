@@ -375,8 +375,8 @@ for c in CRITERIA_ALLOWED_DICT:
     _add(criteria_allowed_dict, c, CRITERIA_ALLOWED_DICT[c])
 
 
-def compute_when(date_start, date_end):
-    today = Date.today()
+def compute_when(date_start, date_end, today=None):
+    today = today or Date.today()
     if today < date_start:
         return "BEFORE"
     if date_end and today > date_end:
@@ -392,9 +392,10 @@ def compute_criteria(
     successor_contract_line_id,
     predecessor_contract_line_id,
     is_canceled,
+    today=None,
 ):
     return Criteria(
-        when=compute_when(date_start, date_end),
+        when=compute_when(date_start, date_end, today=today),
         has_date_end=bool(date_end),
         has_last_date_invoiced=bool(has_last_date_invoiced),
         is_auto_renew=is_auto_renew,
@@ -414,6 +415,7 @@ def get_allowed(
     successor_contract_line_id,
     predecessor_contract_line_id,
     is_canceled,
+    today=None,
 ):
     criteria = compute_criteria(
         date_start,
@@ -423,6 +425,7 @@ def get_allowed(
         successor_contract_line_id,
         predecessor_contract_line_id,
         is_canceled,
+        today=today,
     )
     if criteria in criteria_allowed_dict:
         return criteria_allowed_dict[criteria]

@@ -6,8 +6,8 @@
 from odoo import fields, models
 
 
-class ContractContract(models.Model):
-    _inherit = "contract.contract"
+class ContractTemplate(models.Model):
+    _inherit = "contract.template"
 
     skip_zero_qty = fields.Boolean(
         string="Skip Zero Qty Lines",

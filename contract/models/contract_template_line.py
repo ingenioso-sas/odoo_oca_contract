@@ -154,7 +154,13 @@ class ContractTemplateLine(models.Model):
                     lang=partner.lang,
                     partner=partner.id,
                 )
-                line.name = product.get_product_multiline_description_sale()
+                if line.contract_id.contract_type == "purchase":
+                    name = product.display_name
+                    if product.description_purchase:
+                        name = f"{name}\n{product.description_purchase}"
+                    line.name = name
+                else:
+                    line.name = product.get_product_multiline_description_sale()
 
     @api.depends("product_id", "product_id.uom_id", "product_id.uom_ids")
     def _compute_allowed_uom_ids(self):
@@ -227,21 +233,30 @@ class ContractTemplateLine(models.Model):
             else:
                 line.price_unit = line.specific_price
 
-    # Tip in https://github.com/odoo/odoo/issues/23891#issuecomment-376910788
-    @api.onchange("price_unit")
     def _inverse_price_unit(self):
         for line in self.filtered(lambda x: not x.automatic_price):
             line.specific_price = line.price_unit
 
-    @api.depends("quantity", "price_unit", "discount")
+    @api.depends(
+        "quantity",
+        "price_unit",
+        "discount",
+        "currency_id",
+        "contract_id.pricelist_id.currency_id",
+        "contract_id.company_id.currency_id",
+    )
     def _compute_price_subtotal(self):
         for line in self:
             subtotal = line.quantity * line.price_unit
             subtotal *= 1 - (line.discount / 100)
             cur = (
-                line.contract_id.pricelist_id.currency_id
-                if line.contract_id.pricelist_id
-                else None
+                line.currency_id
+                or (
+                    line.contract_id.pricelist_id.currency_id
+                    if line.contract_id.pricelist_id
+                    else None
+                )
+                or line.contract_id.company_id.currency_id
             )
             line.price_subtotal = cur.round(subtotal) if cur else subtotal
 

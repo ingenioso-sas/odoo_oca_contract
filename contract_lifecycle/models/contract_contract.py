@@ -59,6 +59,7 @@ class ContractContract(models.Model):
         "contract_line_ids.date_start",
         "contract_line_ids.date_end",
         "contract_line_ids.is_canceled",
+        "contract_line_ids.display_type",
     )
     def _compute_lifecycle_state(self):
         today = fields.Date.context_today(self)
@@ -70,13 +71,14 @@ class ContractContract(models.Model):
                 contract.lifecycle_state = "paused"
                 continue
             lines = contract._get_product_lines()
-            if lines and all(
-                line.date_start and line.date_start > today for line in lines
-            ):
+            if not lines:
+                has_product_lines = any(
+                    not line.display_type for line in contract.contract_line_ids
+                )
+                contract.lifecycle_state = "closed" if has_product_lines else "running"
+            elif all(line.date_start and line.date_start > today for line in lines):
                 contract.lifecycle_state = "upcoming"
-            elif lines and all(
-                line.date_end and line.date_end < today for line in lines
-            ):
+            elif all(line.date_end and line.date_end < today for line in lines):
                 contract.lifecycle_state = "closed"
             else:
                 contract.lifecycle_state = "running"
@@ -168,7 +170,6 @@ class ContractContract(models.Model):
                 "state": pause_state,
             }
         )
-        self.is_paused = pause_state == "active"
         for line in eligible_lines:
             original = {
                 "original_date_start": line.date_start,
@@ -275,6 +276,7 @@ class ContractContract(models.Model):
             )
         if not is_indefinite:
             self._add_referral_paused_days(pause_days)
+        self.is_paused = pause_state == "active"
         if is_indefinite:
             body = self.env._(
                 "Contract paused from %(start)s with no end date. Reason: %(reason)s",
@@ -304,6 +306,7 @@ class ContractContract(models.Model):
                 self.env._("The resume date cannot be before the pause start date.")
             )
         pause_days = (resume_date - pause.start_date).days
+        self.is_paused = False
         for pause_line in pause.line_ids:
             line = pause_line.contract_line_id
             if not line.exists():
@@ -362,7 +365,6 @@ class ContractContract(models.Model):
                 "resume_date": resume_date,
             }
         )
-        self.is_paused = False
         self.message_post(
             body=self.env._("Contract resumed on %(date)s.", date=resume_date)
         )
@@ -453,6 +455,19 @@ class ContractContract(models.Model):
                 self._add_referral_paused_days(actual_days - pause.pause_days)
             pause.write({"state": "cancelled"})
         self.is_paused = False
+        if terminate_date:
+            # Cancel unstarted successor lines (e.g. post-pause resumption lines)
+            # from newest to oldest so their predecessors become stoppable.
+            future_successors = self.contract_line_ids.filtered(
+                lambda line: not line.display_type
+                and not line.is_canceled
+                and line.predecessor_contract_line_id
+                and line.date_start
+                and line.date_start > terminate_date
+            ).sorted("date_start", reverse=True)
+            for line in future_successors:
+                if line.is_cancel_allowed:
+                    line.cancel()
 
     def _finish_referrals(self):
         referrals = self.env["contract.referral"].search(

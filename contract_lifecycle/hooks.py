@@ -8,5 +8,5 @@ def post_init_hook(env):
     Pauses and terminations create a credit note when the contract was already
     invoiced for a period that is no longer served.
     """
-    companies = env["res.company"].search([])
+    companies = env["res.company"].with_context(active_test=False).search([])
     companies.write({"enable_contract_line_refund_on_stop": True})

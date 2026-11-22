@@ -71,6 +71,7 @@
                         name="date_end"
                         required="True"
                     />
+                    <field name="is_auto_renew" />
                 </group>
                 <footer>
                     <button

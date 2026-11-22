@@ -30,6 +30,7 @@ class ContractLine(models.Model):
         readonly=True,
         index=True,
         copy=False,
+        check_company=True,
         help="In case of restart after suspension, this field contain the new "
         "contract line created.",
     )
@@ -40,6 +41,7 @@ class ContractLine(models.Model):
         readonly=True,
         index=True,
         copy=False,
+        check_company=True,
         help="Contract Line origin of this one.",
     )
     manual_renew_needed = fields.Boolean(
@@ -90,15 +92,18 @@ class ContractLine(models.Model):
                 rec.termination_notice_date = False
 
     @api.depends(
+        "display_type",
         "date_start",
         "date_end",
         "last_date_invoiced",
         "is_auto_renew",
         "successor_contract_line_id",
         "predecessor_contract_line_id",
+        "predecessor_contract_line_id.successor_contract_line_id",
         "is_canceled",
     )
     def _compute_allowed(self):
+        today = fields.Date.context_today(self)
         for rec in self:
             rec.update(
                 {
@@ -109,7 +114,7 @@ class ContractLine(models.Model):
                     "is_un_cancel_allowed": False,
                 }
             )
-            if rec.date_start:
+            if rec.date_start and not rec.display_type:
                 allowed = get_allowed(
                     rec.date_start,
                     rec.date_end,
@@ -118,6 +123,7 @@ class ContractLine(models.Model):
                     rec.successor_contract_line_id,
                     rec.predecessor_contract_line_id,
                     rec.is_canceled,
+                    today=today,
                 )
                 if allowed:
                     rec.update(
@@ -131,6 +137,33 @@ class ContractLine(models.Model):
                             "is_un_cancel_allowed": allowed.uncancel,
                         }
                     )
+
+    @api.constrains("successor_contract_line_id", "predecessor_contract_line_id")
+    def _check_successor_contract_line(self):
+        for rec in self:
+            if rec.successor_contract_line_id:
+                if rec.successor_contract_line_id == rec:
+                    raise ValidationError(
+                        self.env._("A contract line cannot be its own successor.")
+                    )
+                if rec.successor_contract_line_id.contract_id != rec.contract_id:
+                    raise ValidationError(
+                        self.env._(
+                            "A successor contract line must belong to the same "
+                            "contract."
+                        )
+                    )
+                if rec.successor_contract_line_id.company_id != rec.company_id:
+                    raise ValidationError(
+                        self.env._(
+                            "A successor contract line must belong to the same "
+                            "company."
+                        )
+                    )
+            if rec.predecessor_contract_line_id == rec:
+                raise ValidationError(
+                    self.env._("A contract line cannot be its own predecessor.")
+                )
 
     @api.constrains("is_auto_renew", "successor_contract_line_id", "date_end")
     def _check_allowed(self):
@@ -239,6 +272,8 @@ class ContractLine(models.Model):
         if state == "upcoming":
             return [
                 "&",
+                "&",
+                ("display_type", "=", False),
                 ("date_start", ">", today),
                 ("is_canceled", "=", False),
             ]
@@ -247,6 +282,8 @@ class ContractLine(models.Model):
                 "&",
                 "&",
                 "&",
+                "&",
+                ("display_type", "=", False),
                 ("date_start", "<=", today),
                 ("is_canceled", "=", False),
                 "|",
@@ -254,14 +291,18 @@ class ContractLine(models.Model):
                 ("date_end", "=", False),
                 "|",
                 ("is_auto_renew", "=", True),
-                "&",
-                ("is_auto_renew", "=", False),
-                ("termination_notice_date", ">", today),
+                "|",
+                ("manual_renew_needed", "=", True),
+                "|",
+                ("termination_notice_date", "=", False),
+                ("termination_notice_date", ">=", today),
             ]
         if state == "to-renew":
             return [
                 "&",
                 "&",
+                "&",
+                ("display_type", "=", False),
                 ("is_canceled", "=", False),
                 ("date_end", "<", today),
                 "|",
@@ -277,6 +318,8 @@ class ContractLine(models.Model):
                 "&",
                 "&",
                 "&",
+                "&",
+                ("display_type", "=", False),
                 ("date_start", "<=", today),
                 ("is_auto_renew", "=", False),
                 ("manual_renew_needed", "=", False),
@@ -289,6 +332,8 @@ class ContractLine(models.Model):
                 "&",
                 "&",
                 "&",
+                "&",
+                ("display_type", "=", False),
                 ("is_canceled", "=", False),
                 ("date_end", "<", today),
                 ("is_auto_renew", "=", False),
@@ -299,9 +344,14 @@ class ContractLine(models.Model):
                 ("manual_renew_needed", "=", False),
             ]
         if state == "canceled":
-            return [("is_canceled", "=", True)]
+            return [
+                "&",
+                ("display_type", "=", False),
+                ("is_canceled", "=", True),
+            ]
         if not state:
             return [("display_type", "!=", False)]
+        return [("id", "=", False)]
 
     @api.model
     def _search_state(self, operator, value):
@@ -331,20 +381,23 @@ class ContractLine(models.Model):
                 raise TypeError("Operator 'in' expects a list or tuple")
             domain = []
             for state in value:
+                if state not in states:
+                    continue
                 if domain:
                     domain.insert(0, "|")
                 domain.extend(self._get_state_domain(state))
-            return domain
+            return domain or [("id", "=", False)]
 
         if operator == "not in":
             # Check if value is a string - if so, raise TypeError
             if isinstance(value, str):
                 raise TypeError("Operator 'not in' expects a list or tuple")
-            if set(value) == set(states):
+            if set(value) >= set(states):
                 return [("id", "=", False)]
             return self._search_state(
                 "in", [state for state in states if state not in value]
             )
+        return [("id", "=", False)]
 
     @api.model
     def _get_first_date_end(
@@ -485,15 +538,19 @@ class ContractLine(models.Model):
                 self.recurring_interval,
                 max_date_end=date_end,
             )
-        new_vals = self.read()[0]
-        new_vals.pop("id", None)
-        new_vals.pop("last_date_invoiced", None)
-        values = self._convert_to_write(new_vals)
-        values["date_start"] = date_start
-        values["date_end"] = date_end
-        values["recurring_next_date"] = recurring_next_date
-        values["is_auto_renew"] = is_auto_renew
-        values["predecessor_contract_line_id"] = self.id
+        values = self.copy_data(
+            {
+                "date_start": date_start,
+                "date_end": date_end,
+                "recurring_next_date": recurring_next_date,
+                "last_date_invoiced": False,
+                "is_auto_renew": is_auto_renew,
+                "manual_renew_needed": False,
+                "is_canceled": False,
+                "successor_contract_line_id": False,
+                "predecessor_contract_line_id": self.id,
+            }
+        )[0]
         return values
 
     def plan_successor(
@@ -577,6 +634,10 @@ class ContractLine(models.Model):
         :param is_auto_renew: is the new line is set to auto_renew
         :return: created contract line
         """
+        if date_start > date_end:
+            raise ValidationError(
+                self.env._("Suspension start date cannot be after end date.")
+            )
         if not all(self.mapped("is_stop_plan_successor_allowed")):
             raise ValidationError(
                 self.env._("Stop/Plan successor not allowed for this line")
@@ -584,7 +645,7 @@ class ContractLine(models.Model):
         contract_line = self.env["contract.line"]
         for rec in self:
             if rec.date_start >= date_start:
-                if rec.date_start < date_end:
+                if rec.date_start <= date_end:
                     delay = (date_end - rec.date_start) + timedelta(days=1)
                 else:
                     delay = (date_end - date_start) + timedelta(days=1)
@@ -680,7 +741,12 @@ class ContractLine(models.Model):
         for rec in self:
             if rec.predecessor_contract_line_id:
                 predecessor_contract_line = rec.predecessor_contract_line_id
-                assert not predecessor_contract_line.successor_contract_line_id
+                if predecessor_contract_line.successor_contract_line_id:
+                    raise ValidationError(
+                        self.env._(
+                            "Predecessor line already has an active successor."
+                        )
+                    )
                 predecessor_contract_line.successor_contract_line_id = rec
             rec.is_canceled = False
             rec.recurring_next_date = recurring_next_date
@@ -688,17 +754,19 @@ class ContractLine(models.Model):
 
     def action_uncancel(self):
         self.ensure_one()
-        context = {
-            "default_contract_line_id": self.id,
-            "default_recurring_next_date": fields.Date.context_today(self),
-        }
-        context.update(self.env.context)
+        today = fields.Date.context_today(self)
+        default_next = max(today, self.date_start) if self.date_start else today
+        context = dict(
+            self.env.context,
+            default_contract_line_id=self.id,
+            default_recurring_next_date=default_next,
+        )
         view_id = self.env.ref(
             "contract_line_successor.contract_line_wizard_uncancel_form_view"
         ).id
         return {
             "type": "ir.actions.act_window",
-            "name": "Un-Cancel Contract Line",
+            "name": self.env._("Un-Cancel Contract Line"),
             "res_model": "contract.line.wizard",
             "view_mode": "form",
             "views": [(view_id, "form")],
@@ -708,17 +776,22 @@ class ContractLine(models.Model):
 
     def action_plan_successor(self):
         self.ensure_one()
-        context = {
-            "default_contract_line_id": self.id,
-            "default_is_auto_renew": self.is_auto_renew,
-        }
-        context.update(self.env.context)
+        context = dict(
+            self.env.context,
+            default_contract_line_id=self.id,
+            default_is_auto_renew=self.is_auto_renew,
+            default_date_start=(
+                self.date_end + relativedelta(days=1)
+                if self.date_end
+                else fields.Date.context_today(self)
+            ),
+        )
         view_id = self.env.ref(
             "contract_line_successor.contract_line_wizard_plan_successor_form_view"
         ).id
         return {
             "type": "ir.actions.act_window",
-            "name": "Plan contract line successor",
+            "name": self.env._("Plan contract line successor"),
             "res_model": "contract.line.wizard",
             "view_mode": "form",
             "views": [(view_id, "form")],
@@ -728,17 +801,17 @@ class ContractLine(models.Model):
 
     def action_stop(self):
         self.ensure_one()
-        context = {
-            "default_contract_line_id": self.id,
-            "default_date_end": self.date_end,
-        }
-        context.update(self.env.context)
+        context = dict(
+            self.env.context,
+            default_contract_line_id=self.id,
+            default_date_end=self.date_end,
+        )
         view_id = self.env.ref(
             "contract_line_successor.contract_line_wizard_stop_form_view"
         ).id
         return {
             "type": "ir.actions.act_window",
-            "name": "Terminate contract line",
+            "name": self.env._("Terminate contract line"),
             "res_model": "contract.line.wizard",
             "view_mode": "form",
             "views": [(view_id, "form")],
@@ -748,17 +821,17 @@ class ContractLine(models.Model):
 
     def action_stop_plan_successor(self):
         self.ensure_one()
-        context = {
-            "default_contract_line_id": self.id,
-            "default_is_auto_renew": self.is_auto_renew,
-        }
-        context.update(self.env.context)
+        context = dict(
+            self.env.context,
+            default_contract_line_id=self.id,
+            default_is_auto_renew=self.is_auto_renew,
+        )
         view_id = self.env.ref(
             "contract_line_successor.contract_line_wizard_stop_plan_successor_form_view"
         ).id
         return {
             "type": "ir.actions.act_window",
-            "name": "Suspend contract line",
+            "name": self.env._("Suspend contract line"),
             "res_model": "contract.line.wizard",
             "view_mode": "form",
             "views": [(view_id, "form")],

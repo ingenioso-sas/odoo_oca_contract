@@ -16,6 +16,14 @@ class AccountMove(models.Model):
             with self.env.cr.savepoint():
                 self.sudo()._create_referral_commissions()
                 self.sudo()._create_referral_commission_adjustments()
+                contracts = self.invoice_line_ids.contract_line_id.contract_id
+                if contracts:
+                    self.env["contract.referral"].sudo().search(
+                        [
+                            ("referred_contract_id", "in", contracts.ids),
+                            ("state", "=", "active"),
+                        ]
+                    )._maybe_finish()
         except Exception:  # noqa: BLE001 - never block invoice posting
             _logger.exception("Could not create referral commissions")
         return result
@@ -69,6 +77,7 @@ class AccountMove(models.Model):
                             ),
                         }
                     )
+                    referral._maybe_finish()
 
     def _create_referral_commission_adjustments(self):
         """Reverse commissions when a referred invoice is refunded."""

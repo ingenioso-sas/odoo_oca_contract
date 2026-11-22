@@ -7,6 +7,7 @@
 # Copyright 2021 Tecnativa - Víctor Martínez
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
+from collections import defaultdict
 import logging
 
 from dateutil.relativedelta import relativedelta
@@ -52,6 +53,7 @@ class ContractContract(models.Model):
         store=True,
         readonly=False,
         ondelete="restrict",
+        check_company=True,
     )
     tag_ids = fields.Many2many(comodel_name="contract.tag", string="Tags")
     note = fields.Text(string="Notes")
@@ -92,11 +94,13 @@ class ContractContract(models.Model):
         comodel_name="account.payment.term",
         string="Payment Terms",
         index=True,
+        check_company=True,
     )
     fiscal_position_id = fields.Many2one(
         comodel_name="account.fiscal.position",
         string="Fiscal Position",
         ondelete="restrict",
+        check_company=True,
     )
     invoice_count = fields.Integer(compute="_compute_invoice_count")
     create_invoice_visibility = fields.Boolean(
@@ -107,6 +111,7 @@ class ContractContract(models.Model):
     contract_template_id = fields.Many2one(
         string="Contract Template",
         comodel_name="contract.template",
+        check_company=True,
     )
     contract_line_ids = fields.One2many(
         string="Contract lines",
@@ -182,8 +187,26 @@ class ContractContract(models.Model):
                 rec.manual_currency_id = False
 
     def _compute_invoice_count(self):
+        real_ids = [rec_id for rec_id in self._ids if isinstance(rec_id, int)]
+        if not real_ids:
+            for rec in self:
+                rec.invoice_count = 0
+            return
+        all_lines = self.with_context(active_test=False).mapped("contract_line_ids")
+        line_to_contract = {line.id: line.contract_id.id for line in all_lines}
+        moves_by_contract = defaultdict(set)
+        if line_to_contract:
+            grouped = self.env["account.move.line"]._read_group(
+                domain=[("contract_line_id", "in", list(line_to_contract.keys()))],
+                groupby=["contract_line_id"],
+                aggregates=["move_id:array_agg"],
+            )
+            for contract_line, move_ids in grouped:
+                contract_id = line_to_contract.get(contract_line.id)
+                if contract_id and move_ids:
+                    moves_by_contract[contract_id].update(move_ids)
         for rec in self:
-            rec.invoice_count = len(rec._get_related_invoices())
+            rec.invoice_count = len(moves_by_contract.get(rec.id, ()))
 
     @api.depends(
         "next_period_date_start",
@@ -239,11 +262,17 @@ class ContractContract(models.Model):
                 contract.contract_line_ids.mapped("create_invoice_visibility")
             )
 
-    @api.depends("contract_line_ids.date_end")
+    @api.depends(
+        "contract_line_ids.date_end",
+        "contract_line_ids.display_type",
+        "contract_line_ids.is_canceled",
+    )
     def _compute_date_end(self):
         for contract in self:
             contract.date_end = False
-            date_end = contract.contract_line_ids.mapped("date_end")
+            date_end = contract.contract_line_ids.filtered(
+                lambda line: not line.display_type and not line.is_canceled
+            ).mapped("date_end")
             if date_end and all(date_end):
                 contract.date_end = max(date_end)
 
@@ -353,6 +382,11 @@ class ContractContract(models.Model):
         return records
 
     def write(self, vals):
+        old_partners = (
+            {rec.id: rec.partner_id for rec in self}
+            if "partner_id" in vals
+            else {}
+        )
         if "modification_ids" in vals:
             res = super(
                 ContractContract, self.with_context(bypass_modification_send=True)
@@ -360,6 +394,34 @@ class ContractContract(models.Model):
             self._modification_mail_send()
         else:
             res = super().write(vals)
+        if old_partners:
+            subtype_id = self.env.ref(
+                "contract.mail_message_subtype_contract_modification",
+                raise_if_not_found=False,
+            )
+            for rec in self:
+                old_partner = old_partners.get(rec.id)
+                if not old_partner or old_partner == rec.partner_id:
+                    continue
+                if (
+                    "invoice_partner_id" not in vals
+                    and (
+                        not rec.invoice_partner_id
+                        or rec.invoice_partner_id == old_partner
+                        or rec.invoice_partner_id.commercial_partner_id
+                        == old_partner.commercial_partner_id
+                    )
+                ):
+                    rec.invoice_partner_id = rec.partner_id.address_get(["invoice"])[
+                        "invoice"
+                    ]
+                if rec.partner_id:
+                    rec.message_unsubscribe(partner_ids=[old_partner.id])
+                    if subtype_id:
+                        rec.message_subscribe(
+                            partner_ids=[rec.partner_id.id],
+                            subtype_ids=[subtype_id.id],
+                        )
         return res
 
     # === Actions ===
@@ -378,15 +440,14 @@ class ContractContract(models.Model):
         tree_view = self.env.ref("account.view_invoice_tree", raise_if_not_found=False)
         form_view = self.env.ref("account.view_move_form", raise_if_not_found=False)
         ctx = dict(self.env.context)
-        if ctx.get("default_contract_type"):
+        contract_type = self.contract_type or ctx.get("default_contract_type")
+        if contract_type:
             ctx["default_move_type"] = (
-                "out_invoice"
-                if ctx.get("default_contract_type") == "sale"
-                else "in_invoice"
+                "out_invoice" if contract_type == "sale" else "in_invoice"
             )
         action = {
             "type": "ir.actions.act_window",
-            "name": "Invoices",
+            "name": self.env._("Invoices"),
             "res_model": "account.move",
             "view_mode": "list,kanban,form,calendar,pivot,graph,activity",
             "domain": [("id", "in", self._get_related_invoices().ids)],
@@ -436,18 +497,21 @@ class ContractContract(models.Model):
     # === Helpers and Utilities ===
 
     def get_formview_id(self, access_uid=None):
-        if self.contract_type == "sale":
-            return self.env.ref("contract.contract_contract_customer_form_view").id
-        else:
-            return self.env.ref("contract.contract_contract_supplier_form_view").id
+        if len(self) == 1:
+            if self.contract_type == "sale":
+                return self.env.ref("contract.contract_contract_customer_form_view").id
+            elif self.contract_type == "purchase":
+                return self.env.ref("contract.contract_contract_supplier_form_view").id
+        return super().get_formview_id(access_uid=access_uid)
 
     def _set_start_contract_modification(self):
         subtype_id = self.env.ref("contract.mail_message_subtype_contract_modification")
         for record in self:
-            if record.contract_line_ids:
-                date_start = min(record.contract_line_ids.mapped("date_start"))
+            dated_lines = record.contract_line_ids.filtered(lambda l: l.date_start)
+            if dated_lines:
+                date_start = min(dated_lines.mapped("date_start"))
             else:
-                date_start = record.create_date
+                date_start = record.date or fields.Date.context_today(record)
             record.message_subscribe(
                 partner_ids=[record.partner_id.id], subtype_ids=[subtype_id.id]
             )
@@ -482,7 +546,9 @@ class ContractContract(models.Model):
                         subtype_id=subtype_id,
                         email_layout_xmlid="contract.template_contract_modification",
                     )
-                modification_ids_not_sent.write({"sent": True})
+                modification_ids_not_sent.with_context(
+                    bypass_modification_send=True
+                ).write({"sent": True})
 
     def _get_related_invoices(self):
         self.ensure_one()
@@ -687,24 +753,34 @@ class ContractContract(models.Model):
             contract_lines._update_last_date_invoiced()
         return invoices_values
 
-    @api.model
+    def _group_moves_by_contract(self, moves):
+        """Map contract ID -> moves recordset in memory without N+1 queries."""
+        moves_by_contract = defaultdict(lambda: self.env["account.move"])
+        contract_ids = set(self.ids)
+        for line in moves.line_ids:
+            contract_id = line.contract_line_id.contract_id.id
+            if contract_id in contract_ids and line.move_id not in moves_by_contract[contract_id]:
+                moves_by_contract[contract_id] |= line.move_id
+        return moves_by_contract
+
     def _invoice_followers(self, invoices):
         invoice_create_subtype = self.env.ref(
             "contract.mail_message_subtype_invoice_created"
         )
+        moves_by_contract = self._group_moves_by_contract(invoices)
         for item in self:
             partner_ids = item.message_follower_ids.filtered(
                 lambda x: invoice_create_subtype in x.subtype_ids
             ).mapped("partner_id")
             if partner_ids:
-                (invoices & item._get_related_invoices()).message_subscribe(
-                    partner_ids=partner_ids.ids
-                )
+                contract_moves = moves_by_contract.get(item.id)
+                if contract_moves:
+                    contract_moves.message_subscribe(partner_ids=partner_ids.ids)
 
-    @api.model
     def _add_contract_origin(self, invoices):
+        moves_by_contract = self._group_moves_by_contract(invoices)
         for item in self:
-            for move in invoices & item._get_related_invoices():
+            for move in moves_by_contract.get(item.id, self.env["account.move"]):
                 translation = self.env._("by contract")
                 move.message_post(
                     body=Markup("%s %s %s.")
@@ -731,8 +807,9 @@ class ContractContract(models.Model):
         contract_invoice_auto_validate behaviour). Can be set per
         contract/template instead of globally per company.
         """
+        moves_by_contract = self._group_moves_by_contract(moves)
         for contract in self:
-            contract_moves = moves & contract._get_related_invoices()
+            contract_moves = moves_by_contract.get(contract.id, self.env["account.move"])
             if not contract_moves or contract.invoicing_mode == "draft":
                 continue
             draft_moves = contract_moves.filtered(lambda m: m.state == "draft")

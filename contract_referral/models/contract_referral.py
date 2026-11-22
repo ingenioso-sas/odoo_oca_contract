@@ -162,6 +162,16 @@ class ContractReferral(models.Model):
                 raise ValidationError(
                     self.env._("Discount percentage must be between 0 and 100.")
                 )
+            if (
+                referral.referrer_commission_percent <= 0
+                and referral.referred_discount_percent <= 0
+            ):
+                raise ValidationError(
+                    self.env._(
+                        "Define a commission percentage or a discount percentage "
+                        "greater than 0."
+                    )
+                )
 
     @api.constrains("max_months", "max_invoices")
     def _check_limits(self):
@@ -470,11 +480,60 @@ class ContractReferral(models.Model):
         for referral in self:
             referral.paused_days = max(referral.paused_days + days, 0)
 
+    def _is_exhausted(self):
+        """Return True when all enabled referral benefits are expired or consumed."""
+        self.ensure_one()
+        today = fields.Date.context_today(self)
+        if self.end_date and today > self.end_date:
+            return True
+        if not self.max_invoices:
+            return False
+        discount_done = (
+            self.referred_discount_percent <= 0
+            or self.referred_discount_lost
+            or sum(
+                self.with_context(active_test=False)
+                .discount_rule_ids.mapped("applied_invoice_count")
+            )
+            >= self.max_invoices
+        )
+        commission_count = self.env["contract.referral.commission"].search_count(
+            [
+                ("referral_id", "=", self.id),
+                ("is_adjustment", "=", False),
+                ("state", "!=", "cancelled"),
+            ]
+        )
+        commission_done = (
+            self.referrer_commission_percent <= 0
+            or commission_count >= self.max_invoices
+        )
+        return discount_done and commission_done
+
+    def _maybe_finish(self):
+        to_finish = self.filtered(
+            lambda r: r.state == "active" and r._is_exhausted()
+        )
+        if to_finish:
+            to_finish.action_finish()
+
+    @api.model
+    def cron_finish_expired_referrals(self):
+        active_referrals = self.search([("state", "=", "active")])
+        active_referrals._maybe_finish()
+        return True
+
     def action_cancel(self):
+        self.with_context(active_test=False).mapped("discount_rule_ids").filtered(
+            "active"
+        ).write({"active": False})
         self.write({"state": "cancelled"})
 
     def action_activate(self):
         self.write({"state": "active"})
 
     def action_finish(self):
+        self.with_context(active_test=False).mapped("discount_rule_ids").filtered(
+            "active"
+        ).write({"active": False})
         self.write({"state": "finished"})

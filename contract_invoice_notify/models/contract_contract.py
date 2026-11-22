@@ -54,6 +54,17 @@ class ContractContract(models.Model):
         )
         return channel or self.env["contract.notification.channel"]
 
+    @api.onchange("contract_template_id")
+    def _onchange_contract_template_id(self):
+        super()._onchange_contract_template_id()
+        tmpl = self.contract_template_id
+        if tmpl:
+            self.notification_channel_ids = tmpl.notification_channel_ids
+            self.overdue_reminder_enabled = tmpl.overdue_reminder_enabled
+            self.overdue_grace_days = tmpl.overdue_grace_days
+            self.overdue_resend_after_days = tmpl.overdue_resend_after_days
+            self.overdue_max_reminders = tmpl.overdue_max_reminders
+
     # === TEMPLATES === #
 
     def _get_invoice_email_template(self):
@@ -147,8 +158,9 @@ class ContractContract(models.Model):
 
     def _get_notification_channels(self):
         self.ensure_one()
-        if self.notification_channel_ids:
-            return self.notification_channel_ids.filtered("active")
+        configured = self.with_context(active_test=False).notification_channel_ids
+        if configured:
+            return configured.filtered("active")
         return self.env["contract.notification.channel"].search(
             [("code", "=", "email"), ("active", "=", True)], limit=1
         )
@@ -305,14 +317,21 @@ class ContractContract(models.Model):
         except Exception:  # noqa: BLE001
             return ""
 
+    def _is_overdue_reminder_opted_out(self):
+        self.ensure_one()
+        partners = self.partner_id | self.commercial_partner_id | self.invoice_partner_id
+        return any(
+            getattr(partner, "opt_out_overdue_reminder", False)
+            for partner in partners
+            if partner
+        )
+
     def _send_overdue_digest(self, invoices=None):
         """Send one digest per contract through the configured channels."""
         self.ensure_one()
         if not self.overdue_reminder_enabled:
             return False
-        if hasattr(self.partner_id, "opt_out_overdue_reminder") and (
-            self.partner_id.opt_out_overdue_reminder
-        ):
+        if self._is_overdue_reminder_opted_out():
             return False
         invoices = invoices or self._get_overdue_reminder_candidates()
         if not invoices:
@@ -359,11 +378,28 @@ class ContractContract(models.Model):
     @api.model
     def cron_overdue_reminders(self):
         """Daily cron: one digest per contract with eligible overdue invoices."""
-        contracts = self.search(
-            [
-                ("overdue_reminder_enabled", "=", True),
-                ("contract_type", "=", "sale"),
-            ]
+        today = fields.Date.context_today(self)
+        grouped_lines = self.env["account.move.line"]._read_group(
+            domain=[
+                ("contract_line_id.contract_id.overdue_reminder_enabled", "=", True),
+                ("contract_line_id.contract_id.contract_type", "=", "sale"),
+                ("move_id.move_type", "=", "out_invoice"),
+                ("move_id.state", "=", "posted"),
+                (
+                    "move_id.payment_state",
+                    "not in",
+                    ("paid", "in_payment", "reversed", "invoicing_legacy"),
+                ),
+                ("move_id.amount_residual", ">", 0),
+                ("move_id.invoice_date_due", "<=", today),
+            ],
+            groupby=["contract_line_id"],
+        )
+        candidate_lines = self.env["contract.line"].union(
+            *[row[0] for row in grouped_lines if row[0]]
+        )
+        contracts = candidate_lines.mapped("contract_id").filtered(
+            lambda c: c.overdue_reminder_enabled and c.contract_type == "sale"
         )
         count = 0
         in_test_mode = self.env.registry.in_test_mode()
@@ -386,14 +422,33 @@ class ContractContract(models.Model):
     def action_resend_last_invoice_notification(self):
         """Manual resend for support (uses the configured channels)."""
         self.ensure_one()
-        invoices = self._get_related_invoices().filtered(
-            lambda m: m.state == "posted"
-        ).sorted("invoice_date", reverse=True)[:1]
+        invoices = (
+            self._get_related_invoices()
+            .filtered(lambda m: m.state == "posted" and m.move_type == "out_invoice")
+            .sorted(
+                lambda m: (
+                    m.invoice_date
+                    or (m.create_date.date() if m.create_date else fields.Date.today()),
+                    m.id,
+                ),
+                reverse=True,
+            )[:1]
+        )
         if not invoices:
             return False
         move = invoices[0]
+        successes = []
         for channel in self._get_notification_channels():
-            self._send_notification(
-                move, "invoice_notification", channel.code
+            if self._send_notification(move, "invoice_notification", channel.code):
+                successes.append(channel.code)
+        if successes:
+            move.message_post(
+                body=Markup(
+                    self.env._(
+                        "Manual invoice notification resent (%(mode)s) from contract %(contract)s."
+                    )
+                )
+                % {"mode": ", ".join(successes), "contract": self._get_html_link()}
             )
-        return True
+            return True
+        return False
