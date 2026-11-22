@@ -3,7 +3,7 @@
 {
     "name": "Contract Invoice Period",
     "summary": "Store the billing period of invoices generated from contracts",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.0.1",
     "category": "Contract Management",
     "website": "https://github.com/OCA/contract",
     "author": "Odoo Community Association (OCA)",

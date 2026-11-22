@@ -3,7 +3,7 @@
 {
     "name": "Contract Lifecycle",
     "summary": "Pause, resume and finish contracts with credit notes",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.0.1",
     "category": "Contract Management",
     "website": "https://github.com/OCA/contract",
     "author": "Odoo Community Association (OCA)",

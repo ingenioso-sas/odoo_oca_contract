@@ -4,7 +4,7 @@
     "name": "Contract Referral",
     "summary": "Referral discounts for referred customers and commissions "
     "for referrers",
-    "version": "19.0.1.1.0",
+    "version": "19.0.1.1.1",
     "category": "Contract Management",
     "website": "https://github.com/OCA/contract",
     "author": "Odoo Community Association (OCA)",
