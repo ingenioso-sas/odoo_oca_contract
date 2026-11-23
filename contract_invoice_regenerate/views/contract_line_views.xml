@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="contract_line_form_view_invoice_regenerate" model="ir.ui.view">
+        <field name="name">contract.line.form (invoice regenerate)</field>
+        <field name="model">contract.line</field>
+        <field name="inherit_id" ref="contract.contract_line_form_view" />
+        <field name="arch" type="xml">
+            <xpath
+                expr="//group[@name='next_period_dates']//field[@name='recurring_next_date']"
+                position="after"
+            >
+                <div
+                    class="d-flex flex-wrap gap-2 mt-2"
+                    groups="contract_invoice_regenerate.group_contract_invoice_regenerate"
+                    invisible="display_type"
+                >
+                    <button
+                        name="action_recalculate_invoice_dates"
+                        type="object"
+                        string="Recalcular fechas"
+                        icon="fa-refresh"
+                        class="btn btn-outline-secondary btn-sm"
+                        confirm="Se recalcularán las fechas según las facturas que existan. ¿Continuar?"
+                    />
+                    <button
+                        name="action_regenerate_invoice"
+                        type="object"
+                        string="Regenerar factura"
+                        icon="fa-repeat"
+                        class="btn btn-primary btn-sm"
+                    />
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
