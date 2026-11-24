@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="contract_contract_form_view_mixed_invoicing" model="ir.ui.view">
+        <field name="name">contract.contract form (mixed invoicing warning)</field>
+        <field name="model">contract.contract</field>
+        <field name="inherit_id" ref="contract.contract_contract_form_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/notebook" position="before">
+                <div
+                    class="alert alert-warning"
+                    role="alert"
+                    invisible="not mixed_invoicing_warning"
+                >
+                    <field
+                        name="mixed_invoicing_warning"
+                        readonly="1"
+                        nolabel="1"
+                        class="border-0 bg-transparent p-0"
+                    />
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record
+        id="contract_contract_customer_form_view_mixed_invoicing"
+        model="ir.ui.view"
+    >
+        <field
+            name="name"
+        >contract.contract customer form (mixed invoicing warning)</field>
+        <field name="model">contract.contract</field>
+        <field
+            name="inherit_id"
+            ref="contract.contract_contract_customer_form_view"
+        />
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/notebook" position="before">
+                <div
+                    class="alert alert-warning"
+                    role="alert"
+                    invisible="not mixed_invoicing_warning"
+                >
+                    <field
+                        name="mixed_invoicing_warning"
+                        readonly="1"
+                        nolabel="1"
+                        class="border-0 bg-transparent p-0"
+                    />
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record
+        id="contract_contract_supplier_form_view_mixed_invoicing"
+        model="ir.ui.view"
+    >
+        <field
+            name="name"
+        >contract.contract supplier form (mixed invoicing warning)</field>
+        <field name="model">contract.contract</field>
+        <field
+            name="inherit_id"
+            ref="contract.contract_contract_supplier_form_view"
+        />
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/notebook" position="before">
+                <div
+                    class="alert alert-warning"
+                    role="alert"
+                    invisible="not mixed_invoicing_warning"
+                >
+                    <field
+                        name="mixed_invoicing_warning"
+                        readonly="1"
+                        nolabel="1"
+                        class="border-0 bg-transparent p-0"
+                    />
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
