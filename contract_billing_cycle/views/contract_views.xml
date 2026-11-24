@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="contract_contract_form_view_billing_cycle" model="ir.ui.view">
+        <field name="name">contract.contract form (billing cycle)</field>
+        <field name="model">contract.contract</field>
+        <field name="inherit_id" ref="contract.contract_contract_form_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="billing_cycle" string="Ciclo de facturación">
+                    <group>
+                        <group>
+                            <field name="billing_anchor_day" />
+                            <field name="skip_zero_invoices" />
+                        </group>
+                        <group>
+                            <field name="free_trial_periods" />
+                            <field
+                                name="free_trial_discount"
+                                invisible="not free_trial_periods"
+                            />
+                        </group>
+                    </group>
+                    <div class="text-muted">
+                        El período inicial parcial se cobra prorrateado. La
+                        prueba gratuita aplica a los primeros períodos
+                        completos. Solo aplica a líneas pospago.
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record
+        id="contract_contract_customer_form_view_billing_cycle"
+        model="ir.ui.view"
+    >
+        <field
+            name="name"
+        >contract.contract customer form (billing cycle)</field>
+        <field name="model">contract.contract</field>
+        <field
+            name="inherit_id"
+            ref="contract.contract_contract_customer_form_view"
+        />
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="billing_cycle" string="Ciclo de facturación">
+                    <group>
+                        <group>
+                            <field name="billing_anchor_day" />
+                            <field name="skip_zero_invoices" />
+                        </group>
+                        <group>
+                            <field name="free_trial_periods" />
+                            <field
+                                name="free_trial_discount"
+                                invisible="not free_trial_periods"
+                            />
+                        </group>
+                    </group>
+                    <div class="text-muted">
+                        El período inicial parcial se cobra prorrateado. La
+                        prueba gratuita aplica a los primeros períodos
+                        completos. Solo aplica a líneas pospago.
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record
+        id="contract_contract_supplier_form_view_billing_cycle"
+        model="ir.ui.view"
+    >
+        <field
+            name="name"
+        >contract.contract supplier form (billing cycle)</field>
+        <field name="model">contract.contract</field>
+        <field
+            name="inherit_id"
+            ref="contract.contract_contract_supplier_form_view"
+        />
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="billing_cycle" string="Ciclo de facturación">
+                    <group>
+                        <group>
+                            <field name="billing_anchor_day" />
+                            <field name="skip_zero_invoices" />
+                        </group>
+                        <group>
+                            <field name="free_trial_periods" />
+                            <field
+                                name="free_trial_discount"
+                                invisible="not free_trial_periods"
+                            />
+                        </group>
+                    </group>
+                    <div class="text-muted">
+                        El período inicial parcial se cobra prorrateado. La
+                        prueba gratuita aplica a los primeros períodos
+                        completos. Solo aplica a líneas pospago.
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
