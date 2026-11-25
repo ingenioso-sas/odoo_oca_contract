@@ -106,6 +106,18 @@ class TestContractBillingCycle(TestContractBase):
         self.assertEqual(line.next_period_date_start, date(2026, 10, 5))
         self.assertEqual(line.next_period_date_end, date(2026, 11, 4))
 
+    def test_anchor_invoice_date_hook(self):
+        contract = self._create_contract()
+        line = contract.contract_line_ids
+        self.assertEqual(
+            line._get_anchor_invoice_date(date(2026, 10, 15)),
+            date(2026, 11, 1),
+        )
+        self.assertEqual(
+            line._get_anchor_invoice_date(date(2026, 11, 1)),
+            date(2026, 12, 1),
+        )
+
     def test_anchor_does_not_apply_to_prepaid_lines(self):
         contract = self._create_contract(
             line_overrides={"recurring_invoicing_type": "pre-paid"}

@@ -50,6 +50,13 @@ inicial.
 Si el contrato inicia el día 1, el primer período ya es completo y la primera
 factura es la gratuita.
 
+## Recalcular fechas
+
+La acción **Recalcular fechas** de la línea también respeta el día de
+facturación configurado. Si no hay facturas, calcula la próxima fecha desde el
+inicio del contrato; si hay facturas, calcula el siguiente día de facturación
+después del último período facturado.
+
 ## Facturas en cero
 
 - **Omitir facturas en cero desmarcado** (por defecto): la factura de prueba

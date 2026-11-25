@@ -66,20 +66,34 @@ class ContractLine(models.Model):
         next_month = date.replace(day=1) + relativedelta(months=1)
         return self._get_anchor_date(next_month, anchor_day)
 
-    def _get_first_anchor_invoice_date(self):
+    def _get_anchor_invoice_date(self, next_period_start):
+        """Return the invoice date aligned to the billing anchor.
+
+        The date is the next anchor strictly after the period start, minus
+        one day plus the invoicing offset. It works both for the first period
+        and after existing invoices.
+        """
         self.ensure_one()
-        if not self.date_start:
+        if not next_period_start or not self._supports_billing_anchor():
             return False
-        first_anchor = self._get_next_anchor_date(
-            self.date_start, self.contract_id.billing_anchor_day or 1
+        if self.date_end and next_period_start > self.date_end:
+            return False
+        next_anchor = self._get_next_anchor_date(
+            next_period_start, self.contract_id.billing_anchor_day or 1
         )
-        if not first_anchor:
+        if not next_anchor:
+            return False
+        if self.date_end and next_anchor - relativedelta(days=1) > self.date_end:
             return False
         return (
-            first_anchor
+            next_anchor
             - relativedelta(days=1)
             + relativedelta(days=self.recurring_invoicing_offset or 0)
         )
+
+    def _get_first_anchor_invoice_date(self):
+        self.ensure_one()
+        return self._get_anchor_invoice_date(self.date_start)
 
     def _get_first_full_period_start(self):
         self.ensure_one()

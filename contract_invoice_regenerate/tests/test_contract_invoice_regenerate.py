@@ -68,6 +68,34 @@ class TestContractInvoiceRegenerate(TestContractBase):
         self.assertEqual(self.line.last_date_invoiced, date(2026, 1, 31))
         self.assertEqual(self.line.recurring_next_date, date(2026, 3, 1))
 
+    def test_recalculate_respects_the_billing_anchor(self):
+        if not hasattr(self.line, "_get_anchor_invoice_date"):
+            self.skipTest("contract_billing_cycle is not installed")
+        self.contract.billing_anchor_day = 5
+        self.line.write({"date_start": date(2026, 1, 15)})
+        self.line.write({"recurring_next_date": date(2026, 1, 20)})
+
+        self.line.action_recalculate_invoice_dates()
+
+        self.assertEqual(self.line.last_date_invoiced, False)
+        self.assertEqual(self.line.recurring_next_date, date(2026, 2, 5))
+        self.assertEqual(self.line.next_period_date_start, date(2026, 1, 15))
+        self.assertEqual(self.line.next_period_date_end, date(2026, 2, 4))
+
+    def test_recalculate_respects_the_billing_anchor_after_invoicing(self):
+        if not hasattr(self.line, "_get_anchor_invoice_date"):
+            self.skipTest("contract_billing_cycle is not installed")
+        self.contract.recurring_create_invoice()
+        self.assertEqual(self.line.last_date_invoiced, date(2026, 1, 31))
+
+        self.contract.billing_anchor_day = 5
+        self.line.action_recalculate_invoice_dates()
+
+        self.assertEqual(self.line.last_date_invoiced, date(2026, 1, 31))
+        self.assertEqual(self.line.recurring_next_date, date(2026, 2, 5))
+        self.assertEqual(self.line.next_period_date_start, date(2026, 2, 1))
+        self.assertEqual(self.line.next_period_date_end, date(2026, 2, 4))
+
     def test_regenerate_invoice_keeps_the_original_period_and_date(self):
         self.contract.recurring_create_invoice()
         second = self.contract.recurring_create_invoice()

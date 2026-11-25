@@ -49,6 +49,11 @@ The create values are also adjusted before the insert
 (`_apply_billing_anchor_to_vals`) because `recurring_next_date` is a computed
 field that Odoo does not recompute when it is explicitly provided.
 
+`_get_anchor_invoice_date(next_period_start)` returns the anchor-aligned
+invoice date for any period start. It is used by
+`contract_invoice_regenerate` when recalculating dates, so the recalculation
+respects the billing day before and after invoices exist.
+
 ## First-period price proration
 
 `contract.line._prepare_invoice_line()` calls

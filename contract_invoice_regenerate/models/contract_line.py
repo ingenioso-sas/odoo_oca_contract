@@ -110,6 +110,23 @@ class ContractLine(models.Model):
                 period_ends.append(period_end)
         return max(period_ends) if period_ends else False
 
+    def _get_recalculated_next_invoice_date(self, next_period_start):
+        """Return the next invoice date, respecting an optional billing anchor."""
+        self.ensure_one()
+        anchor_getter = getattr(self, "_get_anchor_invoice_date", None)
+        if anchor_getter:
+            anchor_date = anchor_getter(next_period_start)
+            if anchor_date:
+                return anchor_date
+        return self.get_next_invoice_date(
+            next_period_start,
+            self.recurring_invoicing_type,
+            self.recurring_invoicing_offset,
+            self.recurring_rule_type,
+            self.recurring_interval,
+            max_date_end=self.date_end,
+        )
+
     def _get_recalculated_invoice_dates(self):
         """Return the dates that match the current contract invoices."""
         self.ensure_one()
@@ -121,13 +138,8 @@ class ContractLine(models.Model):
         )
         if not next_period_start:
             return last_date_invoiced, False
-        recurring_next_date = self.get_next_invoice_date(
-            next_period_start,
-            self.recurring_invoicing_type,
-            self.recurring_invoicing_offset,
-            self.recurring_rule_type,
-            self.recurring_interval,
-            max_date_end=self.date_end,
+        recurring_next_date = self._get_recalculated_next_invoice_date(
+            next_period_start
         )
         return last_date_invoiced, recurring_next_date
 

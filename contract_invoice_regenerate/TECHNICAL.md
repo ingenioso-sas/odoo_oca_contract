@@ -33,6 +33,12 @@ Helpers:
 | `_get_recalculated_invoice_dates()` | Last date invoiced and next invoice date |
 | `_recalculate_invoice_dates()` | Writes both dates in one operation |
 
+`_get_recalculated_next_invoice_date()` uses the optional
+`_get_anchor_invoice_date()` hook when the line provides it (installed by
+`contract_billing_cycle`). Otherwise it falls back to the standard recurrence
+date. This makes the recalculation respect the billing day both before and
+after invoices exist.
+
 Actions:
 
 - `action_recalculate_invoice_dates()`: admin-only, writes the dates computed
