@@ -6,8 +6,9 @@ Adds a calendar billing cycle for post-paid contracts:
   from the contract start date;
 - automatic **price proration** for the first partial period, keeping
   quantity at 1;
-- a configurable **free trial** for the first full periods, with a percentage
-  discount (default 100%);
+- a configurable **free trial** counted from the service start, with a
+  percentage discount (default 100%) and prorated across the invoices that
+  cover the trial range;
 - an optional **zero invoice policy** to create or skip invoices whose total
   is zero.
 

@@ -21,7 +21,8 @@ Added to `contract.template` and inherited by `contract.contract`:
 | Field | Purpose |
 |---|---|
 | `billing_anchor_day` | Invoice day of the month (1–31, default 1) |
-| `free_trial_periods` | Number of full periods with the trial discount |
+| `free_trial_duration` | Trial duration from the service start (default 0) |
+| `free_trial_unit` | Trial unit: days or months |
 | `free_trial_discount` | Trial discount percentage (default 100) |
 | `skip_zero_invoices` | Skip invoices whose total is zero |
 
@@ -70,34 +71,39 @@ formula, the price proration is skipped to avoid a double adjustment.
 
 ## Free trial
 
-The trial applies to the first **full** periods, not to the initial partial
-period.
+The trial is a date range counted from the **service start**:
 
-- `_get_first_full_period_start()` returns `date_start` when it is an anchor
-  date, otherwise the next anchor date.
-- `_get_effective_free_trial_start()` shifts the trial to the first full
-  period on or after today when the original first full period is in the
-  past. If the next period to invoice is later (pause or backlog), that date
-  is used as the reference.
-- `_get_free_trial_end()` iterates the recurrence rule N times.
+```text
+trial_start = date_start
+trial_end   = date_start + duration - 1 day
+```
+
+`duration` is expressed in days or months according to `free_trial_unit`.
+The range is not moved to the future if it is in the past.
+
+- `_get_free_trial_dates()` returns the range, clamped to `date_end`.
 - `_sync_free_trial_discount()` creates or updates a
   `contract.invoice.discount` rule linked to the line:
   - `is_free_trial = True`;
   - `discount = free_trial_discount`;
   - `start_mode = fixed_date`;
-  - `date_start = effective trial start`;
-  - `date_end = last day of the last free period`;
+  - `date_start = trial_start`;
+  - `date_end = trial_end`;
   - `max_invoices = 0`;
   - `pause_policy = calendar` (no extension on pause).
 
 The rule is created on line create, updated when the line dates or the
 contract trial fields change, and deactivated when the trial is disabled. It
-is also synchronized before preparing each invoice line, so a trial that
-became past while the contract was waiting is moved to the future.
+is also synchronized before preparing each invoice line.
 
-If the rule has already been applied to an invoice (`applied_invoice_count`)
-or the zero invoice was skipped (`free_trial_consumed`), the rule is not
-moved again. This prevents a second free trial.
+`contract_invoice_discount` prorates the percentage by the overlap between the
+trial range and each invoice period. For a one-month trial starting 15 October:
+
+```text
+invoice 15 Oct – 31 Oct: 17/17 days → 100% discount
+invoice 1 Nov – 30 Nov:  14/30 days → 46.67% discount
+invoice 1 Dec – 31 Dec:   0/31 days → no discount
+```
 
 Lines with `predecessor_contract_line_id` (successors/renewals) do not receive
 a new trial. `copy_data()` removes the trial rule from copied lines.
@@ -109,9 +115,11 @@ contract. When `skip_zero_invoices` is enabled:
 
 1. the standard values are built (which advances `last_date_invoiced`);
 2. the untaxed total of each invoice is computed from its product lines;
-3. invoices whose total is zero are removed before `account.move.create()`;
-4. if a removed invoice contains a free trial rule, the rule is marked with
-   `free_trial_consumed = True` so it is not shifted to a future period.
+3. invoices whose total is zero are removed before `account.move.create()`.
+
+The trial rule is not consumed or deactivated: if the trial continues into the
+next invoice period, that invoice still receives the corresponding prorated
+discount.
 
 A message is posted on the contract when an invoice is skipped.
 
@@ -131,12 +139,10 @@ A message is posted on the contract when an invoice is skipped.
 - full period without proration;
 - custom anchor day;
 - pre-paid lines keep the standard behaviour;
-- first full period free;
-- start on the anchor day;
-- past trial shifted to the next full future period;
-- entirely past trial shifted;
-- future trial not shifted;
-- applied trial not shifted;
+- trial from the service start prorated across invoices;
+- trial starts on the service start;
+- trial duration in days;
+- entirely past trial still applied;
 - zero invoice skipped or created;
 - commercial discount on top of the prorated price;
 - template field copy.

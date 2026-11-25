@@ -36,7 +36,8 @@ class TestContractBillingCycle(TestContractBase):
             "line_recurrence": True,
             "invoicing_mode": "draft",
             "billing_anchor_day": 1,
-            "free_trial_periods": 0,
+            "free_trial_duration": 0,
+            "free_trial_unit": "months",
             "free_trial_discount": 100,
             "skip_zero_invoices": False,
             "contract_line_ids": [Command.create(line_vals)],
@@ -48,6 +49,8 @@ class TestContractBillingCycle(TestContractBase):
         return invoice.invoice_line_ids.filtered(
             lambda line: line.display_type in (False, "product")
         )[:1]
+
+    # === BILLING ANCHOR === #
 
     def test_billing_anchor_moves_first_invoice_to_the_first(self):
         contract = self._create_contract()
@@ -138,37 +141,42 @@ class TestContractBillingCycle(TestContractBase):
         self.assertEqual(line.recurring_next_date, date(2026, 11, 5))
         self.assertEqual(line.next_period_date_end, date(2026, 11, 4))
 
-    @freeze_time("2026-10-15")
-    def test_first_full_period_is_free(self):
-        contract = self._create_contract(free_trial_periods=1)
+    # === FREE TRIAL === #
+
+    @freeze_time("2026-11-25")
+    def test_trial_covers_first_month_from_service_start(self):
+        contract = self._create_contract(free_trial_duration=1)
         line = contract.contract_line_ids
 
-        self.assertEqual(line.free_trial_start, date(2026, 11, 1))
-        self.assertEqual(line.free_trial_end, date(2026, 11, 30))
+        self.assertEqual(line.free_trial_start, date(2026, 10, 15))
+        self.assertEqual(line.free_trial_end, date(2026, 11, 14))
         rule = line.free_trial_discount_id
         self.assertTrue(rule)
         self.assertTrue(rule.is_free_trial)
-        self.assertEqual(rule.date_start, date(2026, 11, 1))
-        self.assertEqual(rule.date_end, date(2026, 11, 30))
+        self.assertEqual(rule.date_start, date(2026, 10, 15))
+        self.assertEqual(rule.date_end, date(2026, 11, 14))
 
         first = contract.recurring_create_invoice()
-        self.assertAlmostEqual(first.amount_untaxed, 100 * 17 / 31, places=2)
+        self.assertEqual(first.amount_untaxed, 0.0)
+        self.assertEqual(self._product_line(first).discount, 100.0)
 
         second = contract.recurring_create_invoice()
-        self.assertEqual(second.invoice_date, date(2026, 12, 1))
-        self.assertEqual(self._product_line(second).discount, 100.0)
-        self.assertEqual(second.amount_untaxed, 0.0)
+        self.assertAlmostEqual(
+            self._product_line(second).discount, 100 * 14 / 30, places=2
+        )
+        self.assertAlmostEqual(
+            second.amount_untaxed, 100 * 16 / 30, places=2
+        )
 
         third = contract.recurring_create_invoice()
-        self.assertEqual(third.invoice_date, date(2027, 1, 1))
         self.assertEqual(self._product_line(third).discount, 0.0)
         self.assertEqual(third.amount_untaxed, 100.0)
 
-    @freeze_time("2026-11-01")
-    def test_start_on_anchor_makes_the_first_period_free(self):
+    @freeze_time("2026-11-25")
+    def test_trial_starts_on_service_start(self):
         contract = self._create_contract(
             line_overrides={"date_start": date(2026, 11, 1)},
-            free_trial_periods=1,
+            free_trial_duration=1,
         )
         line = contract.contract_line_ids
         self.assertEqual(line.free_trial_start, date(2026, 11, 1))
@@ -182,45 +190,82 @@ class TestContractBillingCycle(TestContractBase):
         second = contract.recurring_create_invoice()
         self.assertEqual(second.amount_untaxed, 100.0)
 
-    @freeze_time("2026-10-15")
+    @freeze_time("2026-11-25")
+    def test_trial_duration_in_days(self):
+        contract = self._create_contract(
+            free_trial_duration=30,
+            free_trial_unit="days",
+        )
+        line = contract.contract_line_ids
+        self.assertEqual(line.free_trial_start, date(2026, 10, 15))
+        self.assertEqual(line.free_trial_end, date(2026, 11, 13))
+
+        first = contract.recurring_create_invoice()
+        self.assertEqual(first.amount_untaxed, 0.0)
+
+        second = contract.recurring_create_invoice()
+        self.assertAlmostEqual(
+            self._product_line(second).discount, 100 * 13 / 30, places=2
+        )
+        self.assertAlmostEqual(
+            second.amount_untaxed, 100 * 17 / 30, places=2
+        )
+
+    @freeze_time("2026-11-25")
+    def test_entirely_past_trial_still_applies(self):
+        contract = self._create_contract(
+            line_overrides={"date_start": date(2026, 8, 15)},
+            free_trial_duration=1,
+        )
+        line = contract.contract_line_ids
+        self.assertEqual(line.free_trial_start, date(2026, 8, 15))
+        self.assertEqual(line.free_trial_end, date(2026, 9, 14))
+
+        first = contract.recurring_create_invoice()
+        self.assertEqual(first.invoice_date, date(2026, 9, 1))
+        self.assertEqual(first.amount_untaxed, 0.0)
+
+        second = contract.recurring_create_invoice()
+        self.assertAlmostEqual(
+            self._product_line(second).discount, 100 * 14 / 30, places=2
+        )
+        self.assertAlmostEqual(
+            second.amount_untaxed, 100 * 16 / 30, places=2
+        )
+
+    @freeze_time("2026-11-25")
     def test_zero_invoice_can_be_skipped(self):
         contract = self._create_contract(
-            free_trial_periods=1,
+            free_trial_duration=1,
             skip_zero_invoices=True,
         )
         line = contract.contract_line_ids
 
-        first = contract.recurring_create_invoice()
-        self.assertAlmostEqual(first.amount_untaxed, 100 * 17 / 31, places=2)
-
         skipped = contract.recurring_create_invoice()
         self.assertFalse(skipped)
-        self.assertEqual(line.last_date_invoiced, date(2026, 11, 30))
-        self.assertEqual(line.recurring_next_date, date(2027, 1, 1))
-        self.assertTrue(
-            line.free_trial_discount_id.free_trial_consumed
+        self.assertEqual(line.last_date_invoiced, date(2026, 10, 31))
+        self.assertEqual(line.recurring_next_date, date(2026, 12, 1))
+
+        second = contract.recurring_create_invoice()
+        self.assertEqual(second.invoice_date, date(2026, 12, 1))
+        self.assertAlmostEqual(
+            self._product_line(second).discount, 100 * 14 / 30, places=2
+        )
+        self.assertAlmostEqual(
+            second.amount_untaxed, 100 * 16 / 30, places=2
         )
 
-        with freeze_time("2026-12-15"):
-            line._sync_free_trial_discount()
-            self.assertEqual(
-                line.free_trial_discount_id.date_start, date(2026, 11, 1)
-            )
-            self.assertEqual(
-                line.free_trial_discount_id.date_end, date(2026, 11, 30)
-            )
-
         third = contract.recurring_create_invoice()
-        self.assertEqual(third.invoice_date, date(2027, 1, 1))
         self.assertEqual(third.amount_untaxed, 100.0)
 
-    @freeze_time("2026-10-15")
+    @freeze_time("2026-11-25")
     def test_zero_invoice_is_created_by_default(self):
-        contract = self._create_contract(free_trial_periods=1)
-        contract.recurring_create_invoice()
+        contract = self._create_contract(free_trial_duration=1)
         trial_invoice = contract.recurring_create_invoice()
         self.assertTrue(trial_invoice)
         self.assertEqual(trial_invoice.amount_untaxed, 0.0)
+
+    # === OTHER === #
 
     def test_discount_applies_on_the_prorated_price(self):
         contract = self._create_contract()
@@ -247,82 +292,13 @@ class TestContractBillingCycle(TestContractBase):
             places=2,
         )
 
-    @freeze_time("2026-11-25")
-    def test_past_trial_is_shifted_to_the_next_full_period(self):
-        contract = self._create_contract(free_trial_periods=1)
-        line = contract.contract_line_ids
-
-        self.assertEqual(line.free_trial_start, date(2026, 12, 1))
-        self.assertEqual(line.free_trial_end, date(2026, 12, 31))
-        rule = line.free_trial_discount_id
-        self.assertEqual(rule.date_start, date(2026, 12, 1))
-        self.assertEqual(rule.date_end, date(2026, 12, 31))
-
-        first = contract.recurring_create_invoice()
-        self.assertAlmostEqual(
-            first.amount_untaxed, 100 * 17 / 31, places=2
-        )
-        second = contract.recurring_create_invoice()
-        self.assertEqual(second.amount_untaxed, 100.0)
-        third = contract.recurring_create_invoice()
-        self.assertEqual(third.amount_untaxed, 0.0)
-
-    @freeze_time("2026-11-25")
-    def test_entirely_past_trial_is_shifted(self):
-        contract = self._create_contract(
-            line_overrides={"date_start": date(2026, 8, 15)},
-            free_trial_periods=1,
-        )
-        line = contract.contract_line_ids
-
-        self.assertEqual(line.free_trial_start, date(2026, 12, 1))
-        self.assertEqual(line.free_trial_end, date(2026, 12, 31))
-        first = contract.recurring_create_invoice()
-        self.assertAlmostEqual(
-            first.amount_untaxed, 100 * 17 / 31, places=2
-        )
-
-    @freeze_time("2026-11-25")
-    def test_future_trial_is_not_shifted(self):
-        contract = self._create_contract(
-            line_overrides={"date_start": date(2026, 12, 1)},
-            free_trial_periods=1,
-        )
-        line = contract.contract_line_ids
-
-        self.assertEqual(line.free_trial_start, date(2026, 12, 1))
-        self.assertEqual(line.free_trial_end, date(2026, 12, 31))
-
-    def test_applied_trial_is_not_shifted(self):
-        with freeze_time("2026-11-01"):
-            contract = self._create_contract(
-                line_overrides={"date_start": date(2026, 11, 1)},
-                free_trial_periods=1,
-            )
-            line = contract.contract_line_ids
-            first = contract.recurring_create_invoice()
-            self.assertEqual(first.amount_untaxed, 0.0)
-            rule = line.free_trial_discount_id
-            self.assertEqual(rule.date_start, date(2026, 11, 1))
-            self.assertEqual(rule.date_end, date(2026, 11, 30))
-            self.assertEqual(rule.applied_invoice_count, 1)
-
-        with freeze_time("2026-12-15"):
-            line._sync_free_trial_discount()
-            self.assertEqual(rule.date_start, date(2026, 11, 1))
-            self.assertEqual(rule.date_end, date(2026, 11, 30))
-            line.invalidate_recordset(
-                ["free_trial_start", "free_trial_end"]
-            )
-            self.assertEqual(line.free_trial_start, date(2026, 11, 1))
-            self.assertEqual(line.free_trial_end, date(2026, 11, 30))
-
     def test_template_copies_billing_cycle_fields(self):
         template = self.env["contract.template"].create(
             {
                 "name": "Billing cycle template",
                 "billing_anchor_day": 5,
-                "free_trial_periods": 2,
+                "free_trial_duration": 2,
+                "free_trial_unit": "months",
                 "free_trial_discount": 100,
                 "skip_zero_invoices": True,
             }
@@ -333,6 +309,7 @@ class TestContractBillingCycle(TestContractBase):
             contract_form.partner_id = self.partner
             contract = contract_form.save()
         self.assertEqual(contract.billing_anchor_day, 5)
-        self.assertEqual(contract.free_trial_periods, 2)
+        self.assertEqual(contract.free_trial_duration, 2)
+        self.assertEqual(contract.free_trial_unit, "months")
         self.assertEqual(contract.free_trial_discount, 100)
         self.assertTrue(contract.skip_zero_invoices)

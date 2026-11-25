@@ -15,19 +15,29 @@ class ContractTemplate(models.Model):
         help="Día del mes en que se emite la factura pospaga. Por defecto, "
         "el día 1. Si el mes no tiene ese día, se usa el último día del mes.",
     )
-    free_trial_periods = fields.Integer(
-        string="Períodos completos gratis",
+    free_trial_duration = fields.Integer(
+        string="Duración de la prueba",
         default=0,
-        help="Cantidad de períodos completos que se facturan con descuento "
-        "de prueba. 0 = sin prueba gratuita. El período inicial parcial se "
-        "cobra prorrateado.",
+        help="Duración de la prueba gratuita desde la fecha de inicio del "
+        "servicio. 0 = sin prueba gratuita. Se prorratea entre las facturas "
+        "que cubran ese rango.",
+    )
+    free_trial_unit = fields.Selection(
+        selection=[
+            ("days", "Días"),
+            ("months", "Meses"),
+        ],
+        string="Unidad de la prueba",
+        default="months",
+        required=True,
+        help="Unidad de la duración de la prueba gratuita.",
     )
     free_trial_discount = fields.Float(
         string="Descuento de prueba (%)",
         digits="Discount",
         default=100.0,
-        help="Porcentaje de descuento aplicado a los períodos completos de "
-        "prueba. Normalmente 100.",
+        help="Porcentaje de descuento aplicado durante la prueba gratuita. "
+        "Normalmente 100.",
     )
     skip_zero_invoices = fields.Boolean(
         string="Omitir facturas en cero",
@@ -45,12 +55,12 @@ class ContractTemplate(models.Model):
                     self.env._("El día de facturación debe estar entre 1 y 31.")
                 )
 
-    @api.constrains("free_trial_periods")
-    def _check_free_trial_periods(self):
+    @api.constrains("free_trial_duration")
+    def _check_free_trial_duration(self):
         for record in self:
-            if record.free_trial_periods < 0:
+            if record.free_trial_duration < 0:
                 raise ValidationError(
-                    self.env._("Los períodos de prueba no pueden ser negativos.")
+                    self.env._("La duración de la prueba no puede ser negativa.")
                 )
 
     @api.constrains("free_trial_discount")

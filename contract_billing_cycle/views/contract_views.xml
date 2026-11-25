@@ -13,17 +13,21 @@
                             <field name="skip_zero_invoices" />
                         </group>
                         <group>
-                            <field name="free_trial_periods" />
+                            <field name="free_trial_duration" />
+                            <field
+                                name="free_trial_unit"
+                                invisible="not free_trial_duration"
+                            />
                             <field
                                 name="free_trial_discount"
-                                invisible="not free_trial_periods"
+                                invisible="not free_trial_duration"
                             />
                         </group>
                     </group>
                     <div class="text-muted">
-                        El período inicial parcial se cobra prorrateado. La
-                        prueba gratuita aplica a los primeros períodos
-                        completos. Solo aplica a líneas pospago.
+                        La prueba gratuita se cuenta desde el inicio del servicio y
+                        se prorratea entre las facturas que cubran ese rango.
+                        Solo aplica a líneas pospago.
                     </div>
                 </page>
             </xpath>
