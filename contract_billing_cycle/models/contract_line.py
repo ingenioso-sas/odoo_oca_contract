@@ -95,14 +95,39 @@ class ContractLine(models.Model):
         self.ensure_one()
         return self._get_anchor_invoice_date(self.date_start)
 
-    def _get_first_full_period_start(self):
+    def _get_first_full_period_start_on_or_after(self, reference_date):
         self.ensure_one()
-        if not self.date_start:
+        if not reference_date:
             return False
         anchor_day = self.contract_id.billing_anchor_day or 1
-        if self._get_anchor_date(self.date_start, anchor_day) == self.date_start:
-            return self.date_start
-        return self._get_next_anchor_date(self.date_start, anchor_day)
+        if self._get_anchor_date(reference_date, anchor_day) == reference_date:
+            return reference_date
+        return self._get_next_anchor_date(reference_date, anchor_day)
+
+    def _get_first_full_period_start(self):
+        self.ensure_one()
+        return self._get_first_full_period_start_on_or_after(self.date_start)
+
+    def _get_effective_free_trial_start(self):
+        """Return the trial start, shifted to the future when it is past.
+
+        The trial always covers full periods. If the original first full
+        period is before today (or before the next period to invoice), it is
+        moved to the first full period on or after that reference.
+        """
+        self.ensure_one()
+        if not self._supports_billing_anchor():
+            return False
+        original_start = self._get_first_full_period_start()
+        if not original_start:
+            return False
+        today = fields.Date.context_today(self)
+        if original_start >= today:
+            return original_start
+        reference = today
+        if self.next_period_date_start and self.next_period_date_start > reference:
+            reference = self.next_period_date_start
+        return self._get_first_full_period_start_on_or_after(reference)
 
     def _get_free_trial_end(self, start, periods):
         self.ensure_one()
@@ -130,6 +155,10 @@ class ContractLine(models.Model):
         "recurring_invoicing_type",
         "contract_id.billing_anchor_day",
         "contract_id.free_trial_periods",
+        "last_date_invoiced",
+        "next_period_date_start",
+        "free_trial_discount_id",
+        "free_trial_discount_id.applied_invoice_count",
     )
     def _compute_free_trial_dates(self):
         for line in self:
@@ -138,7 +167,12 @@ class ContractLine(models.Model):
                 line.free_trial_start = False
                 line.free_trial_end = False
                 continue
-            start = line._get_first_full_period_start()
+            rule = line.free_trial_discount_id
+            if rule and (rule.applied_invoice_count or rule.free_trial_consumed):
+                line.free_trial_start = rule.date_start
+                line.free_trial_end = rule.date_end
+                continue
+            start = line._get_effective_free_trial_start()
             line.free_trial_start = start
             line.free_trial_end = line._get_free_trial_end(start, periods)
 
@@ -180,6 +214,8 @@ class ContractLine(models.Model):
         Quantity stays at 1 and the unit price is adjusted, so other
         discounts still apply on top of the prorated amount.
         """
+        if self.contract_id.free_trial_periods and not self.display_type:
+            self._sync_free_trial_discount()
         vals = super()._prepare_invoice_line()
         if not vals or self.display_type:
             return vals
@@ -223,8 +259,6 @@ class ContractLine(models.Model):
             is_successor = bool(
                 getattr(line, "predecessor_contract_line_id", False)
             )
-            if line.last_date_invoiced:
-                continue
             if (
                 periods <= 0
                 or discount <= 0
@@ -233,7 +267,11 @@ class ContractLine(models.Model):
             ):
                 line._deactivate_free_trial_discount()
                 continue
-            start = line._get_first_full_period_start()
+            rule = line.free_trial_discount_id
+            if rule and (rule.applied_invoice_count or rule.free_trial_consumed):
+                # The customer already received the trial; do not move it.
+                continue
+            start = line._get_effective_free_trial_start()
             end = line._get_free_trial_end(start, periods)
             if not start or not end or end < start:
                 line._deactivate_free_trial_discount()

@@ -4,7 +4,7 @@
 {
     "name": "Contract Billing Cycle",
     "summary": "Billing anchor day, first-period proration and free trial periods",
-    "version": "19.0.1.0.2",
+    "version": "19.0.1.0.3",
     "category": "Contract Management",
     "license": "AGPL-3",
     "author": "PayOnline Ing",

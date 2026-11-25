@@ -47,6 +47,16 @@ Factura 1 ene: 1 dic – 31 dic   → cobra completo
 La prueba empieza en el primer período completo, no en el período parcial
 inicial.
 
+Si el período de prueba calculado cae en el pasado, se desplaza al primer
+período completo futuro. Ejemplo con hoy 25 de noviembre:
+
+```text
+Prueba original: 1 nov – 30 nov
+Prueba aplicada: 1 dic – 31 dic
+```
+
+Así el cliente recibe un mes completo futuro y no un beneficio retroactivo.
+
 Si el contrato inicia el día 1, el primer período ya es completo y la primera
 factura es la gratuita.
 
@@ -62,7 +72,9 @@ después del último período facturado.
 - **Omitir facturas en cero desmarcado** (por defecto): la factura de prueba
   se crea con importe 0.
 - **Omitir facturas en cero marcado**: la factura no se crea; las fechas del
-  contrato avanzan y la siguiente factura cobrable se genera normalmente.
+  contrato avanzan y la siguiente factura cobrable se genera normalmente. La
+  prueba se marca como consumida para no volver a regalarla en un período
+  futuro.
 
 ## Límites
 

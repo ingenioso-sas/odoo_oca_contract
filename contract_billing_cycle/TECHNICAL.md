@@ -75,21 +75,29 @@ period.
 
 - `_get_first_full_period_start()` returns `date_start` when it is an anchor
   date, otherwise the next anchor date.
+- `_get_effective_free_trial_start()` shifts the trial to the first full
+  period on or after today when the original first full period is in the
+  past. If the next period to invoice is later (pause or backlog), that date
+  is used as the reference.
 - `_get_free_trial_end()` iterates the recurrence rule N times.
 - `_sync_free_trial_discount()` creates or updates a
   `contract.invoice.discount` rule linked to the line:
   - `is_free_trial = True`;
   - `discount = free_trial_discount`;
   - `start_mode = fixed_date`;
-  - `date_start = first full period start`;
+  - `date_start = effective trial start`;
   - `date_end = last day of the last free period`;
   - `max_invoices = 0`;
   - `pause_policy = calendar` (no extension on pause).
 
 The rule is created on line create, updated when the line dates or the
-contract trial fields change, and deactivated when the trial is disabled.
-After the line has `last_date_invoiced`, the rule is not regenerated, to avoid
-giving a new trial after the contract has started.
+contract trial fields change, and deactivated when the trial is disabled. It
+is also synchronized before preparing each invoice line, so a trial that
+became past while the contract was waiting is moved to the future.
+
+If the rule has already been applied to an invoice (`applied_invoice_count`)
+or the zero invoice was skipped (`free_trial_consumed`), the rule is not
+moved again. This prevents a second free trial.
 
 Lines with `predecessor_contract_line_id` (successors/renewals) do not receive
 a new trial. `copy_data()` removes the trial rule from copied lines.
@@ -101,7 +109,9 @@ contract. When `skip_zero_invoices` is enabled:
 
 1. the standard values are built (which advances `last_date_invoiced`);
 2. the untaxed total of each invoice is computed from its product lines;
-3. invoices whose total is zero are removed before `account.move.create()`.
+3. invoices whose total is zero are removed before `account.move.create()`;
+4. if a removed invoice contains a free trial rule, the rule is marked with
+   `free_trial_consumed = True` so it is not shifted to a future period.
 
 A message is posted on the contract when an invoice is skipped.
 
@@ -123,6 +133,10 @@ A message is posted on the contract when an invoice is skipped.
 - pre-paid lines keep the standard behaviour;
 - first full period free;
 - start on the anchor day;
+- past trial shifted to the next full future period;
+- entirely past trial shifted;
+- future trial not shifted;
+- applied trial not shifted;
 - zero invoice skipped or created;
 - commercial discount on top of the prorated price;
 - template field copy.
