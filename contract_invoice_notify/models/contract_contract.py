@@ -4,7 +4,7 @@ import logging
 
 from markupsafe import Markup
 
-from odoo import _, api, fields, models
+from odoo import _, api, fields, models, tools
 
 _logger = logging.getLogger(__name__)
 
@@ -402,7 +402,7 @@ class ContractContract(models.Model):
             lambda c: c.overdue_reminder_enabled and c.contract_type == "sale"
         )
         count = 0
-        in_test_mode = self.env.registry.in_test_mode()
+        in_test_mode = bool(tools.config.get("test_enable"))
         for contract in contracts:
             contract = contract.with_company(contract.company_id)
             try:

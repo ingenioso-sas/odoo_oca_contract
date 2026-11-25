@@ -4,7 +4,7 @@
     "name": "Contract Invoice Notify",
     "summary": "Auto-validate + notify contract invoices by configurable "
     "channels with payment link and overdue summary. No debt consolidation.",
-    "version": "19.0.2.2.1",
+    "version": "19.0.2.2.2",
     "category": "Contract Management",
     "website": "https://github.com/OCA/contract",
     "author": "Odoo Community Association (OCA)",
