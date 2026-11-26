@@ -62,6 +62,41 @@ Factura 1 nov: 15 oct – 31 oct → 100% descuento
 Factura 1 dic: 1 nov – 30 nov   → 13 días gratis, 17 días cobrados
 ```
 
+## Otras recurrencias
+
+El ciclo de facturación funciona con recurrencias mensuales, trimestrales,
+semestrales y anuales, y con intervalos distintos de 1.
+
+Ejemplos con día de facturación 1:
+
+```text
+Trimestral, inicio 15 oct:
+  Factura 1 nov: 15 oct – 31 oct (período parcial)
+  Factura 1 feb: 1 nov – 31 ene (trimestre completo)
+
+Anual, inicio 15 oct:
+  Factura 1 nov: 15 oct – 31 oct (período parcial)
+  Factura 1 nov del año siguiente: 1 nov – 31 oct (año completo)
+
+Mensual cada 12 meses, inicio 15 oct:
+  Igual que el ejemplo anual.
+```
+
+Si el contrato inicia **exactamente en el día de facturación**, el primer
+período es completo según la regla. Por ejemplo, anual con inicio 1 nov:
+
+```text
+Factura 1 nov del año siguiente: 1 nov – 31 oct (año completo)
+```
+
+La prueba gratuita también se puede expresar en meses o días para estas
+recurrencias:
+
+```text
+Anual + prueba de 12 meses  → primer año cubierto por la prueba
+Trimestral + prueba de 3 meses → primer trimestre cubierto
+```
+
 ## Recalcular fechas
 
 La acción **Recalcular fechas** de la línea respeta el día de facturación
@@ -81,5 +116,9 @@ contrato; si hay facturas, calcula el siguiente día de facturación después de
 
 - El ciclo de facturación y la prueba gratuita aplican a líneas **pospago**
   con recurrencia por línea.
+- Recurrencias soportadas: mensual, trimestral, semestral y anual, con
+  cualquier intervalo positivo.
 - Para líneas prepago se mantiene el comportamiento estándar del contrato.
+- No se aplica el ancla de facturación a recurrencias diarias, semanales ni
+  al último día del mes; esas líneas mantienen el comportamiento estándar.
 - La prueba no se extiende automáticamente al pausar el contrato.

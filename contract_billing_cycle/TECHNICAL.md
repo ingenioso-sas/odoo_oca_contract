@@ -46,6 +46,17 @@ first_invoice_date = first_anchor - 1 day + invoicing_offset
 For a post-paid monthly line the offset is 1, so the first invoice date is the
 first anchor date. The period is `date_start` to `first_anchor - 1`.
 
+If the service starts exactly on the anchor and the recurrence period is
+longer than one month, the first period is a **full recurrence period**. For
+example, an annual line starting 1 November is first invoiced one year later
+for the full year, not one month later.
+
+For later periods, `_get_anchor_date_on_or_after()` is applied to the standard
+recurrence date. If the billing day changed, the invoice moves to the next
+anchor; otherwise the standard date is kept. This works for monthly,
+quarterly, semesterly and yearly rules, including intervals different from 1
+(for example, monthly every 12 months).
+
 The create values are also adjusted before the insert
 (`_apply_billing_anchor_to_vals`) because `recurring_next_date` is a computed
 field that Odoo does not recompute when it is explicitly provided.
@@ -138,6 +149,9 @@ A message is posted on the contract when an invoice is skipped.
 - first invoice moved to the anchor day;
 - full period without proration;
 - custom anchor day;
+- yearly, quarterly, semesterly and monthly-interval recurrences;
+- intervals different from 1 (quarterly every 2, monthly every 12, yearly every 2);
+- start exactly on the anchor for quarterly and yearly rules;
 - pre-paid lines keep the standard behaviour;
 - trial from the service start prorated across invoices;
 - trial starts on the service start;

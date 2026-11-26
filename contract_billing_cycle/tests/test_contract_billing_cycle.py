@@ -141,6 +141,203 @@ class TestContractBillingCycle(TestContractBase):
         self.assertEqual(line.recurring_next_date, date(2026, 11, 5))
         self.assertEqual(line.next_period_date_end, date(2026, 11, 4))
 
+    def _assert_recalculated(self, line, expected):
+        if not hasattr(line, "action_recalculate_invoice_dates"):
+            return
+        line.action_recalculate_invoice_dates()
+        self.assertEqual(line.recurring_next_date, expected)
+
+    def test_yearly_anchor_first_partial_period(self):
+        contract = self._create_contract(
+            line_overrides={
+                "recurring_rule_type": "yearly",
+                "recurring_interval": 1,
+            }
+        )
+        line = contract.contract_line_ids
+        self.assertEqual(line.recurring_next_date, date(2026, 11, 1))
+        self.assertEqual(line.next_period_date_end, date(2026, 10, 31))
+
+        invoice = contract.recurring_create_invoice()
+        self.assertEqual(invoice.contract_period_start, date(2026, 10, 15))
+        self.assertEqual(invoice.contract_period_end, date(2026, 10, 31))
+        self.assertAlmostEqual(
+            self._product_line(invoice).price_unit, 100 * 17 / 365, places=2
+        )
+
+        self.assertEqual(line.recurring_next_date, date(2027, 11, 1))
+        self.assertEqual(line.next_period_date_start, date(2026, 11, 1))
+        self.assertEqual(line.next_period_date_end, date(2027, 10, 31))
+        self._assert_recalculated(line, date(2027, 11, 1))
+
+    def test_quarterly_anchor_first_partial_period(self):
+        contract = self._create_contract(
+            line_overrides={
+                "recurring_rule_type": "quarterly",
+                "recurring_interval": 1,
+            }
+        )
+        line = contract.contract_line_ids
+        self.assertEqual(line.recurring_next_date, date(2026, 11, 1))
+
+        invoice = contract.recurring_create_invoice()
+        self.assertAlmostEqual(
+            self._product_line(invoice).price_unit, 100 * 17 / 92, places=2
+        )
+        self.assertEqual(line.recurring_next_date, date(2027, 2, 1))
+        self.assertEqual(line.next_period_date_end, date(2027, 1, 31))
+        self._assert_recalculated(line, date(2027, 2, 1))
+
+    def test_monthly_interval_12_first_partial_period(self):
+        contract = self._create_contract(
+            line_overrides={
+                "recurring_rule_type": "monthly",
+                "recurring_interval": 12,
+            }
+        )
+        line = contract.contract_line_ids
+        self.assertEqual(line.recurring_next_date, date(2026, 11, 1))
+
+        invoice = contract.recurring_create_invoice()
+        self.assertAlmostEqual(
+            self._product_line(invoice).price_unit, 100 * 17 / 365, places=2
+        )
+        self.assertEqual(line.recurring_next_date, date(2027, 11, 1))
+        self.assertEqual(line.next_period_date_end, date(2027, 10, 31))
+        self._assert_recalculated(line, date(2027, 11, 1))
+
+    def test_yearly_interval_2_first_partial_period(self):
+        contract = self._create_contract(
+            line_overrides={
+                "recurring_rule_type": "yearly",
+                "recurring_interval": 2,
+            }
+        )
+        line = contract.contract_line_ids
+        self.assertEqual(line.recurring_next_date, date(2026, 11, 1))
+
+        invoice = contract.recurring_create_invoice()
+        self.assertAlmostEqual(
+            self._product_line(invoice).price_unit, 100 * 17 / 730, places=2
+        )
+        self.assertEqual(line.recurring_next_date, date(2028, 11, 1))
+        self.assertEqual(line.next_period_date_end, date(2028, 10, 31))
+        self._assert_recalculated(line, date(2028, 11, 1))
+
+    def test_quarterly_interval_2_first_partial_period(self):
+        contract = self._create_contract(
+            line_overrides={
+                "recurring_rule_type": "quarterly",
+                "recurring_interval": 2,
+            }
+        )
+        line = contract.contract_line_ids
+        self.assertEqual(line.recurring_next_date, date(2026, 11, 1))
+
+        invoice = contract.recurring_create_invoice()
+        self.assertAlmostEqual(
+            self._product_line(invoice).price_unit, 100 * 17 / 184, places=2
+        )
+        self.assertEqual(line.recurring_next_date, date(2027, 5, 1))
+        self.assertEqual(line.next_period_date_end, date(2027, 4, 30))
+        self._assert_recalculated(line, date(2027, 5, 1))
+
+    def test_semesterly_anchor_first_partial_period(self):
+        contract = self._create_contract(
+            line_overrides={
+                "recurring_rule_type": "semesterly",
+                "recurring_interval": 1,
+            }
+        )
+        line = contract.contract_line_ids
+        self.assertEqual(line.recurring_next_date, date(2026, 11, 1))
+
+        invoice = contract.recurring_create_invoice()
+        self.assertAlmostEqual(
+            self._product_line(invoice).price_unit, 100 * 17 / 184, places=2
+        )
+        self.assertEqual(line.recurring_next_date, date(2027, 5, 1))
+        self.assertEqual(line.next_period_date_end, date(2027, 4, 30))
+        self._assert_recalculated(line, date(2027, 5, 1))
+
+    def test_yearly_start_on_anchor(self):
+        contract = self._create_contract(
+            line_overrides={
+                "recurring_rule_type": "yearly",
+                "recurring_interval": 1,
+                "date_start": date(2026, 11, 1),
+            }
+        )
+        line = contract.contract_line_ids
+        self.assertEqual(line.recurring_next_date, date(2027, 11, 1))
+        self.assertEqual(line.next_period_date_end, date(2027, 10, 31))
+
+        invoice = contract.recurring_create_invoice()
+        self.assertEqual(invoice.invoice_date, date(2027, 11, 1))
+        self.assertEqual(invoice.contract_period_start, date(2026, 11, 1))
+        self.assertEqual(invoice.contract_period_end, date(2027, 10, 31))
+        self.assertEqual(self._product_line(invoice).price_unit, 100.0)
+        self.assertEqual(line.recurring_next_date, date(2028, 11, 1))
+        self._assert_recalculated(line, date(2028, 11, 1))
+
+    def test_quarterly_start_on_anchor(self):
+        contract = self._create_contract(
+            line_overrides={
+                "recurring_rule_type": "quarterly",
+                "recurring_interval": 1,
+                "date_start": date(2026, 11, 1),
+            }
+        )
+        line = contract.contract_line_ids
+        self.assertEqual(line.recurring_next_date, date(2027, 2, 1))
+        self.assertEqual(line.next_period_date_end, date(2027, 1, 31))
+
+        invoice = contract.recurring_create_invoice()
+        self.assertEqual(invoice.invoice_date, date(2027, 2, 1))
+        self.assertEqual(invoice.contract_period_start, date(2026, 11, 1))
+        self.assertEqual(invoice.contract_period_end, date(2027, 1, 31))
+        self.assertEqual(self._product_line(invoice).price_unit, 100.0)
+        self.assertEqual(line.recurring_next_date, date(2027, 5, 1))
+        self._assert_recalculated(line, date(2027, 5, 1))
+
+    def test_monthly_interval_3_start_on_anchor(self):
+        contract = self._create_contract(
+            line_overrides={
+                "recurring_rule_type": "monthly",
+                "recurring_interval": 3,
+                "date_start": date(2026, 11, 1),
+            }
+        )
+        line = contract.contract_line_ids
+        self.assertEqual(line.recurring_next_date, date(2027, 2, 1))
+        self.assertEqual(line.next_period_date_end, date(2027, 1, 31))
+
+        invoice = contract.recurring_create_invoice()
+        self.assertEqual(invoice.invoice_date, date(2027, 2, 1))
+        self.assertEqual(self._product_line(invoice).price_unit, 100.0)
+        self.assertEqual(line.recurring_next_date, date(2027, 5, 1))
+        self._assert_recalculated(line, date(2027, 5, 1))
+
+    def test_yearly_custom_anchor_day(self):
+        contract = self._create_contract(
+            line_overrides={
+                "recurring_rule_type": "yearly",
+                "recurring_interval": 1,
+            },
+            billing_anchor_day=5,
+        )
+        line = contract.contract_line_ids
+        self.assertEqual(line.recurring_next_date, date(2026, 11, 5))
+        self.assertEqual(line.next_period_date_end, date(2026, 11, 4))
+
+        invoice = contract.recurring_create_invoice()
+        self.assertAlmostEqual(
+            self._product_line(invoice).price_unit, 100 * 21 / 365, places=2
+        )
+        self.assertEqual(line.recurring_next_date, date(2027, 11, 5))
+        self.assertEqual(line.next_period_date_end, date(2027, 11, 4))
+        self._assert_recalculated(line, date(2027, 11, 5))
+
     # === FREE TRIAL === #
 
     @freeze_time("2026-11-25")
@@ -231,6 +428,54 @@ class TestContractBillingCycle(TestContractBase):
         )
         self.assertAlmostEqual(
             second.amount_untaxed, 100 * 16 / 30, places=2
+        )
+
+    @freeze_time("2026-11-25")
+    def test_yearly_trial_prorated(self):
+        contract = self._create_contract(
+            line_overrides={
+                "recurring_rule_type": "yearly",
+                "recurring_interval": 1,
+            },
+            free_trial_duration=12,
+        )
+        line = contract.contract_line_ids
+        self.assertEqual(line.free_trial_start, date(2026, 10, 15))
+        self.assertEqual(line.free_trial_end, date(2027, 10, 14))
+
+        first = contract.recurring_create_invoice()
+        self.assertEqual(first.amount_untaxed, 0.0)
+
+        second = contract.recurring_create_invoice()
+        self.assertAlmostEqual(
+            self._product_line(second).discount, 100 * 348 / 365, places=2
+        )
+        self.assertAlmostEqual(
+            second.amount_untaxed, 100 * 17 / 365, places=2
+        )
+
+    @freeze_time("2026-11-25")
+    def test_quarterly_trial_prorated(self):
+        contract = self._create_contract(
+            line_overrides={
+                "recurring_rule_type": "quarterly",
+                "recurring_interval": 1,
+            },
+            free_trial_duration=1,
+        )
+        line = contract.contract_line_ids
+        self.assertEqual(line.free_trial_start, date(2026, 10, 15))
+        self.assertEqual(line.free_trial_end, date(2026, 11, 14))
+
+        first = contract.recurring_create_invoice()
+        self.assertEqual(first.amount_untaxed, 0.0)
+
+        second = contract.recurring_create_invoice()
+        self.assertAlmostEqual(
+            self._product_line(second).discount, 100 * 14 / 92, places=2
+        )
+        self.assertAlmostEqual(
+            second.amount_untaxed, 100 * 78 / 92, places=2
         )
 
     @freeze_time("2026-11-25")

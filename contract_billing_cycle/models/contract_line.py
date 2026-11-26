@@ -66,30 +66,89 @@ class ContractLine(models.Model):
         next_month = date.replace(day=1) + relativedelta(months=1)
         return self._get_anchor_date(next_month, anchor_day)
 
+    @api.model
+    def _get_anchor_date_on_or_after(self, date, anchor_day):
+        if not date:
+            return False
+        candidate = self._get_anchor_date(date, anchor_day)
+        if candidate >= date:
+            return candidate
+        next_month = date.replace(day=1) + relativedelta(months=1)
+        return self._get_anchor_date(next_month, anchor_day)
+
     def _get_anchor_invoice_date(self, next_period_start):
         """Return the invoice date aligned to the billing anchor.
 
-        The date is the next anchor strictly after the period start, minus
-        one day plus the invoicing offset. It works both for the first period
-        and after existing invoices.
+        For the first period the invoice date is the next anchor after the
+        period start. If the service starts exactly on the anchor and the
+        recurrence period is longer than one month, the first period is a
+        full recurrence period instead.
+
+        For later periods the standard recurrence date is kept when it is
+        already an anchor, or moved to the next anchor when the billing day
+        changed.
         """
         self.ensure_one()
         if not next_period_start or not self._supports_billing_anchor():
             return False
         if self.date_end and next_period_start > self.date_end:
             return False
-        next_anchor = self._get_next_anchor_date(
-            next_period_start, self.contract_id.billing_anchor_day or 1
+        anchor_day = self.contract_id.billing_anchor_day or 1
+        offset = self.recurring_invoicing_offset or 0
+        if not self.last_date_invoiced:
+            is_anchor_start = (
+                self._get_anchor_date(next_period_start, anchor_day)
+                == next_period_start
+            )
+            is_monthly_interval_one = (
+                self.recurring_rule_type == "monthly"
+                and self.recurring_interval == 1
+            )
+            if is_anchor_start and not is_monthly_interval_one:
+                return self.get_next_invoice_date(
+                    next_period_start,
+                    self.recurring_invoicing_type,
+                    offset,
+                    self.recurring_rule_type,
+                    self.recurring_interval,
+                    max_date_end=self.date_end,
+                )
+            next_anchor = self._get_next_anchor_date(
+                next_period_start, anchor_day
+            )
+            if not next_anchor:
+                return False
+            if (
+                self.date_end
+                and next_anchor - relativedelta(days=1) > self.date_end
+            ):
+                return False
+            return (
+                next_anchor
+                - relativedelta(days=1)
+                + relativedelta(days=offset)
+            )
+        standard_invoice_date = self.get_next_invoice_date(
+            next_period_start,
+            self.recurring_invoicing_type,
+            offset,
+            self.recurring_rule_type,
+            self.recurring_interval,
+            max_date_end=self.date_end,
         )
-        if not next_anchor:
+        if not standard_invoice_date:
             return False
-        if self.date_end and next_anchor - relativedelta(days=1) > self.date_end:
-            return False
-        return (
-            next_anchor
-            - relativedelta(days=1)
-            + relativedelta(days=self.recurring_invoicing_offset or 0)
+        anchor_invoice_date = self._get_anchor_date_on_or_after(
+            standard_invoice_date, anchor_day
         )
+        if not anchor_invoice_date:
+            return False
+        if (
+            self.date_end
+            and anchor_invoice_date - relativedelta(days=offset) > self.date_end
+        ):
+            return False
+        return anchor_invoice_date
 
     def _get_first_anchor_invoice_date(self):
         self.ensure_one()
@@ -311,17 +370,46 @@ class ContractLine(models.Model):
         date_start = (
             fields.Date.to_date(vals.get("date_start"))
             if vals.get("date_start")
-            else False
+            else contract.date_start
         )
         if not date_start:
             return
+        interval = int(
+            vals.get("recurring_interval")
+            or contract.recurring_interval
+            or 1
+        )
+        if "date_end" in vals:
+            date_end = (
+                fields.Date.to_date(vals["date_end"])
+                if vals["date_end"]
+                else False
+            )
+        else:
+            date_end = contract.date_end
         anchor = contract.billing_anchor_day or 1
-        first_anchor = self._get_next_anchor_date(date_start, anchor)
-        if not first_anchor:
-            return
         offset = self._get_default_recurring_invoicing_offset(
             invoicing_type, rule_type
         )
+        is_anchor_start = self._get_anchor_date(date_start, anchor) == date_start
+        is_monthly_interval_one = rule_type == "monthly" and interval == 1
+        if is_anchor_start and not is_monthly_interval_one:
+            next_date = self.get_next_invoice_date(
+                date_start,
+                invoicing_type,
+                offset,
+                rule_type,
+                interval,
+                max_date_end=date_end,
+            )
+            if next_date:
+                vals["recurring_next_date"] = next_date
+            return
+        first_anchor = self._get_next_anchor_date(date_start, anchor)
+        if not first_anchor:
+            return
+        if date_end and first_anchor - relativedelta(days=1) > date_end:
+            return
         vals["recurring_next_date"] = (
             first_anchor
             - relativedelta(days=1)
